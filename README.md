@@ -1,4 +1,4 @@
-# Template for Java Spring Microservice project
+# GPD Massive Upload Microservice
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TODO-set-your-id&metric=alert_status)](https://sonarcloud.io/dashboard?id=TODO-set-your-id)
 [![Integration Tests](https://github.com/pagopa/<TODO-repo>/actions/workflows/integration_test.yml/badge.svg?branch=main)](https://github.com/pagopa/<TODO-repo>/actions/workflows/integration_test.yml)
@@ -19,11 +19,9 @@ See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubuserc
 
 ## Technology Stack
 
-- Java 11
-- Spring Boot
-- Spring Web
-- Hibernate
-- JPA
+- Java 17
+- Micronaut
+- Azure Storage Blob
 - ...
 - TODO
 
@@ -51,15 +49,15 @@ from `./docker` directory
 
 - git
 - maven
-- jdk-11
+- jdk-17
 
 ### Run the project
 
-Start the springboot application with this command:
+Start the micronaut application with this command:
 
-`mvn spring-boot:run -Dspring-boot.run.profiles=local`
+`mvn mn:run`
 
-### Spring Profiles
+### Micronaut Profiles
 
 - **local**: to develop locally.
 - _default (no profile set)_: The application gets the properties from the environment (for Azure).
