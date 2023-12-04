@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.upload.repository;
 
 import io.micronaut.http.multipart.CompletedFileUpload;
 
+import java.io.IOException;
 import java.net.URL;
 
 public interface FileRepository {
@@ -12,5 +13,5 @@ public interface FileRepository {
 
     URL findURLbyKey(String key);
 
-    String upload(CompletedFileUpload file);
+    String upload(String directory, CompletedFileUpload file) throws IOException;
 }
