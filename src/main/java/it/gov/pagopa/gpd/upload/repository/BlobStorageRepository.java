@@ -1,14 +1,15 @@
 package it.gov.pagopa.gpd.upload.repository;
 
+import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
-import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.net.URL;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Context
 @Singleton
+@Slf4j
 public class BlobStorageRepository implements FileRepository {
 
     @Value("${blob.sas.url}")
@@ -52,12 +54,17 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     @Override
-    public String upload(String directory, CompletedFileUpload file) throws FileNotFoundException {
+    public String upload(String directory, File file) throws FileNotFoundException {
+        BlobContainerClient container = blobServiceClient.getBlobContainerClient("input/" + directory);
         String key = this.createRandomName(directory);
-        BlobContainerClient container = blobServiceClient.getBlobContainerClient("input/inbox");
-        BlockBlobClient blockBlobClient = container
-                                            .getBlobClient(key)
-                                            .getBlockBlobClient();
+        BlobClient blobClient = container.getBlobClient(key);
+        // retry in case of pseudo random collision
+        while (blobClient.exists()) {
+            key = this.createRandomName(directory);
+            blobClient = container.getBlobClient(key);
+        }
+
+        BlockBlobClient blockBlobClient = blobClient.getBlockBlobClient();
 
         try {
             this.uploadFileBlocksAsBlockBlob(blockBlobClient, file);
@@ -68,11 +75,11 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     private String createRandomName(String namePrefix) {
-        return namePrefix + UUID.randomUUID().toString().replace("-", "");
+        return namePrefix + "_" + UUID.randomUUID().toString().replace("-", "");
     }
 
-    private void uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, CompletedFileUpload file) throws IOException {
-        InputStream inputStream = file.getInputStream();
+    private void uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, File file) throws IOException {
+        InputStream inputStream = new FileInputStream(file);
         ByteArrayInputStream byteInputStream = null;
         byte[] bytes = null;
         int blockSize = 1024 * 1024;

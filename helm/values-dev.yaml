@@ -29,8 +29,8 @@ microservice-chart:
       - 8080
   ingress:
     create: true
-    host: "your.host" # TODO: set the host
-    path: /your-path-here/(.*) # TODO: set your path
+    host: "weudev.gps.internal.dev.platform.pagopa.it"
+    path: /pagopa-gpd-upload/(.*)
     servicePort: 8080
   serviceAccount:
     create: false
@@ -80,8 +80,10 @@ microservice-chart:
     # required
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
+    BLOB_SAS_URL: gpd-upload-blob-sas-url
+    BLOB_SAS_TOKEN: gpd-upload-blob-sas-token
   keyvault:
-    name: "pagopa-d-name-kv" #TODO
+    name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
   nodeSelector: { }
   tolerations: [ ]
