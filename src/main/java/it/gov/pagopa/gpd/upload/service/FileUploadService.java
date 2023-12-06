@@ -8,6 +8,7 @@ import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import jakarta.annotation.PostConstruct;
@@ -38,6 +39,8 @@ public class FileUploadService {
 
     private static List<String> ALLOWABLE_EXTENSIONS = Arrays.asList("json");
 
+    private static List<String> VALID_UPLOAD_EXTENSION = Arrays.asList("zip");
+
     private ObjectMapper objectMapper;
 
     @Inject
@@ -60,7 +63,8 @@ public class FileUploadService {
         log.debug("File with name " + file.getName() + " has been unzipped");
         PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
         if(!isValid(file.getName(), paymentPositionsModel)) {
-            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file are invalid.");
+            log.error("Debt Positions validation failed for file " + file.getName());
+            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
         }
         String fileId = blobStorageRepository.upload(organizationFiscalCode, file);
         fileStatusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
@@ -70,10 +74,21 @@ public class FileUploadService {
 
     private boolean isValid(String id, PaymentPositionsModel paymentPositionsModel) throws IOException {
         log.debug("Starting validation for object related to" + id);
-        Set<ConstraintViolation<PaymentPositionsModel>> constraintViolations = validator.validate(paymentPositionsModel);
-        log.debug("Validation result for object related to " + id + ": " + constraintViolations.toString());
+        Set<ConstraintViolation<PaymentPositionsModel>> constraintViolations;
 
-        return constraintViolations.isEmpty();
+        for(PaymentPositionModel paymentPositionModel : paymentPositionsModel.getPaymentPositions()) {
+            constraintViolations = validator.validate(paymentPositionsModel);
+            if(!constraintViolations.isEmpty()) {
+                log.error("Validation error for object related to " + id + ": " + paymentPositionModel);
+                for(ConstraintViolation cv : constraintViolations) {
+                    log.error("Invalid value: " + cv.getMessage());
+                    log.error("Invalid value: " + cv.getConstraintDescriptor());
+                    log.error("Invalid value: " + cv.getInvalidValue());
+                }
+                return false;
+            }
+        }
+        return true;
     }
 
     private File unzip(CompletedFileUpload file) {
@@ -82,6 +97,11 @@ public class FileUploadService {
         int zipSize = 0;
         File outputFile = null;
         final byte[] buffer = new byte[1024];
+
+        if(!VALID_UPLOAD_EXTENSION.contains(getFileExtension(file.getFilename()))) {
+            log.error("The file " + file.getFilename() + " with extension " + getFileExtension(file.getFilename()) + " is not a zip file ");
+            throw new AppException(HttpStatus.BAD_REQUEST, "NOT A ZIP FILE", "Only zip file can be uploaded.");
+        }
 
         try {
             ZipInputStream zis = new ZipInputStream(file.getInputStream());
@@ -93,7 +113,7 @@ public class FileUploadService {
                     zis.closeEntry();
                     zis.close();
                     log.error("Zip content has too many entries");
-                    throw new AppException(HttpStatus.BAD_REQUEST, "", "Zip content has too many entries (check for hidden files)");
+                    throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Zip content has too many entries (check for hidden files)");
                 }
 
                 if (!entry.isDirectory()) {
@@ -121,7 +141,7 @@ public class FileUploadService {
                             zis.close();
                             fos.close();
                             log.error("Zip content too large");
-                            throw new AppException(HttpStatus.BAD_REQUEST, "", "Zip content too large");
+                            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Zip content too large");
                         }
 
                         fos.write(buffer, 0, len);
@@ -135,7 +155,7 @@ public class FileUploadService {
 
             return outputFile;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e);
         }
     }
 

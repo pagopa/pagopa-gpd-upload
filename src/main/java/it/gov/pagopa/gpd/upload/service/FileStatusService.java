@@ -22,7 +22,7 @@ public class FileStatusService {
         return map(statusRepository.findStatusById(fileId));
     }
 
-    public Status createUploadStatus(String organizationFiscalCode,String fileId, PaymentPositionsModel paymentPositionsModel) {
+    public Status createUploadStatus(String organizationFiscalCode, String fileId, PaymentPositionsModel paymentPositionsModel) {
         Upload upload = Upload.builder()
                 .current(0)
                 .total(paymentPositionsModel.getPaymentPositions().size())

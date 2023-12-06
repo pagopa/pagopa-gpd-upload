@@ -7,6 +7,8 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
+import io.micronaut.http.HttpStatus;
+import it.gov.pagopa.gpd.upload.exception.AppException;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -54,13 +56,13 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     @Override
-    public String upload(String directory, File file) throws FileNotFoundException {
-        BlobContainerClient container = blobServiceClient.getBlobContainerClient("input/" + directory);
-        String key = this.createRandomName(directory);
+    public String upload(String fiscalCode, File file) throws FileNotFoundException {
+        BlobContainerClient container = blobServiceClient.getBlobContainerClient("input/" + fiscalCode);
+        String key = this.createRandomName(fiscalCode);
         BlobClient blobClient = container.getBlobClient(key);
         // retry in case of pseudo random collision
         while (blobClient.exists()) {
-            key = this.createRandomName(directory);
+            key = this.createRandomName(fiscalCode);
             blobClient = container.getBlobClient(key);
         }
 
@@ -70,7 +72,7 @@ public class BlobStorageRepository implements FileRepository {
             this.uploadFileBlocksAsBlockBlob(blockBlobClient, file);
             return key;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Internal server error", e);
         }
     }
 
@@ -92,7 +94,7 @@ public class BlobStorageRepository implements FileRepository {
             bytes = inputStream.readNBytes(blockSize);
             while (bytes.length == blockSize) {
                 byteInputStream = new ByteArrayInputStream(bytes);
-                blockId = String.format("%05d", blockNum);
+                blockId = String.format("%05d", blockNum); // 5-digit number
                 blockIdEncoded = Base64.getEncoder().encodeToString(blockId.getBytes());
                 blockBlob.stageBlock(blockIdEncoded, byteInputStream, blockSize);
                 blockList.add(blockIdEncoded);
@@ -101,7 +103,7 @@ public class BlobStorageRepository implements FileRepository {
             }
             blockId = String.format("%05d", blockNum);
             blockIdEncoded = Base64.getEncoder().encodeToString(blockId.getBytes());
-            byteInputStream = new ByteArrayInputStream(bytes);
+            byteInputStream = new ByteArrayInputStream(bytes); // add last block based on remaining bytes
             blockBlob.stageBlock(blockIdEncoded, byteInputStream, bytes.length);
             blockList.add(blockIdEncoded);
 

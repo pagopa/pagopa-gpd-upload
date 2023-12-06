@@ -1,10 +1,12 @@
 package it.gov.pagopa.gpd.upload.model.pd;
 
+import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,10 +16,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 
 @Data
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Introspected
 public class PaymentOptionModel implements Serializable {
 
     /**

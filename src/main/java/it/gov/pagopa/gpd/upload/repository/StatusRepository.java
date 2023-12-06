@@ -47,6 +47,7 @@ public class StatusRepository {
         CosmosItemResponse<Status> response = container.createItem(status);
         if (response.getStatusCode() != HttpStatus.CREATED.getCode()) {
             log.error("the Status saving was not successful: " + response);
+            throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "COSMOS UNAVAILABLE", "the Status saving was not successful");
         }
         return response.getItem();
     }
@@ -55,7 +56,7 @@ public class StatusRepository {
         CosmosItemResponse<Status> response = container.readItem(id, PartitionKey.NONE, Status.class);
         if (response.getStatusCode() != HttpStatus.OK.getCode()) {
             log.error("the Status retrieval was not successful: " + response);
-            throw new AppException(HttpStatus.valueOf(response.getStatusCode()), response.getETag(), "the Status retrieval was not successful");
+            throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "COSMOS UNAVAILABLE", "the Status retrieval was not successful");
         }
         return response.getItem();
     }

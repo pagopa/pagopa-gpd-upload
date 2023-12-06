@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.model.pd;
 
+import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -15,6 +16,7 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Introspected
 public class Stamp implements Serializable {
     private static final long serialVersionUID = -5862140737726963810L;
 

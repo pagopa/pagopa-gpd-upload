@@ -1,8 +1,11 @@
 package it.gov.pagopa.gpd.upload.model.pd.enumeration;
 
+import io.micronaut.core.annotation.Introspected;
+
 import java.util.EnumSet;
 import java.util.Set;
 
+@Introspected
 public enum DebtPositionStatus {
     DRAFT, PUBLISHED, VALID, INVALID, EXPIRED, PARTIALLY_PAID, PAID, REPORTED;
 
