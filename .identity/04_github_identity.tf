@@ -16,8 +16,8 @@ module "identity_cd" {
   github_federations = var.cd_github_federations
 
   cd_rbac_roles = {
-    subscription_roles = local.environment_cd_roles.subscription
-    resource_groups    = local.environment_cd_roles.resource_groups
+    subscription_roles = var.environment_cd_roles.subscription
+    resource_groups    = var.environment_cd_roles.resource_groups
   }
 
   tags = var.tags

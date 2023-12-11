@@ -20,19 +20,6 @@ locals {
     name           = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-cae",
     resource_group = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-rg",
   }
-
-  environment_cd_roles = {
-    subscription = [
-      "Contributor",
-      "Storage Account Contributor",
-      "Storage Blob Data Contributor",
-      "Storage File Data SMB Share Contributor",
-      "Storage Queue Data Contributor",
-      "Storage Table Data Contributor",
-      "Key Vault Contributor",
-    ]
-    resource_groups = {}
-  }
 }
 
 variable "location" {
@@ -65,6 +52,14 @@ variable "cd_github_federations" {
     subject           = string
   }))
   description = "GitHub Organization, repository name and scope permissions"
+}
+
+variable "environment_cd_roles" {
+  type = object({
+    subscription    = list(string)
+    resource_groups = map(list(string))
+  })
+  description = "GitHub Continous Delivery roles"
 }
 
 variable "github_repository_environment" {
