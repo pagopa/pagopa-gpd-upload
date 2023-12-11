@@ -100,12 +100,13 @@ jobs:
     steps:
       - name: Make Release
         id: release
-        uses: pagopa/github-actions-template/maven-release@v1.6.8
+        uses: pagopa/github-actions-template/maven-release@PAGOPA-1360-gpd-upload-service
         with:
           semver: ${{ needs.setup.outputs.semver }}
           github_token: ${{ secrets.BOT_TOKEN_GITHUB }}
           beta: ${{ inputs.beta }}
           skip_ci: false
+          jdk_version: 17
 
   image:
     needs: [ setup, release ]
