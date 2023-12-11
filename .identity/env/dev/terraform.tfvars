@@ -31,6 +31,9 @@ environment_cd_roles = {
   resource_groups = {
     "pagopa-d-gps-sec-rg" = [
       "Key Vault Contributor"
+    ],
+    "pagopa-d-weu-dev-aks-rg" = [
+      "Contributor"
     ]
   }
 }
