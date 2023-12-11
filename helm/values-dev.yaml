@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/yourname # TODO
-    tag: "0.0.0"
+    tag: "0.1.0-1-PAGOPA-1360-sviluppo-massive-upload-service"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -34,9 +34,9 @@ microservice-chart:
     servicePort: 8080
   serviceAccount:
     create: false
-    annotations: { }
+    annotations: {}
     name: ""
-  podAnnotations: { }
+  podAnnotations: {}
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
@@ -68,7 +68,6 @@ microservice-chart:
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-
     OTEL_SERVICE_NAME: # TODO
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
@@ -85,8 +84,8 @@ microservice-chart:
   keyvault:
     name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
-  nodeSelector: { }
-  tolerations: [ ]
+  nodeSelector: {}
+  tolerations: []
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -97,7 +96,7 @@ microservice-chart:
                 values:
                   - user
   canaryDelivery:
-    create: true
+    create: false
     ingress:
       create: true
       canary:
@@ -113,6 +112,5 @@ microservice-chart:
         repository: ghcr.io/pagopa/yourname # TODO
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: { }
-      envSecret: { }
-
+      envConfig: {}
+      envSecret: {}
