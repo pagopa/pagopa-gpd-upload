@@ -13,7 +13,7 @@ tags = {
 
 cd_github_federations = [
   {
-    repository = "gpd-upload-service"
-    subject    = "dev-cd"
+    repository = "pagopa-gpd-upload"
+    subject    = "dev"
   }
 ]
