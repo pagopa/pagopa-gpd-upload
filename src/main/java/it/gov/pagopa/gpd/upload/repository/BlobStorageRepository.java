@@ -1,9 +1,11 @@
 package it.gov.pagopa.gpd.upload.repository;
 
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobContainerItem;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -29,6 +31,9 @@ public class BlobStorageRepository implements FileRepository {
 
     @Value("${blob.sas.token}")
     private String blobToken;
+
+    @Value("${blob.container.input}")
+    private String inputContainer;
 
     private BlobServiceClient blobServiceClient;
 
@@ -57,7 +62,7 @@ public class BlobStorageRepository implements FileRepository {
 
     @Override
     public String upload(String fiscalCode, File file) throws FileNotFoundException {
-        BlobContainerClient container = blobServiceClient.getBlobContainerClient("input/" + fiscalCode);
+        BlobContainerClient container = blobServiceClient.getBlobContainerClient(inputContainer + "/" + fiscalCode);
         String key = this.createRandomName(fiscalCode);
         BlobClient blobClient = container.getBlobClient(key);
         // retry in case of pseudo random collision
