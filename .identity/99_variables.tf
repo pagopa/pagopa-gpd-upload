@@ -1,11 +1,11 @@
 locals {
   github = {
     org        = "pagopa"
-    repository = "TODO" #TODO
+    repository = "pagopa-gpd-upload"
   }
 
   prefix         = "pagopa"
-  domain         = "TODO" #TODO
+  domain         = "gps"
   location_short = "weu"
   product        = "${var.prefix}-${var.env_short}"
 
@@ -20,6 +20,10 @@ locals {
     name           = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-cae",
     resource_group = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-rg",
   }
+}
+
+variable "location" {
+  type = string
 }
 
 variable "env" {
@@ -41,6 +45,23 @@ variable "prefix" {
   }
 }
 
+variable "cd_github_federations" {
+  type = list(object({
+    repository        = string
+    credentials_scope = optional(string, "environment")
+    subject           = string
+  }))
+  description = "GitHub Organization, repository name and scope permissions"
+}
+
+variable "environment_cd_roles" {
+  type = object({
+    subscription    = list(string)
+    resource_groups = map(list(string))
+  })
+  description = "GitHub Continous Delivery roles"
+}
+
 variable "github_repository_environment" {
   type = object({
     protected_branches     = bool
@@ -52,5 +73,16 @@ variable "github_repository_environment" {
     protected_branches     = false
     custom_branch_policies = true
     reviewers_teams        = ["pagopa-team-core"]
+  }
+}
+
+variable "tags" {
+  type = map(any)
+  default = {
+    CreatedBy   = "Terraform"
+    Environment = "PROD"
+    Owner       = "pagoPA"
+    Source      = "https://github.com/pagopa/pagopa-gpd-upload"
+    CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 }
