@@ -77,8 +77,8 @@ microservice-chart:
   envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     #    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
-    BLOB_SAS_URL: 'gpd-upload-blob-sas-url'
-    BLOB_SAS_TOKEN: 'gpd-upload-blob-sas-token'
+    BLOB_SAS_URL: 'gpd-upload-sas-url-blob'
+    BLOB_SAS_TOKEN: 'gpd-upload-sas-token-blob'
     COSMOS_URI: 'gpd-upload-cosmos-uri'
     COSMOS_KEY: 'gpd-upload-cosmos-key'
     DB_NAME: 'gpd-upload-cosmos-db-name'
