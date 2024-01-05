@@ -18,8 +18,8 @@ public class FileStatusService {
     @Inject
     StatusRepository statusRepository;
 
-    public FileStatus getStatus(String fileId) {
-        return map(statusRepository.findStatusById(fileId));
+    public FileStatus getStatus(String fileId, String organizationFiscalCode) {
+        return map(statusRepository.findStatusById(fileId, organizationFiscalCode));
     }
 
     public Status createUploadStatus(String organizationFiscalCode, String fileId, PaymentPositionsModel paymentPositionsModel) {
