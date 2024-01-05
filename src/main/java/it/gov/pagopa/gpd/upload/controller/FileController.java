@@ -44,7 +44,7 @@ public class FileController {
     @Inject
     FileStatusService fileStatusService;
 
-    @Value("${response.headers.retry_after.millis}")
+    @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
     private ObjectMapper objectMapper;
 

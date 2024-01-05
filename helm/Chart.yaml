@@ -1,6 +1,6 @@
 apiVersion: v2
-name: pagopa-afm-calculator
-description: Microservice that handles calculation for pagoPA Advanced Fees Management
+name: pagopa-gpd-upload
+description: Microservice that handles file upload of massive debt positions JSON object
 type: application
 version: 0.17.0
 appVersion: 0.1.1-2-PAGOPA-1360-refactoring
