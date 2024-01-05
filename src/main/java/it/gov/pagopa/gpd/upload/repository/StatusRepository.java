@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.upload.repository;
 import com.azure.cosmos.CosmosClientBuilder;
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosContainer;
+import com.azure.cosmos.CosmosException;
 import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.PartitionKey;
 import io.micronaut.context.annotation.Context;
@@ -52,12 +53,13 @@ public class StatusRepository {
         return response.getItem();
     }
 
-    public Status findStatusById(String id) {
-        CosmosItemResponse<Status> response = container.readItem(id, PartitionKey.NONE, Status.class);
-        if (response.getStatusCode() != HttpStatus.OK.getCode()) {
-            log.error("the Status retrieval was not successful: " + response);
+    public Status findStatusById(String id, String fiscalCode) {
+        try {
+            CosmosItemResponse<Status> response = container.readItem(id, new PartitionKey(fiscalCode), Status.class);
+            return response.getItem();
+        } catch (CosmosException ex) {
+            log.error("the Status retrieval was not successful: " + ex.getStatusCode());
             throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "COSMOS UNAVAILABLE", "the Status retrieval was not successful");
         }
-        return response.getItem();
     }
 }

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class FileStatus {
     public String fileId;
     private ArrayList<String> successIUPD;
