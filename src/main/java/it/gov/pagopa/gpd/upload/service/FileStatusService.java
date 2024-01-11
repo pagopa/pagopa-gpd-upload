@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -27,7 +28,7 @@ public class FileStatusService {
                 .current(0)
                 .total(paymentPositionsModel.getPaymentPositions().size())
                 .successIUPD(new ArrayList<>())
-                .failedIUPD(new ArrayList<>())
+                .failedIUPDs(new ArrayList<>())
                 .start(LocalDateTime.now())
                 .build();
         Status status = Status.builder()
@@ -40,10 +41,17 @@ public class FileStatusService {
     }
 
     private FileStatus map(Status status) {
+        // returns only IUPD codes because FailedIUPD could be too verbose and would generate a high size response
+        ArrayList<String> failedIUPD = status.upload.getFailedIUPDs().stream()
+                .flatMap(f -> f.getSkippedIUPDs().stream())
+                .collect(Collectors.toCollection(ArrayList::new));
+
         return FileStatus.builder()
                 .fileId(status.id)
+                .processed(status.upload.getCurrent())
+                .uploaded(status.upload.getTotal())
                 .successIUPD(status.upload.getSuccessIUPD())
-                .failedIUPD(status.upload.getFailedIUPD())
+                .failedIUPD(failedIUPD)
                 .uploadTime(status.upload.getStart())
                 .build();
     }

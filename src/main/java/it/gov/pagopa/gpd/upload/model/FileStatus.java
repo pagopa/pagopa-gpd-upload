@@ -13,6 +13,8 @@ import java.util.ArrayList;
 @ToString
 public class FileStatus {
     public String fileId;
+    public int processed;
+    public int uploaded;
     private ArrayList<String> successIUPD;
     private ArrayList<String> failedIUPD;
     private LocalDateTime uploadTime;

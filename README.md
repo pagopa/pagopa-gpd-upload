@@ -59,6 +59,16 @@ Start the micronaut application with this command:
 
 `mvn mn:run`
 
+### Rule of thumb
+
+Prevent more than 1 file in with macOS
+
+`zip -d filename.zip __MACOSX/\*`
+
+`zip -d filename.zip \*/.DS_Store`
+
+`zip file.zip uncompressed`
+
 ### Micronaut Profiles
 
 - **local**: to develop locally.

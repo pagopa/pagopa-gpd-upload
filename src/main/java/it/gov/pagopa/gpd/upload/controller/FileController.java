@@ -50,7 +50,7 @@ public class FileController {
 
     @PostConstruct
     public void init() {
-        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-ddHH:mm:ss.SSS"));
     }
