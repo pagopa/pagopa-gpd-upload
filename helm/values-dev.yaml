@@ -82,8 +82,7 @@ microservice-chart:
   envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     #    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
-    BLOB_SAS_URL: 'gpd-upload-sas-url-blob'
-    BLOB_SAS_TOKEN: 'gpd-upload-sas-token-blob'
+    BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'
     COSMOS_KEY: 'gpd-upload-cosmos-key'
   keyvault:
     name: "pagopa-d-gps-kv"
