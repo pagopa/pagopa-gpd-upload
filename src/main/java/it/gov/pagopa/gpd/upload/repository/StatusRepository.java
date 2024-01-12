@@ -45,12 +45,16 @@ public class StatusRepository {
     }
 
     public Status saveStatus(Status status) {
-        CosmosItemResponse<Status> response = container.createItem(status);
-        if (response.getStatusCode() != HttpStatus.CREATED.getCode()) {
-            log.error("the Status saving was not successful: " + response);
-            throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "COSMOS UNAVAILABLE", "the Status saving was not successful");
+        try {
+            CosmosItemResponse<Status> response = container.createItem(status);
+            return response.getItem();
+        } catch (CosmosException ex) {
+            log.error("the Status retrieval was not successful: " + ex.getStatusCode());
+            if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "Status saving unavailable");
+            else
+                throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status saving failed");
         }
-        return response.getItem();
     }
 
     public Status findStatusById(String id, String fiscalCode) {
@@ -59,7 +63,10 @@ public class StatusRepository {
             return response.getItem();
         } catch (CosmosException ex) {
             log.error("the Status retrieval was not successful: " + ex.getStatusCode());
-            throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "COSMOS UNAVAILABLE", "the Status retrieval was not successful");
+            if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "Status saving unavailable");
+            else
+                throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
         }
     }
 }

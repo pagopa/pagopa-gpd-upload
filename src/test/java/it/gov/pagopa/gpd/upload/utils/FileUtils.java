@@ -16,7 +16,7 @@ public class FileUtils {
         return f;
     }
 
-    public static byte[] fromJSONtoZip() throws IOException {
+    private static byte[] fromJSONtoZip() throws IOException {
         String jsonString = PaymentPositionUtils.createPaymentPositionsJSON("77777777777", 1);
         byte[] jsonBytes = jsonString.getBytes();
 
