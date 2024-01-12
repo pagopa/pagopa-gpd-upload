@@ -159,7 +159,7 @@ public class FileUploadService {
         }
     }
 
-    public static String getFileExtension(String fileName) {
+    private static String getFileExtension(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return "";
         }
@@ -172,7 +172,7 @@ public class FileUploadService {
         return fileName.substring(dotIndex + 1);
     }
 
-    public static String sanitizeFileName(String fileName) {
+    private static String sanitizeFileName(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return "";
         }

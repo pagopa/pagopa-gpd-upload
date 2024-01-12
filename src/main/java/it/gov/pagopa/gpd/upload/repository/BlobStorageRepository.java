@@ -26,11 +26,8 @@ import java.util.UUID;
 @Slf4j
 public class BlobStorageRepository implements FileRepository {
 
-    @Value("${blob.sas.url}")
-    private String blobURL;
-
-    @Value("${blob.sas.token}")
-    private String blobToken;
+    @Value("${blob.sas.connection}")
+    private String connectionString;
 
     @Value("${blob.container.input}")
     private String inputContainer;
@@ -40,8 +37,7 @@ public class BlobStorageRepository implements FileRepository {
     @PostConstruct
     public void init() {
         blobServiceClient = new BlobServiceClientBuilder()
-                .endpoint(blobURL)
-                .sasToken(blobToken)
+                .connectionString(connectionString)
                 .buildClient();
     }
 

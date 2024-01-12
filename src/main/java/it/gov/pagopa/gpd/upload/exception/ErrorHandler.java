@@ -17,7 +17,7 @@ public class ErrorHandler implements ExceptionHandler<AppException, HttpResponse
 
     @Override
     public HttpResponse handle(HttpRequest request, AppException exception) {
-        log.error("[ERROR] AppException raised: ", exception);
+        log.error("[ERROR] AppException raised: ", exception.toString());
 
         ProblemJson errorResponse = ProblemJson.builder()
                 .status(exception.getHttpStatus().getCode())

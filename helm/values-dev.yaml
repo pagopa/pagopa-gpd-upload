@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.1.1"
+    tag: "0.1.1-4-PAGOPA-1360-refactoring"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -66,6 +66,11 @@ microservice-chart:
     ENV: 'azure-kubernetes-dev'
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
+    COSMOS_URI: "https://pagopa-d-weu-gps-cosmos-account.documents.azure.com:443/"
+    DB_NAME: "gpd_db"
+    CONTAINER_NAME: "gpd_upload_status"
+    POST_FILE_RETRY_AFTER: '10000'
+    LOG_LEVEL: "DEBUG"
     #    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     #    OTEL_SERVICE_NAME: # TODO
     #    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
@@ -77,12 +82,8 @@ microservice-chart:
   envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     #    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
-    BLOB_SAS_URL: 'gpd-upload-blob-sas-url'
-    BLOB_SAS_TOKEN: 'gpd-upload-blob-sas-token'
-    COSMOS_URI: 'gpd-upload-cosmos-uri'
+    BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'
     COSMOS_KEY: 'gpd-upload-cosmos-key'
-    DB_NAME: 'gpd-upload-cosmos-db-name'
-    CONTAINER_NAME: 'gpd-upload-cosmos-db-container-name'
   keyvault:
     name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

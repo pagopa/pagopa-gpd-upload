@@ -1,7 +1,9 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
+import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileStatus;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -11,6 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
 @Singleton
 @Slf4j
@@ -18,8 +24,11 @@ public class FileStatusService {
     @Inject
     StatusRepository statusRepository;
 
-    public FileStatus getStatus(String fileId) {
-        return map(statusRepository.findStatusById(fileId));
+    public FileStatus getStatus(String fileId, String organizationFiscalCode) {
+        Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
+        if(status == null)
+            throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given fileId "+ fileId + " does not exist");
+        return map(status);
     }
 
     public Status createUploadStatus(String organizationFiscalCode, String fileId, PaymentPositionsModel paymentPositionsModel) {
@@ -27,7 +36,7 @@ public class FileStatusService {
                 .current(0)
                 .total(paymentPositionsModel.getPaymentPositions().size())
                 .successIUPD(new ArrayList<>())
-                .failedIUPD(new ArrayList<>())
+                .failedIUPDs(new ArrayList<>())
                 .start(LocalDateTime.now())
                 .build();
         Status status = Status.builder()
@@ -40,10 +49,17 @@ public class FileStatusService {
     }
 
     private FileStatus map(Status status) {
+        // returns only IUPD codes because FailedIUPD could be too verbose and would generate a high size response
+        ArrayList<String> failedIUPD = status.upload.getFailedIUPDs().stream()
+                .flatMap(f -> f.getSkippedIUPDs().stream())
+                .collect(Collectors.toCollection(ArrayList::new));
+
         return FileStatus.builder()
                 .fileId(status.id)
+                .processed(status.upload.getCurrent())
+                .uploaded(status.upload.getTotal())
                 .successIUPD(status.upload.getSuccessIUPD())
-                .failedIUPD(status.upload.getFailedIUPD())
+                .failedIUPD(failedIUPD)
                 .uploadTime(status.upload.getStart())
                 .build();
     }
