@@ -1,7 +1,9 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
+import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileStatus;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -11,7 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
 @Singleton
 @Slf4j
@@ -20,7 +25,10 @@ public class FileStatusService {
     StatusRepository statusRepository;
 
     public FileStatus getStatus(String fileId, String organizationFiscalCode) {
-        return map(statusRepository.findStatusById(fileId, organizationFiscalCode));
+        Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
+        if(status == null)
+            throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given fileId "+ fileId + " does not exist");
+        return map(status);
     }
 
     public Status createUploadStatus(String organizationFiscalCode, String fileId, PaymentPositionsModel paymentPositionsModel) {
