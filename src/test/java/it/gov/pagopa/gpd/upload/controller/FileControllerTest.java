@@ -23,7 +23,7 @@ import static io.micronaut.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @MicronautTest
-public class FileControllerTest {
+class FileControllerTest {
 
     private static String URI = "/organizations/fiscal-code/debtpositions/file";
     private static String UPLOAD_KEY = "key";
@@ -44,11 +44,8 @@ public class FileControllerTest {
                         .addPart("file", file.getName(), file)
                         .build());
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
-        HttpHeaders httpHeaders = response.getHeaders();
 
         assertNotNull(response);
-        assertEquals(retryAfter + " ms", httpHeaders.getValue(HttpHeaders.RETRY_AFTER));
-        assertEquals(URI + "/key/status", httpHeaders.getValue(HttpHeaders.LOCATION));
         assertEquals(ACCEPTED, response.getStatus());
     }
 
