@@ -15,7 +15,7 @@
 resource "null_resource" "github_runner_app_permissions_to_namespace" {
   triggers = {
     aks_id               = data.azurerm_kubernetes_cluster.aks.id
-    service_principal_id = module.identity_cd.identity_client_id
+    service_principal_id = data.azurerm_user_assigned_identity.identity_cd.client_id
     namespace            = local.domain
     version              = "v2"
   }
