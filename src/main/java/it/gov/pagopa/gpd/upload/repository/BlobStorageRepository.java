@@ -1,11 +1,9 @@
 package it.gov.pagopa.gpd.upload.repository;
 
-import com.azure.core.http.rest.PagedIterable;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobContainerItem;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -48,7 +46,6 @@ public class BlobStorageRepository implements FileRepository {
 
     @Override
     public void delete(String key) {
-
     }
 
     @Override
