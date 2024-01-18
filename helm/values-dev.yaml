@@ -104,6 +104,10 @@ microservice-chart:
     create: false
     ingress:
       create: true
+      proxyBodySize: 5m
+      annotations: {
+        nginx.ingress.kubernetes.io/proxy-read-timeout: '130'
+      }
       canary:
         type: header
         headerName: X-Canary

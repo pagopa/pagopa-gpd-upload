@@ -32,6 +32,10 @@ microservice-chart:
     host: "your.host" # TODO: set the host
     path: /your-path-here/(.*) # TODO: set your path
     servicePort: 8080
+    proxyBodySize: 5m
+    annotations: {
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '130'
+    }
   serviceAccount:
     create: false
     annotations: {}
@@ -97,6 +101,10 @@ microservice-chart:
     create: false
     ingress:
       create: true
+      proxyBodySize: 5m
+      annotations: {
+        nginx.ingress.kubernetes.io/proxy-read-timeout: '130'
+      }
       canary:
         type: header
         headerName: X-Canary
