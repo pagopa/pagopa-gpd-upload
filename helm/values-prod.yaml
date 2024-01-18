@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/yourname # TODO
-    tag: "0.1.2-12-PAGOPA-1449"
+    tag: "0.1.2-13-PAGOPA-1449"
     pullPolicy: Always
   livenessProbe:
     httpGet:
