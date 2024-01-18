@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "pagopa-gpd-upload",
-    "version": "0.1.2-13-PAGOPA-1449"
+    "version": "0.1.2-14-PAGOPA-1449"
   },
   "paths": {
     "/info": {
