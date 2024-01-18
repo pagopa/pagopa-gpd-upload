@@ -32,6 +32,10 @@ microservice-chart:
     host: "weudev.gps.internal.dev.platform.pagopa.it"
     path: /pagopa-gpd-upload/(.*)
     servicePort: 8080
+    proxyBodySize: 5m
+    annotations: {
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '130'
+    }
   serviceAccount:
     create: false
     annotations: {}
