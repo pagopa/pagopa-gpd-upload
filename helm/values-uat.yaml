@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.1.2-16-PAGOPA-1449"
+    tag: "0.1.2-10-PAGOPA-1399-infra-ingress"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -32,6 +32,10 @@ microservice-chart:
     host: "weuuat.gps.internal.uat.platform.pagopa.it"
     path: /pagopa-gpd-upload/(.*)
     servicePort: 8080
+    proxyBodySize: 5m
+    annotations: {
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '130'
+    }
   serviceAccount:
     create: false
     annotations: {}
@@ -102,6 +106,10 @@ microservice-chart:
     create: false
     ingress:
       create: true
+      proxyBodySize: 5m
+      annotations: {
+        nginx.ingress.kubernetes.io/proxy-read-timeout: '130'
+      }
       canary:
         type: header
         headerName: X-Canary

@@ -1,6 +1,7 @@
 {
   "openapi": "3.0.1",
   "info": {
+    "version": "0.1.2-10-PAGOPA-1399-infra-ingress"
     "title": "pagopa-gpd-upload",
     "version": "0.1.2-16-PAGOPA-1449"
   },
