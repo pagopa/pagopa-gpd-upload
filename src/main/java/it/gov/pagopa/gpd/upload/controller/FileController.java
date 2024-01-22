@@ -114,7 +114,7 @@ public class FileController {
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "Upload result not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-ID}/output",
+    @Get(value = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-ID}/report",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<UploadReport> getUploadOutput(
             @Parameter(description = "The broker code", required = true)
