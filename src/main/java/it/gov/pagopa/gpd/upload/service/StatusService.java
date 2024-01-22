@@ -41,7 +41,7 @@ public class StatusService {
         Upload upload = Upload.builder()
                 .current(0)
                 .total(paymentPositionsModel.getPaymentPositions().size())
-                .responseEntries(new ArrayList<>())
+                .responses(new ArrayList<>())
                 .start(LocalDateTime.now())
                 .build();
         Status status = Status.builder()
@@ -69,7 +69,7 @@ public class StatusService {
                 .uploadID(status.id)
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
-                .responses(status.upload.getResponseEntries())
+                .responses(status.upload.getResponses())
                 .startTime(status.upload.getStart())
                 .endTime(status.upload.getEnd())
                 .build();

@@ -19,7 +19,7 @@ import java.util.List;
 public class Upload {
     private int current;
     private int total;
-    private ArrayList<ResponseEntry> responseEntries;
+    private ArrayList<ResponseEntry> responses;
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @Schema(example = "2024-10-08T14:55:16.302Z")
     private LocalDateTime start;
@@ -28,7 +28,7 @@ public class Upload {
     private LocalDateTime end;
 
     public void addResponse(ResponseEntry responseEntry) {
-        for (ResponseEntry existingEntry : responseEntries) {
+        for (ResponseEntry existingEntry : responses) {
             if (existingEntry.statusCode.equals(responseEntry.statusCode)
                         && existingEntry.statusMessage.equals(responseEntry.statusMessage)) {
                 List<String> requestIDs = new ArrayList<>(existingEntry.requestIDs);
@@ -38,6 +38,6 @@ public class Upload {
             }
         }
         // If no match is found, add the new response entry to the list
-        responseEntries.add(responseEntry);
+        responses.add(responseEntry);
     }
 }
