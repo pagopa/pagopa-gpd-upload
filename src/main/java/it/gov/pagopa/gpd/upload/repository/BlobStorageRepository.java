@@ -1,11 +1,9 @@
 package it.gov.pagopa.gpd.upload.repository;
 
-import com.azure.core.http.rest.PagedIterable;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobContainerItem;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -16,7 +14,6 @@ import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.UUID;
@@ -29,9 +26,8 @@ public class BlobStorageRepository implements FileRepository {
     @Value("${blob.sas.connection}")
     private String connectionString;
 
-    @Value("${blob.container.input}")
-    private String inputContainer;
-
+    private static final String INPUT_DIRECTORY = "input";
+    
     private BlobServiceClient blobServiceClient;
 
     @PostConstruct
@@ -42,25 +38,12 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     @Override
-    public boolean doesObjectExists(String key) {
-        return false;
-    }
+    public String upload(String broker, String fiscalCode, File file) throws FileNotFoundException {
+        blobServiceClient.createBlobContainerIfNotExists(broker);
+        BlobContainerClient container = blobServiceClient.getBlobContainerClient(broker + "/" + fiscalCode + "/" + INPUT_DIRECTORY);
+        String key = this.createRandomName(broker + "_" + fiscalCode);
 
-    @Override
-    public void delete(String key) {
-
-    }
-
-    @Override
-    public URL findURLbyKey(String key) {
-        return null;
-    }
-
-    @Override
-    public String upload(String fiscalCode, File file) throws FileNotFoundException {
-        BlobContainerClient container = blobServiceClient.getBlobContainerClient(inputContainer + "/" + fiscalCode);
-        String key = this.createRandomName(fiscalCode);
-        BlobClient blobClient = container.getBlobClient(key);
+        BlobClient blobClient = container.getBlobClient(key + ".json");
         // retry in case of pseudo random collision
         while (blobClient.exists()) {
             key = this.createRandomName(fiscalCode);
@@ -102,7 +85,7 @@ public class BlobStorageRepository implements FileRepository {
                 blockNum++;
                 bytes = inputStream.readNBytes(blockSize);
             }
-            blockId = String.format("%05d", blockNum);
+            blockId = String.format("%05d", blockNum); // 5-digit number
             blockIdEncoded = Base64.getEncoder().encodeToString(blockId.getBytes());
             byteInputStream = new ByteArrayInputStream(bytes); // add last block based on remaining bytes
             blockBlob.stageBlock(blockIdEncoded, byteInputStream, bytes.length);

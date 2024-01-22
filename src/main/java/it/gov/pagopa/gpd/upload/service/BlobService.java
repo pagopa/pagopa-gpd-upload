@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.upload.service;
 
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
@@ -29,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Context
 @Slf4j
-public class FileUploadService {
+public class BlobService {
 
     @Value("${zip.content.size}")
     private int zipMaxSize; // Max size of zip file content
@@ -47,7 +46,7 @@ public class FileUploadService {
     BlobStorageRepository blobStorageRepository;
 
     @Inject
-    FileStatusService fileStatusService;
+    StatusService statusService;
 
     @Inject
     Validator validator;
@@ -58,7 +57,7 @@ public class FileUploadService {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public String upload(String organizationFiscalCode, CompletedFileUpload fileUpload) throws IOException {
+    public String upload(String broker, String organizationFiscalCode, CompletedFileUpload fileUpload) throws IOException {
         File file = unzip(fileUpload);
         log.debug("File with name " + file.getName() + " has been unzipped");
         PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
@@ -66,8 +65,8 @@ public class FileUploadService {
             log.error("Debt Positions validation failed for file " + file.getName());
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
         }
-        String fileId = blobStorageRepository.upload(organizationFiscalCode, file);
-        fileStatusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
+        String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
+        statusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
 
         return fileId;
     }

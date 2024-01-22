@@ -10,7 +10,7 @@ import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
-import it.gov.pagopa.gpd.upload.service.FileUploadService;
+import it.gov.pagopa.gpd.upload.service.BlobService;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import static io.micronaut.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
 class FileControllerTest {
@@ -51,10 +52,10 @@ class FileControllerTest {
 
     @Bean
     @Primary
-    public FileUploadService fileUploadService() throws IOException {
-        FileUploadService fileUploadService = Mockito.mock(FileUploadService.class);
-        Mockito.when(fileUploadService.upload(Mockito.anyString(), Mockito.any())).thenReturn(UPLOAD_KEY);
-        return fileUploadService;
+    public BlobService fileUploadService() throws IOException {
+        BlobService blobService = Mockito.mock(BlobService.class);
+        Mockito.when(blobService.upload(anyString(), anyString(), Mockito.any())).thenReturn(UPLOAD_KEY);
+        return blobService;
     }
 
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string

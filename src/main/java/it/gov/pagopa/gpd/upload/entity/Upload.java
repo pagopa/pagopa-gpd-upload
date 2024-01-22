@@ -1,27 +1,43 @@
 package it.gov.pagopa.gpd.upload.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Builder(toBuilder = true)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonSerialize
+@ToString
 public class Upload {
     private int current;
     private int total;
-    private ArrayList<String> successIUPD;
-    private ArrayList<FailedIUPD> failedIUPDs;
+    private ArrayList<ResponseEntry> responseEntries;
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @Schema(example = "2024-10-08T14:55:16.302Z")
     private LocalDateTime start;
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @Schema(example = "2024-10-08T14:55:16.302Z")
     private LocalDateTime end;
 
-    public void addFailures(FailedIUPD failedIUPD) {
-        this.failedIUPDs.add(failedIUPD);
+    public void addResponse(ResponseEntry responseEntry) {
+        for (ResponseEntry existingEntry : responseEntries) {
+            if (existingEntry.statusCode.equals(responseEntry.statusCode)
+                        && existingEntry.statusMessage.equals(responseEntry.statusMessage)) {
+                List<String> requestIDs = new ArrayList<>(existingEntry.requestIDs);
+                requestIDs.addAll(responseEntry.requestIDs);
+                existingEntry.requestIDs = requestIDs;
+                return; // No need to continue checking once a match is found
+            }
+        }
+        // If no match is found, add the new response entry to the list
+        responseEntries.add(responseEntry);
     }
 }
