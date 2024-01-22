@@ -1,21 +1,21 @@
 microservice-chart:
-  namespace: "your-namespace" # TODO: set your AKS namespace
+  namespace: "gps"
   nameOverride: ""
   fullnameOverride: ""
   image:
-    repository: ghcr.io/pagopa/yourname # TODO
+    repository: ghcr.io/pagopa/pagopa-gpd-upload
     tag: "0.1.3"
     pullPolicy: Always
   livenessProbe:
     httpGet:
-      path: /actuator/health/liveness
+      path: /info
       port: 8080
     initialDelaySeconds: 90
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
-      path: /actuator/health/readiness
+      path: /info
       port: 8080
     initialDelaySeconds: 90
     failureThreshold: 6
@@ -29,9 +29,11 @@ microservice-chart:
       - 8080
   ingress:
     create: true
-    host: "your.host" # TODO: set the host
-    path: /your-path-here/(.*) # TODO: set your path
+    host: "weuuat.gps.internal.uat.platform.pagopa.it"
+    path: /pagopa-gpd-upload/(.*)
     servicePort: 8080
+    proxyBodySize: 5m
+    annotations: {nginx.ingress.kubernetes.io/proxy-read-timeout: '130'}
   serviceAccount:
     create: false
     annotations: {}
@@ -51,8 +53,8 @@ microservice-chart:
       cpu: "0.25"
   autoscaling:
     enable: true
-    minReplica: 3
-    maxReplica: 10
+    minReplica: 1
+    maxReplica: 1
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
@@ -62,25 +64,30 @@ microservice-chart:
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig:
-    # TODO: set your name
-    WEBSITE_SITE_NAME: 'yourProjectName' # required to show cloud role name in application insights
-    ENV: 'azure-uat'
+    WEBSITE_SITE_NAME: 'pagopa-u-gpd-upload-service' # required to show cloud role name in application insights
+    ENV: 'azure-kubernetes-uat'
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
-    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-    OTEL_SERVICE_NAME: # TODO
-    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
-    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
-    OTEL_TRACES_EXPORTER: otlp
-    OTEL_METRICS_EXPORTER: otlp
-    OTEL_LOGS_EXPORTER: none
-    OTEL_TRACES_SAMPLER: "always_on"
+    COSMOS_URI: "https://pagopa-u-weu-gps-cosmos-account.documents.azure.com:443/"
+    DB_NAME: "gpd_db"
+    CONTAINER_NAME: "gpd_upload_status"
+    POST_FILE_RETRY_AFTER: '10000'
+    LOG_LEVEL: "INFO"
+    #    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
+    #    OTEL_SERVICE_NAME: # TODO
+    #    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
+    #    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
+    #    OTEL_TRACES_EXPORTER: otlp
+    #    OTEL_METRICS_EXPORTER: otlp
+    #    OTEL_LOGS_EXPORTER: none
+    #    OTEL_TRACES_SAMPLER: "always_on"
   envSecret:
-    # required
-    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-u-connection-string'
-    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
+    #    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
+    #    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
+    BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'
+    COSMOS_KEY: 'gpd-upload-db-key'
   keyvault:
-    name: "pagopa-u-name-kv" #TODO
+    name: "pagopa-u-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
   nodeSelector: {}
   tolerations: []
@@ -97,6 +104,8 @@ microservice-chart:
     create: false
     ingress:
       create: true
+      proxyBodySize: 5m
+      annotations: {nginx.ingress.kubernetes.io/proxy-read-timeout: '130'}
       canary:
         type: header
         headerName: X-Canary
@@ -107,7 +116,7 @@ microservice-chart:
     deployment:
       create: true
       image:
-        repository: ghcr.io/pagopa/yourname # TODO
+        repository: ghcr.io/pagopa/pagopa-gpd-upload
         tag: "0.0.0"
         pullPolicy: Always
       envConfig: {}

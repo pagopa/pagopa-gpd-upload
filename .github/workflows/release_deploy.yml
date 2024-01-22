@@ -126,6 +126,7 @@ jobs:
   deploy_aks_dev:
     name: Deploy on AKS DEV
     needs: [ setup, release, image ]
+    if: ${{ needs.setup.outputs.environment == 'dev' }}
     uses: ./.github/workflows/deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
@@ -134,7 +135,7 @@ jobs:
   deploy_aks_uat:
     name: Deploy on AKS UAT
     needs: [ setup, release, image ]
-    if: ${{ needs.setup.outputs.environment != 'dev' }}
+    if: ${{ needs.setup.outputs.environment == 'uat' }}
     uses: ./.github/workflows/deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
