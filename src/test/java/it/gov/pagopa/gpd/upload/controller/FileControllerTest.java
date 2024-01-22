@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 @MicronautTest
 class FileControllerTest {
 
-    private static String URI = "/organizations/fiscal-code/debtpositions/file";
+    private static String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
     private static String UPLOAD_KEY = "key";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;

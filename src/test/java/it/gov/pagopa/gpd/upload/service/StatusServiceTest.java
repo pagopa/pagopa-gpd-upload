@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
-public class FileStatusServiceTest {
+public class StatusServiceTest {
     private static String UPLOAD_KEY = "key";
     @Inject
     StatusService statusService;

@@ -18,7 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
-public class FileUploadServiceTest {
+public class UploadServiceTest {
     private static String FISCAL_CODE = "fiscal-code";
     private static String BROKER_CODE = "broker-code";
     @Inject
