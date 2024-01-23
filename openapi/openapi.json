@@ -37,6 +37,7 @@
                 "properties" : {
                   "file" : {
                     "type" : "string",
+                    "description" : "File to be uploaded",
                     "format" : "binary"
                   }
                 }
@@ -125,7 +126,7 @@
         }, {
           "name" : "fileID",
           "in" : "path",
-          "description" : "The fiscal code of the Organization.",
+          "description" : "The unique identifier for file upload",
           "required" : true,
           "schema" : {
             "minLength" : 1,
@@ -214,7 +215,7 @@
         }, {
           "name" : "fileID",
           "in" : "path",
-          "description" : "The fiscal code of the Organization.",
+          "description" : "The unique identifier for file upload",
           "required" : true,
           "schema" : {
             "minLength" : 1,

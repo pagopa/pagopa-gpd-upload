@@ -66,7 +66,10 @@ public class FileController {
             @NotBlank @PathVariable(name = "broker_code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization_fiscal_code") String organizationFiscalCode,
-            CompletedFileUpload file) {
+            @Parameter(
+                    description = "File to be uploaded",
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
+            ) CompletedFileUpload file) {
         String uploadID = blobService.upload(brokerCode, organizationFiscalCode, file);
         log.debug("A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
@@ -94,7 +97,7 @@ public class FileController {
             @NotBlank @PathVariable(name = "broker_code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization_fiscal_code") String organizationFiscalCode,
-            @Parameter(description = "The fiscal code of the Organization.", required = true)
+            @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "fileID") String fileID) {
 
         UploadStatus uploadStatus = statusService.getStatus(fileID, organizationFiscalCode);
@@ -118,7 +121,7 @@ public class FileController {
             @NotBlank @PathVariable(name = "broker_code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization_fiscal_code") String organizationFiscalCode,
-            @Parameter(description = "The fiscal code of the Organization.", required = true)
+            @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "fileID") String fileID) {
 
         UploadReport uploadReport = statusService.getReport(fileID, organizationFiscalCode);
