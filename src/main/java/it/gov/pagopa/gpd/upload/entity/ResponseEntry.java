@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.upload.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -15,8 +16,8 @@ import java.util.List;
 @JsonSerialize
 public class ResponseEntry {
     @Schema(example = "400")
-    private Integer statusCode;
+    public Integer statusCode;
     @Schema(example = "Bad request caused by invalid email address")
-    private String statusMessage;
-    private List<String> requestIDs; // IUPDs
+    public String statusMessage;
+    public List<String> requestIDs; // IUPDs
 }

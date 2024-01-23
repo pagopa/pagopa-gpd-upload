@@ -38,7 +38,7 @@ public class BaseController {
         return HttpResponse.seeOther(UriBuilder.of("/swagger-ui/").build());
     }
 
-    @Operation(summary = "health check", description = "Return OK if application is started", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Base"})
+    @Operation(summary = "health check", description = "Return OK if application is started", tags = {"Health check"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AppInfo.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),

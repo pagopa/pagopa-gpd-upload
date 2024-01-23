@@ -21,9 +21,9 @@ import java.time.LocalDateTime;
 @JsonSerialize
 @ToString
 public class UploadStatus {
-    private String uploadID;
-    private int processedItem;
-    private int submittedItem;
+    public String uploadID;
+    public int processedItem;
+    public int submittedItem;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(example = "2024-10-08T14:55:16.302Z")
