@@ -19,8 +19,12 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Singleton
 @Slf4j
 public class StatusService {
+    private StatusRepository statusRepository;
+
     @Inject
-    StatusRepository statusRepository;
+    public StatusService(StatusRepository statusRepository) {
+        this.statusRepository = statusRepository;
+    }
 
     public UploadStatus getStatus(String fileId, String organizationFiscalCode) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
@@ -57,7 +61,7 @@ public class StatusService {
         log.info("map status");
 
         return UploadStatus.builder()
-                .uploadID(status.id)
+                .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
                 .startTime(status.upload.getStart())
@@ -66,7 +70,7 @@ public class StatusService {
 
     private UploadReport mapReport(Status status) {
         return UploadReport.builder()
-                .uploadID(status.id)
+                .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
                 .responses(status.upload.getResponses())

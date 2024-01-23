@@ -29,11 +29,11 @@ public class Upload {
 
     public void addResponse(ResponseEntry responseEntry) {
         for (ResponseEntry existingEntry : responses) {
-            if (existingEntry.statusCode.equals(responseEntry.statusCode)
-                        && existingEntry.statusMessage.equals(responseEntry.statusMessage)) {
-                List<String> requestIDs = new ArrayList<>(existingEntry.requestIDs);
-                requestIDs.addAll(responseEntry.requestIDs);
-                existingEntry.requestIDs = requestIDs;
+            if (existingEntry.getStatusCode().equals(responseEntry.getStatusCode())
+                        && existingEntry.getStatusMessage().equals(responseEntry.getStatusMessage())) {
+                List<String> requestIDs = new ArrayList<>(existingEntry.getRequestIDs());
+                requestIDs.addAll(responseEntry.getRequestIDs());
+                existingEntry.setRequestIDs(requestIDs);
                 return; // No need to continue checking once a match is found
             }
         }

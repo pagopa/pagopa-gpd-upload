@@ -15,8 +15,8 @@ import java.util.List;
 @JsonSerialize
 public class ResponseEntry {
     @Schema(example = "400")
-    public Integer statusCode;
+    private Integer statusCode;
     @Schema(example = "Bad request caused by invalid email address")
-    public String statusMessage;
-    public List<String> requestIDs; // IUPDs
+    private String statusMessage;
+    private List<String> requestIDs; // IUPDs
 }

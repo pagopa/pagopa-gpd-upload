@@ -11,8 +11,8 @@ import lombok.*;
 @JsonSerialize
 @ToString
 public class Status {
-    public String id;
-    public String brokerID;
+    private String id;
+    private String brokerID;
     public String fiscalCode;
     public Upload upload;
 }

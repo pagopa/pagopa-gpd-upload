@@ -20,6 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @MicronautTest
 class OpenApiGenerationTest {
 
@@ -32,10 +35,12 @@ class OpenApiGenerationTest {
 
     @Test
     void swaggerSpringPlugin() throws Exception {
-        saveOpenAPI("/swagger/pagopa-gpd-upload-" + version.substring(1) + ".json", "openapi.json");
+        boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version.substring(1) + ".json", "openapi.json");
+
+        assertTrue(result);
     }
 
-        private void saveOpenAPI(String fromUri, String toFile) throws IOException {
+        private boolean saveOpenAPI(String fromUri, String toFile) throws IOException {
             HttpResponse<String> response = client.toBlocking().exchange(fromUri, String.class);
             ObjectMapper objectMapper = new ObjectMapper();
             String responseBody = response.getBody().get();
@@ -44,6 +49,7 @@ class OpenApiGenerationTest {
             Path basePath = Paths.get("openapi/");
             Files.createDirectories(basePath);
             Files.write(basePath.resolve(toFile), formatted.getBytes());
+            return true;
         }
 
     @Bean
