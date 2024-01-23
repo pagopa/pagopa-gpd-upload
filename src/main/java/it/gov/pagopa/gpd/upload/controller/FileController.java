@@ -13,50 +13,46 @@ import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import it.gov.pagopa.gpd.upload.model.FileStatus;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.gov.pagopa.gpd.upload.exception.AppError;
+import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.UploadStatus;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
-import it.gov.pagopa.gpd.upload.service.FileStatusService;
-import it.gov.pagopa.gpd.upload.service.FileUploadService;
-import jakarta.annotation.PostConstruct;
+import it.gov.pagopa.gpd.upload.service.StatusService;
+import it.gov.pagopa.gpd.upload.service.BlobService;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 
-import java.io.IOException;
 import java.net.URI;
-import java.text.SimpleDateFormat;
+import java.net.URISyntaxException;
 
+@Tag(name = "File Upload API")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
+@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY,  in = SecuritySchemeIn.HEADER)
 public class FileController {
 
     @Inject
-    FileUploadService fileUploadService;
+    BlobService blobService;
 
     @Inject
-    FileStatusService fileStatusService;
-
+    StatusService statusService;
+    private static final String BASE_PATH = "brokers/{broker_code}/organizations/{organization_fiscal_code}/debtpositions/file";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
-    private ObjectMapper objectMapper;
 
-    @PostConstruct
-    public void init() {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-ddHH:mm:ss.SSS"));
-    }
-
-    @SneakyThrows
-    @Operation(summary = "The Organization creates the debt positions listed in the file.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "createMassivePositions")
+    @Operation(summary = "The Organization creates the debt positions listed in the file.", operationId = "upload-debt-positions-file")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Request accepted."),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -64,39 +60,74 @@ public class FileController {
             @ApiResponse(responseCode = "409", description = "Conflict: duplicate file found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Post("/organizations/{organizationFiscalCode}/debtpositions/file")
-    public HttpResponse uploadDebtPositionFile(@Parameter(description = "The organization fiscal code", required = true)
-                                                   @NotBlank @PathVariable String organizationFiscalCode, CompletedFileUpload file) throws IOException {
-        String key = fileUploadService.upload(organizationFiscalCode, file);
+    @Post(BASE_PATH)
+    public HttpResponse uploadFile(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker_code") String brokerCode,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization_fiscal_code") String organizationFiscalCode,
+            @Parameter(
+                    description = "File to be uploaded",
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
+            ) CompletedFileUpload file) {
+        String uploadID = blobService.upload(brokerCode, organizationFiscalCode, file);
         log.debug("A file with name: " + file.getFilename() + " has been uploaded");
+        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
-        String uri = "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + key +"/status";
-        HttpResponse response = HttpResponse.accepted(new URI(uri));
-
-        return response.toMutableResponse().header(HttpHeaders.RETRY_AFTER, retryAfter + " ms");
+        try {
+            HttpResponse response = HttpResponse.accepted(new URI(uri));
+            return response.toMutableResponse()
+                    .header(HttpHeaders.RETRY_AFTER, retryAfter + " ms");
+        } catch (URISyntaxException e) {
+            throw new AppException(AppError.INTERNAL_ERROR);
+        }
     }
 
-    @SneakyThrows
-    @Operation(summary = "Returns the upload status of debt positions uploaded via file.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "createMassivePositions")
+    @Operation(summary = "Returns the debt positions upload status.", operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileStatus.class))),
+            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadStatus.class))),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = "/organizations/{organizationFiscalCode}/debtpositions/file/{fileId}/status",
+    @Get(value = BASE_PATH + "/{fileID}/status",
             produces = MediaType.APPLICATION_JSON)
-    HttpResponse<String> getFileSatus(
+    HttpResponse<UploadStatus> getUploadStatus(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker_code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
-            @NotBlank @PathVariable String organizationFiscalCode,
-            @Parameter(description = "The fiscal code of the Organization.", required = true)
-            @NotBlank @PathVariable String fileId) {
+            @NotBlank @PathVariable(name = "organization_fiscal_code") String organizationFiscalCode,
+            @Parameter(description = "The unique identifier for file upload", required = true)
+            @NotBlank @PathVariable(name = "fileID") String fileID) {
 
-        FileStatus fileStatus = fileStatusService.getStatus(fileId, organizationFiscalCode);
-        log.debug("The Status related to file-id " + fileId + " has been found");
+        UploadStatus uploadStatus = statusService.getStatus(fileID, organizationFiscalCode);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(objectMapper.writeValueAsString(fileStatus));
+                .body(uploadStatus);
+    }
+
+    @Operation(summary = "Returns the debt positions upload report.", operationId = "get-debt-positions-upload-report")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReport.class))),
+            @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "Upload report not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+    @Get(value = BASE_PATH + "/{fileID}/report",
+            produces = MediaType.APPLICATION_JSON)
+    HttpResponse<UploadReport> getUploadOutput(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker_code") String brokerCode,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization_fiscal_code") String organizationFiscalCode,
+            @Parameter(description = "The unique identifier for file upload", required = true)
+            @NotBlank @PathVariable(name = "fileID") String fileID) {
+
+        UploadReport uploadReport = statusService.getReport(fileID, organizationFiscalCode);
+
+        return HttpResponse.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(uploadReport);
     }
 }

@@ -8,10 +8,12 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
-import it.gov.pagopa.gpd.upload.service.FileUploadService;
+import it.gov.pagopa.gpd.upload.service.BlobService;
 
+import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,11 +23,12 @@ import java.io.IOException;
 
 import static io.micronaut.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
 class FileControllerTest {
 
-    private static String URI = "/organizations/fiscal-code/debtpositions/file";
+    private static String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
     private static String UPLOAD_KEY = "key";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
@@ -49,13 +52,33 @@ class FileControllerTest {
         assertEquals(ACCEPTED, response.getStatus());
     }
 
+    @Test
+    void getUploadStatus_KO() throws IOException {
+        this.uploadFile_OK();
+
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report");
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(OK, response.getStatus());
+    }
+
     @Bean
     @Primary
-    public FileUploadService fileUploadService() throws IOException {
-        FileUploadService fileUploadService = Mockito.mock(FileUploadService.class);
-        Mockito.when(fileUploadService.upload(Mockito.anyString(), Mockito.any())).thenReturn(UPLOAD_KEY);
-        return fileUploadService;
+    public BlobService fileUploadService() throws IOException {
+        BlobService blobService = Mockito.mock(BlobService.class);
+        Mockito.when(blobService.upload(anyString(), anyString(), Mockito.any())).thenReturn(UPLOAD_KEY);
+        return blobService;
     }
+
+    @Bean
+    @Primary
+    public StatusService statusService() throws IOException {
+        StatusService statusService = Mockito.mock(StatusService.class);
+        Mockito.when(statusService.getReport(anyString(), anyString())).thenReturn(UploadReport.builder().build());
+        return statusService;
+    }
+
 
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean

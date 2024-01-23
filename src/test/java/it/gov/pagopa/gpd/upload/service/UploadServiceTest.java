@@ -18,14 +18,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
-public class FileUploadServiceTest {
+public class UploadServiceTest {
     private static String FISCAL_CODE = "fiscal-code";
+    private static String BROKER_CODE = "broker-code";
     @Inject
-    FileUploadService fileUploadService;
+    BlobService blobService;
 
     @Test
     void upload_OK() throws IOException {
-        String uploadKey = fileUploadService.upload(FISCAL_CODE, FileUtils.getFileUpload());
+        String uploadKey = blobService.upload(BROKER_CODE, FISCAL_CODE, FileUtils.getFileUpload());
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }
@@ -35,7 +36,7 @@ public class FileUploadServiceTest {
     @Primary
     public static BlobStorageRepository blobStorageRepository() throws FileNotFoundException {
         BlobStorageRepository blobStorageRepository = Mockito.mock(BlobStorageRepository.class);
-        Mockito.when(blobStorageRepository.upload(anyString(), any())).thenReturn(FISCAL_CODE);
+        Mockito.when(blobStorageRepository.upload(anyString(), anyString(), any())).thenReturn(FISCAL_CODE);
         return blobStorageRepository;
     }
     @Bean

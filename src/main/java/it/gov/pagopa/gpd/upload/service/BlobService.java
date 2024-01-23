@@ -1,12 +1,12 @@
 package it.gov.pagopa.gpd.upload.service;
 
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.multipart.CompletedFileUpload;
+import it.gov.pagopa.gpd.upload.exception.AppError;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
@@ -16,7 +16,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -29,28 +28,24 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Context
 @Slf4j
-public class FileUploadService {
-
+public class BlobService {
     @Value("${zip.content.size}")
     private int zipMaxSize; // Max size of zip file content
-
     @Value("${zip.entries}")
     private int zipMaxEntries; // Maximum number of entries allowed in the zip file
-
-    private static List<String> ALLOWABLE_EXTENSIONS = Arrays.asList("json");
-
-    private static List<String> VALID_UPLOAD_EXTENSION = Arrays.asList("zip");
-
+    private static final List<String> ALLOWABLE_EXTENSIONS = List.of("json");
+    private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip");
     private ObjectMapper objectMapper;
+    private BlobStorageRepository blobStorageRepository;
+    private StatusService statusService;
+    private Validator validator;
 
     @Inject
-    BlobStorageRepository blobStorageRepository;
-
-    @Inject
-    FileStatusService fileStatusService;
-
-    @Inject
-    Validator validator;
+    public BlobService(BlobStorageRepository blobStorageRepository, StatusService statusService, Validator validator) {
+        this.blobStorageRepository = blobStorageRepository;
+        this.statusService = statusService;
+        this.validator = validator;
+    }
 
     @PostConstruct
     public void init() {
@@ -58,18 +53,25 @@ public class FileUploadService {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public String upload(String organizationFiscalCode, CompletedFileUpload fileUpload) throws IOException {
+    public String upload(String broker, String organizationFiscalCode, CompletedFileUpload fileUpload) {
         File file = unzip(fileUpload);
         log.debug("File with name " + file.getName() + " has been unzipped");
-        PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
-        if(!isValid(file.getName(), paymentPositionsModel)) {
-            log.error("Debt Positions validation failed for file " + file.getName());
-            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
-        }
-        String fileId = blobStorageRepository.upload(organizationFiscalCode, file);
-        fileStatusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
+        PaymentPositionsModel paymentPositionsModel = null;
+        try {
+            paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
+            if(!isValid(file.getName(), paymentPositionsModel)) {
+                log.error("Debt Positions validation failed for file " + file.getName());
+                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
+            }
+            String fileId = null;
+            fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
 
-        return fileId;
+            statusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
+
+            return fileId;
+        } catch (IOException e) {
+            throw new AppException(AppError.INTERNAL_ERROR);
+        }
     }
 
     private boolean isValid(String id, PaymentPositionsModel paymentPositionsModel) throws IOException {
@@ -80,10 +82,10 @@ public class FileUploadService {
             constraintViolations = validator.validate(paymentPositionsModel);
             if(!constraintViolations.isEmpty()) {
                 log.error("Validation error for object related to " + id + ": " + paymentPositionModel);
-                for(ConstraintViolation cv : constraintViolations) {
-                    log.error("Invalid value: " + cv.getMessage());
-                    log.error("Invalid value: " + cv.getConstraintDescriptor());
+                for(ConstraintViolation<PaymentPositionsModel> cv : constraintViolations) {
                     log.error("Invalid value: " + cv.getInvalidValue());
+                    log.error("Invalid value message: " + cv.getMessage());
+                    log.error("Invalid value descriptor: " + cv.getConstraintDescriptor());
                 }
                 return false;
             }
@@ -130,7 +132,10 @@ public class FileUploadService {
 
                     // Disable auto-execution for extracted files
                     outputFile = new File(sanitizedOutputPath);
-                    outputFile.setExecutable(false);
+                    boolean executableOff = outputFile.setExecutable(false);
+                    if(!executableOff) {
+                        log.error("The underlying file system does not implement an execution permission and the operation failed.");
+                    }
 
                     final FileOutputStream fos = new FileOutputStream(outputFile);
                     int len;
@@ -178,7 +183,7 @@ public class FileUploadService {
         }
 
         // Replace invalid characters with underscores
-        fileName = fileName.replaceAll("[^\\w\\._-]", "_");
+        fileName = fileName.replaceAll("[^\\w._-]", "_");
 
         // Normalize file name to lower case
         fileName = fileName.toLowerCase();

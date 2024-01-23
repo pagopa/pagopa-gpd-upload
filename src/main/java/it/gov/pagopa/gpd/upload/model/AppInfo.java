@@ -10,8 +10,7 @@ import lombok.*;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppInfo {
-
-    private String name;
-    private String version;
-    private String environment;
+    public String name;
+    public String version;
+    public String environment;
 }

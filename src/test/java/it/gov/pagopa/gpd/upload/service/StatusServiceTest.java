@@ -5,7 +5,8 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
-import it.gov.pagopa.gpd.upload.model.FileStatus;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.UploadStatus;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
@@ -14,21 +15,27 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
-public class FileStatusServiceTest {
+public class StatusServiceTest {
     private static String UPLOAD_KEY = "key";
     @Inject
-    FileStatusService fileStatusService;
+    StatusService statusService;
 
     @Test
     void getStatus_OK() {
-        FileStatus fileStatus = fileStatusService.getStatus("fileId", "organizationFiscalCode");
+        UploadStatus uploadStatus = statusService.getStatus("fileId", "organizationFiscalCode");
 
-        Assertions.assertEquals(UPLOAD_KEY, fileStatus.fileId);
+        Assertions.assertEquals(UPLOAD_KEY, uploadStatus.getUploadID());
+    }
+
+    @Test
+    void getReport_OK() {
+        UploadReport uploadReport = statusService.getReport("fileId", "organizationFiscalCode");
+
+        Assertions.assertEquals(UPLOAD_KEY, uploadReport.getUploadID());
     }
 
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
@@ -46,8 +53,6 @@ public class FileStatusServiceTest {
                 .upload(Upload.builder()
                         .current(0)
                         .total(0)
-                        .failedIUPDs(new ArrayList<>())
-                        .successIUPD(new ArrayList<>())
                         .start(LocalDateTime.now())
                         .build())
                 .build();
