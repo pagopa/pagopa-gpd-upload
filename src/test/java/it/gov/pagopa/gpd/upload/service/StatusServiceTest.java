@@ -5,6 +5,7 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -28,6 +29,13 @@ public class StatusServiceTest {
         UploadStatus uploadStatus = statusService.getStatus("fileId", "organizationFiscalCode");
 
         Assertions.assertEquals(UPLOAD_KEY, uploadStatus.getUploadID());
+    }
+
+    @Test
+    void getReport_OK() {
+        UploadReport uploadReport = statusService.getReport("fileId", "organizationFiscalCode");
+
+        Assertions.assertEquals(UPLOAD_KEY, uploadReport.getUploadID());
     }
 
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string

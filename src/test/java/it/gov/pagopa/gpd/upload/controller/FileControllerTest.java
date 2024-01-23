@@ -8,10 +8,12 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 
+import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -50,6 +52,17 @@ class FileControllerTest {
         assertEquals(ACCEPTED, response.getStatus());
     }
 
+    @Test
+    void getUploadStatus_KO() throws IOException {
+        this.uploadFile_OK();
+
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report");
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(OK, response.getStatus());
+    }
+
     @Bean
     @Primary
     public BlobService fileUploadService() throws IOException {
@@ -57,6 +70,15 @@ class FileControllerTest {
         Mockito.when(blobService.upload(anyString(), anyString(), Mockito.any())).thenReturn(UPLOAD_KEY);
         return blobService;
     }
+
+    @Bean
+    @Primary
+    public StatusService statusService() throws IOException {
+        StatusService statusService = Mockito.mock(StatusService.class);
+        Mockito.when(statusService.getReport(anyString(), anyString())).thenReturn(UploadReport.builder().build());
+        return statusService;
+    }
+
 
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean

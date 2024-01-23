@@ -58,8 +58,6 @@ public class StatusService {
     }
 
     private UploadStatus map(Status status) {
-        log.info("map status");
-
         return UploadStatus.builder()
                 .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
