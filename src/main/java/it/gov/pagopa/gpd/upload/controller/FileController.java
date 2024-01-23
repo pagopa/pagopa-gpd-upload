@@ -44,7 +44,7 @@ public class FileController {
 
     @Inject
     StatusService statusService;
-    private final static String BASE_PATH = "brokers/{broker_code}/organizations/{organization_fiscal_code}/debtpositions/file";
+    private static final String BASE_PATH = "brokers/{broker_code}/organizations/{organization_fiscal_code}/debtpositions/file";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 

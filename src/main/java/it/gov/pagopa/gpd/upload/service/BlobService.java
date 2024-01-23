@@ -28,19 +28,13 @@ import lombok.extern.slf4j.Slf4j;
 @Context
 @Slf4j
 public class BlobService {
-
     @Value("${zip.content.size}")
     private int zipMaxSize; // Max size of zip file content
-
     @Value("${zip.entries}")
     private int zipMaxEntries; // Maximum number of entries allowed in the zip file
-
-    private final static List<String> ALLOWABLE_EXTENSIONS = List.of("json");
-
-    private final static List<String> VALID_UPLOAD_EXTENSION = List.of("zip"); ;
-
+    private static final List<String> ALLOWABLE_EXTENSIONS = List.of("json");
+    private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip"); ;
     private ObjectMapper objectMapper;
-
     private BlobStorageRepository blobStorageRepository;
     private StatusService statusService;
     private Validator validator;
