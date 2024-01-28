@@ -49,7 +49,9 @@ public class StatusRepository {
             CosmosItemResponse<Status> response = container.createItem(status);
             return response.getItem();
         } catch (CosmosException ex) {
-            log.error("the Status retrieval was not successful: " + ex.getStatusCode());
+            log.error("the Status saving was not successful: " + ex.getStatusCode());
+            if(ex.getStatusCode() == HttpStatus.CONFLICT.getCode())
+                return findStatusById(status.getId(), status.fiscalCode); // already exists, created by blob-consumer function
             if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
                 throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "Status saving unavailable");
             else
