@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "pagopa-gpd-upload",
-    "version": "0.1.4-2-fix-status-saving"
+    "version": "0.1.4-3-integration-test"
   },
   "paths": {
     "/brokers/{broker_code}/organizations/{organization_fiscal_code}/debtpositions/file": {
