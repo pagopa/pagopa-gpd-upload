@@ -6,9 +6,7 @@ import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.multipart.CompletedFileUpload;
-import it.gov.pagopa.gpd.upload.exception.AppError;
 import it.gov.pagopa.gpd.upload.exception.AppException;
-import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import jakarta.annotation.PostConstruct;
@@ -55,7 +53,7 @@ public class BlobService {
 
     public String upload(String broker, String organizationFiscalCode, CompletedFileUpload fileUpload) {
         File file = unzip(fileUpload);
-        log.debug("File with name " + file.getName() + " has been unzipped");
+        log.info("File with name " + file.getName() + " has been unzipped");
         PaymentPositionsModel paymentPositionsModel = null;
         try {
             paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
@@ -70,26 +68,25 @@ public class BlobService {
 
             return fileId;
         } catch (IOException e) {
-            throw new AppException(AppError.INTERNAL_ERROR);
+            e.printStackTrace();
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
     private boolean isValid(String id, PaymentPositionsModel paymentPositionsModel) throws IOException {
-        log.debug("Starting validation for object related to" + id);
+        log.info("Starting validation for object related to" + id);
         Set<ConstraintViolation<PaymentPositionsModel>> constraintViolations;
-
-        for(PaymentPositionModel paymentPositionModel : paymentPositionsModel.getPaymentPositions()) {
-            constraintViolations = validator.validate(paymentPositionsModel);
-            if(!constraintViolations.isEmpty()) {
-                log.error("Validation error for object related to " + id + ": " + paymentPositionModel);
-                for(ConstraintViolation<PaymentPositionsModel> cv : constraintViolations) {
-                    log.error("Invalid value: " + cv.getInvalidValue());
-                    log.error("Invalid value message: " + cv.getMessage());
-                    log.error("Invalid value descriptor: " + cv.getConstraintDescriptor());
-                }
-                return false;
+        constraintViolations = validator.validate(paymentPositionsModel);
+        if(!constraintViolations.isEmpty()) {
+            log.error("Validation error for object related to " + id);
+            for(ConstraintViolation<PaymentPositionsModel> cv : constraintViolations) {
+                log.error("Invalid value: " + cv.getInvalidValue());
+                log.error("Invalid value message: " + cv.getMessage());
+                log.error("Invalid value descriptor: " + cv.getConstraintDescriptor());
             }
+            return false;
         }
+        log.info("PaymentPosition with id " + id + " validated");
         return true;
     }
 
@@ -160,7 +157,8 @@ public class BlobService {
 
             return outputFile;
         } catch (IOException e) {
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e);
+            e.printStackTrace();
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 

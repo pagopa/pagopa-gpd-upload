@@ -59,6 +59,10 @@ Start the micronaut application with this command:
 
 `mvn mn:run`
 
+Start without hot reload
+
+`mn:run -Dmn.watch=false`
+
 ### Rule of thumb
 
 Prevent more than 1 file in with macOS
