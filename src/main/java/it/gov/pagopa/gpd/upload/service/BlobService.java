@@ -64,7 +64,7 @@ public class BlobService {
             String fileId = null;
             fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
 
-            statusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
+            statusService.createUploadStatus(organizationFiscalCode, broker, fileId, paymentPositionsModel);
 
             return fileId;
         } catch (IOException e) {
