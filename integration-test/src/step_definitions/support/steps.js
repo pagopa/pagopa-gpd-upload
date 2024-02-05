@@ -1,7 +1,8 @@
 const {Given, When, Then} = require('@cucumber/cucumber')
 const assert = require("assert");
 const {zipFile} = require('./data')
-const {uploadFile} = require('./common')
+const {get} = require('./common')
+const {uploadFile} = require('./service')
 const fs = require("fs");
 
 const app_host = process.env.APP_HOST
@@ -11,6 +12,11 @@ let responseToCheck;
 
 Given(/^zip file of (.*) payment-position$/, async function (n) {
     filePath = await zipFile(n);
+});
+
+Given(/^GPD-Upload running$/, async function () {
+    let r = await get(app_host + '/info')
+    assert.strictEqual(r.status, 200, r);
 });
 
 When(/^the client send (GET|POST|PUT|DELETE) to (.*)$/,

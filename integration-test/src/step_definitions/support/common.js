@@ -1,33 +1,8 @@
 const axios = require("axios");
-const fs = require('fs');
-const FormData = require('form-data');
-
 
 axios.defaults.headers.common['Ocp-Apim-Subscription-Key'] = process.env.SUBKEY // for all requests
 if (process.env.CANARY) {
   axios.defaults.headers.common['X-Canary'] = 'canary' // for all requests
-}
-
-async function uploadFile(hostUrl, filePath) {
-    let data = new FormData();
-    data.append('file', fs.createReadStream(filePath));
-
-    let config = {
-      method: 'post',
-      maxBodyLength: Infinity,
-      url: hostUrl,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Ocp-Apim-Subscription-Key': process.env.SUBKEY,
-        ...data.getHeaders()
-      },
-      data : data
-    };
-
-    let response = await axios.request(config)
-    console.log(JSON.stringify(response.data));
-
-    return response;
 }
 
 function get(url) {
@@ -36,6 +11,7 @@ function get(url) {
     return res;
   })
   .catch(error => {
+    console.log(error)
     return error.response;
   });
 }
@@ -86,4 +62,4 @@ function call(method, url, body) {
 
 }
 
-module.exports = {get, post, put, del, call, uploadFile}
+module.exports = {get, post, put, del, call}
