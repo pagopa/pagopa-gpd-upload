@@ -18,7 +18,7 @@ class PaymentOption {
         this.iuv = "IUV_" + uuidv4().substring(0, 11);
         this.amount = 100;
         this.isPartialPayment = false;
-        this.dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Plus 1 day
+        this.dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000) .toISOString().slice(0, 23);; // Plus 1 day
         this.transfer = [new Transfer()];
         this.paymentOptionMetadata = [];
     }

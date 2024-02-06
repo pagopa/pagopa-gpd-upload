@@ -62,4 +62,9 @@ function call(method, url, body) {
 
 }
 
-module.exports = {get, post, put, del, call}
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+module.exports = {get, post, put, del, call, sleep}
