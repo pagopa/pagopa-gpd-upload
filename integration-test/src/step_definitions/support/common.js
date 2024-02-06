@@ -47,19 +47,18 @@ function del(url) {
 }
 
 function call(method, url, body) {
-  if (method === 'GET') {
+    if (method === 'GET') {
     return get(url)
-  }
-  if (method === 'POST') {
+    }
+    if (method === 'POST') {
     return post(url, body)
-  }
-  if (method === 'PUT') {
+    }
+    if (method === 'PUT') {
     return put(url, body)
-  }
-  if (method === 'DELETE') {
+    }
+    if (method === 'DELETE') {
     return del(url)
-  }
-
+    }
 }
 
 function sleep(ms) {
