@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.upload.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
@@ -71,7 +69,7 @@ public class FileController {
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file) {
         String uploadID = blobService.upload(brokerCode, organizationFiscalCode, file);
-        log.debug("A file with name: " + file.getFilename() + " has been uploaded");
+        log.info("A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
         try {

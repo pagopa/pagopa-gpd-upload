@@ -41,7 +41,7 @@ public class StatusService {
         return mapReport(status);
     }
 
-    public Status createUploadStatus(String organizationFiscalCode, String fileId, PaymentPositionsModel paymentPositionsModel) {
+    public Status createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, PaymentPositionsModel paymentPositionsModel) {
         Upload upload = Upload.builder()
                 .current(0)
                 .total(paymentPositionsModel.getPaymentPositions().size())
@@ -50,6 +50,7 @@ public class StatusService {
                 .build();
         Status status = Status.builder()
                 .id(fileId)
+                .brokerID(brokerId)
                 .fiscalCode(organizationFiscalCode)
                 .upload(upload)
                 .build();

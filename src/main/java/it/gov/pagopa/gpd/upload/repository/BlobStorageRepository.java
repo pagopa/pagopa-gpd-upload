@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Context
 @Singleton
@@ -52,19 +53,35 @@ public class BlobStorageRepository implements FileRepository {
 
         BlockBlobClient blockBlobClient = blobClient.getBlockBlobClient();
 
-        try {
-            this.uploadFileBlocksAsBlockBlob(blockBlobClient, file);
-            return key;
-        } catch (IOException e) {
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Internal server error", e);
-        }
+        CompletableFuture<String> uploadFuture = uploadFileAsync(blockBlobClient, file);
+
+        uploadFuture.thenAccept(blobName -> {
+            // Handle the result asynchronously
+            log.info(String.format("Asynchronous upload completed for blob %s", blobName));
+        }).exceptionally(ex -> {
+            log.error(String.format("[Error][BlobStorageRepository@upload] Exception while uploading file %s asynchronously", file.getName()));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Error uploading file asynchronously", ex);
+        });
+
+        return key;
+    }
+
+    private CompletableFuture<String> uploadFileAsync(BlockBlobClient blockBlobClient, File file) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String blobName = this.uploadFileBlocksAsBlockBlob(blockBlobClient, file);
+                return blobName;
+            } catch (IOException e) {
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Error uploading file asynchronously", e);
+            }
+        });
     }
 
     private String createRandomName(String namePrefix) {
         return namePrefix + "_" + UUID.randomUUID().toString().replace("-", "");
     }
 
-    private void uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, File file) throws IOException {
+    private String uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, File file) throws IOException {
         InputStream inputStream = new FileInputStream(file);
         ByteArrayInputStream byteInputStream = null;
         byte[] bytes = null;
@@ -102,5 +119,6 @@ public class BlobStorageRepository implements FileRepository {
                 byteInputStream.close();
             }
         }
+        return blockBlob.getBlobName();
     }
 }

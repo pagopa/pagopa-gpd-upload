@@ -6,9 +6,7 @@ import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.multipart.CompletedFileUpload;
-import it.gov.pagopa.gpd.upload.exception.AppError;
 import it.gov.pagopa.gpd.upload.exception.AppException;
-import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import jakarta.annotation.PostConstruct;
@@ -55,41 +53,40 @@ public class BlobService {
 
     public String upload(String broker, String organizationFiscalCode, CompletedFileUpload fileUpload) {
         File file = unzip(fileUpload);
-        log.debug("File with name " + file.getName() + " has been unzipped");
+        log.info("File with name " + file.getName() + " has been unzipped");
         PaymentPositionsModel paymentPositionsModel = null;
         try {
             paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
             if(!isValid(file.getName(), paymentPositionsModel)) {
-                log.error("Debt Positions validation failed for file " + file.getName());
+                log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
             String fileId = null;
             fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
 
-            statusService.createUploadStatus(organizationFiscalCode, fileId, paymentPositionsModel);
+            statusService.createUploadStatus(organizationFiscalCode, broker, fileId, paymentPositionsModel);
 
             return fileId;
         } catch (IOException e) {
-            throw new AppException(AppError.INTERNAL_ERROR);
+            log.error("[Error][BlobService@upload] " + e.getMessage());
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
     private boolean isValid(String id, PaymentPositionsModel paymentPositionsModel) throws IOException {
-        log.debug("Starting validation for object related to" + id);
+        log.info("Starting validation for object related to" + id);
         Set<ConstraintViolation<PaymentPositionsModel>> constraintViolations;
-
-        for(PaymentPositionModel paymentPositionModel : paymentPositionsModel.getPaymentPositions()) {
-            constraintViolations = validator.validate(paymentPositionsModel);
-            if(!constraintViolations.isEmpty()) {
-                log.error("Validation error for object related to " + id + ": " + paymentPositionModel);
-                for(ConstraintViolation<PaymentPositionsModel> cv : constraintViolations) {
-                    log.error("Invalid value: " + cv.getInvalidValue());
-                    log.error("Invalid value message: " + cv.getMessage());
-                    log.error("Invalid value descriptor: " + cv.getConstraintDescriptor());
-                }
-                return false;
+        constraintViolations = validator.validate(paymentPositionsModel);
+        if(!constraintViolations.isEmpty()) {
+            log.error("[Error][BlobService@isValid] Validation error for object related to " + id);
+            for(ConstraintViolation<PaymentPositionsModel> cv : constraintViolations) {
+                log.error("[Error][BlobService@isValid] Invalid value: " + cv.getInvalidValue());
+                log.error("[Error][BlobService@isValid] Invalid value message: " + cv.getMessage());
+                log.error("[Error][BlobService@isValid] Invalid value descriptor: " + cv.getConstraintDescriptor());
             }
+            return false;
         }
+        log.info("PaymentPosition with id " + id + " validated");
         return true;
     }
 
@@ -101,7 +98,7 @@ public class BlobService {
         final byte[] buffer = new byte[1024];
 
         if(!VALID_UPLOAD_EXTENSION.contains(getFileExtension(file.getFilename()))) {
-            log.error("The file " + file.getFilename() + " with extension " + getFileExtension(file.getFilename()) + " is not a zip file ");
+            log.error("[Error][BlobService@unzip] The file " + file.getFilename() + " with extension " + getFileExtension(file.getFilename()) + " is not a zip file ");
             throw new AppException(HttpStatus.BAD_REQUEST, "NOT A ZIP FILE", "Only zip file can be uploaded.");
         }
 
@@ -114,7 +111,7 @@ public class BlobService {
                 if (zipFiles > zipMaxEntries) {
                     zis.closeEntry();
                     zis.close();
-                    log.error("Zip content has too many entries");
+                    log.error("[Error][BlobService@unzip] Zip content has too many entries");
                     throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Zip content has too many entries (check for hidden files)");
                 }
 
@@ -134,7 +131,7 @@ public class BlobService {
                     outputFile = new File(sanitizedOutputPath);
                     boolean executableOff = outputFile.setExecutable(false);
                     if(!executableOff) {
-                        log.error("The underlying file system does not implement an execution permission and the operation failed.");
+                        log.error("[Error][BlobService@unzip] The underlying file system does not implement an execution permission and the operation failed.");
                     }
 
                     final FileOutputStream fos = new FileOutputStream(outputFile);
@@ -145,7 +142,7 @@ public class BlobService {
                             zis.closeEntry();
                             zis.close();
                             fos.close();
-                            log.error("Zip content too large");
+                            log.error("[Error][BlobService@unzip] Zip content too large");
                             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Zip content too large");
                         }
 
@@ -160,7 +157,8 @@ public class BlobService {
 
             return outputFile;
         } catch (IOException e) {
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e);
+            log.error("[Error][BlobService@unzip] " + e.getMessage());
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
