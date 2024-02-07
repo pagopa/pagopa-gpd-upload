@@ -11,7 +11,7 @@ function get(url) {
     return res;
   })
   .catch(error => {
-    console.log(error)
+    console.log("Error while calling GET " + url)
     return error.response;
   });
 }
@@ -22,6 +22,7 @@ function post(url, body) {
     return res;
   })
   .catch(error => {
+    console.log("Error while calling POST " + url)
     return error.response;
   });
 }
@@ -32,6 +33,7 @@ function put(url, body) {
     return res;
   })
   .catch(error => {
+    console.log("Error while calling PUT " + url)
     return error.response;
   });
 }
@@ -42,22 +44,23 @@ function del(url) {
     return res;
   })
   .catch(error => {
+    console.log("Error while calling DELETE " + url)
     return error.response;
   });
 }
 
 function call(method, url, body) {
     if (method === 'GET') {
-    return get(url)
+        return get(url)
     }
     if (method === 'POST') {
-    return post(url, body)
+        return post(url, body)
     }
     if (method === 'PUT') {
-    return put(url, body)
+        return put(url, body)
     }
     if (method === 'DELETE') {
-    return del(url)
+        return del(url)
     }
 }
 
