@@ -13,7 +13,6 @@ on:
         options:
           - dev
           - uat
-          - prod
       canary:
         description: 'run the tests on canary version'
         required: false

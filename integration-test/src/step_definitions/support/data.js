@@ -7,7 +7,7 @@ class Transfer {
         this.idTransfer = "1";
         this.amount = 100;
         this.remittanceInformation = uuidv4().substring(0, 10);
-        this.category = "categoryXZ";
+        this.category = "category-integration-test-gpd-upload";
         this.iban = "IT0000000000000000000000000";
         this.transferMetadata = [];
     }
@@ -15,7 +15,7 @@ class Transfer {
 
 class PaymentOption {
     constructor() {
-        this.iuv = "IUV_" + uuidv4().substring(0, 11);
+        this.iuv = "IUV_GPD_UPLOAD_TEST" + uuidv4().substring(0, 11);
         this.amount = 100;
         this.isPartialPayment = false;
         this.dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000) .toISOString().slice(0, 23);; // Plus 1 day
@@ -26,7 +26,7 @@ class PaymentOption {
 
 class PaymentPosition {
     constructor(fiscalCode) {
-        this.iupd = "IUPD_" + uuidv4().substring(0, 11);
+        this.iupd = "IUPD_GPD_UPLOAD_TEST" + uuidv4().substring(0, 11);
         this.type = "F";
         this.fiscalCode = fiscalCode;
         this.fullName = uuidv4().substring(0, 4);
