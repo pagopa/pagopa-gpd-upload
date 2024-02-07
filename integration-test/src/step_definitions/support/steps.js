@@ -7,7 +7,7 @@ const fs = require("fs");
 
 const app_host = process.env.APP_HOST
 
-setDefaultTimeout(360 * 1000);
+setDefaultTimeout(3600 * 1000);
 
 let filePath;
 let responseToCheck;
