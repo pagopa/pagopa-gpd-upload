@@ -14,4 +14,4 @@ ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/release
 COPY --from=build /home/app/target/pagopa-gpd-upload*.jar /usr/local/lib/app.jar
 RUN true
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/usr/local/lib/app.jar"]
+ENTRYPOINT ["java","-javaagent:opentelemetry-javaagent.jar","--enable-preview","-jar","/usr/local/lib/app.jar"]
