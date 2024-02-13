@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/yourname # TODO
-    tag: "0.1.8-1-logging-elk"
+    tag: "0.1.8-2-logging-elk"
     pullPolicy: Always
   livenessProbe:
     httpGet:
