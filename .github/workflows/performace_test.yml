@@ -68,7 +68,7 @@ jobs:
         uses: grafana/k6-action@v0.3.1
         with:
           filename: performance-test/src/main_scenario.js
-          flags: --env VARS=${{inputs.environment}}.environment.json --env TEST_TYPE=./test-types/${{inputs.type}}.json
+          flags: --env VARS=environments/${{inputs.environment}}.environment.json --env TEST_TYPE=./test-types/${{inputs.type}}.json
         env:
           API_SUBSCRIPTION_KEY: ${{ secrets.SUBKEY }}
 
