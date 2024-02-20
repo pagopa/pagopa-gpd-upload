@@ -1,5 +1,6 @@
 import http from 'k6/http';
-import {check} from 'k6';
+import exec from 'k6/execution';
+import {check, sleep} from 'k6';
 import {SharedArray} from 'k6/data';
 
 export let options = JSON.parse(open(__ENV.TEST_TYPE));
@@ -13,19 +14,11 @@ const varsArray = new SharedArray('vars', function () {
 // workaround to use shared array (only array should be used)
 const vars = varsArray[0];
 const rootUrl = `${vars.host}/${vars.basePath}`;
+let zipFile = open('./files/test1.json.zip', 'b');
 
 export function setup() {
-  // Before All
-  // setup code (once)
   // The setup code runs, setting up the test environment (optional) and generating data
   // used to reuse code for the same VU
-  const params = {
-    headers: {
-      'Content-Type': 'application/json'
-    },
-  };
-  const response = example(rootUrl, params);
-
   // precondition is moved to default fn because in this stage
   // __VU is always 0 and cannot be used to create env properly
 }
@@ -35,37 +28,56 @@ function precondition() {
 }
 
 function postcondition() {
-
   // Delete the new entity created
 }
 
+const params = {
+  headers: {
+    'Ocp-Apim-Subscription-Key': __ENV.API_SUBSCRIPTION_KEY,
+  },
+};
+
+
 export default function () {
 
-  // Create a new spontaneous payment.
+  let idx = exec.scenario.iterationInInstance;
+
+  console.log("idx: " + idx)
+
   let tag = {
-    gpsMethod: "tag",
   };
 
-  let url = `${rootUrl}/${creditor_institution_code}/spontaneouspayments`;
+  // "/brokers/{broker}/organizations/{ec}/debtpositions/file"
+  let url = `${rootUrl}`;
 
-  let payload = JSON.stringify(
-      {}
-  );
-
-  let params = {
-    headers: {
-      'Content-Type': 'application/json'
-    },
+  const data = {
+    field: 'file',
+    file: http.file(zipFile, 'file.zip'),
   };
 
-  let r = http.post(url, payload, params);
+  let r = http.post(url, data, params);
+
+  // check(r, { 'check status is 202': (_r) => r.status === 202, }, tag);
+
+  let statusURL = r.headers['Location']
+  console.log(statusURL)
+  r = http.get(`${vars.host}/${statusURL}`)
+
+  sleep(5)
+
+  while(r.json().processedItem !== r.json().submittedItem) {
+    r = http.get(`${vars.host}/${statusURL}`)
+    sleep(30)
+  }
+
+  let reportURL = statusURL.replace("/status", "/report")
+  r = http.get(`${vars.host}/${reportURL}`)
 
   check(r, {
-    'check status is 201': (_r) => r.status === 201,
+    'check report is created': (_r) => r.status === 200,
   }, tag);
 
   postcondition();
-
 }
 
 export function teardown(data) {

@@ -28,7 +28,7 @@ public class StatusService {
 
     public UploadStatus getStatus(String fileId, String organizationFiscalCode) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
-        log.info("[getStatus] status: " + status);
+        log.info("[getStatus] status: " + status.getId());
         if(status == null)
             throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given fileId "+ fileId + " does not exist");
         return map(status);
