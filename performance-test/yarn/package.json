@@ -1,0 +1,13 @@
+{
+  "name": "pagopa-gpd-upload",
+  "license": "MIT",
+  "version": "1.0.0",
+  "scripts": {
+  },
+  "dependencies": {
+    "dotenv": "^16.0.2",
+    "dotenv-cli": "^3.2.0",
+    "uuid": "^9.0.1",
+    "archiver": "^6.0.1"
+  }
+}
