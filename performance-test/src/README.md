@@ -8,7 +8,7 @@ See [here](https://k6.io/docs/get-started/installation/) to install it.
 To run k6 tests use the command:
 
 ``` shell
-k6 run --env VARS=local.environment.json --env TEST_TYPE=./test-types/smoke.json main_scenario.js
+k6 run --env VARS=environments/local.environment.json --env TEST_TYPE=./test-types/smoke.json main_scenario.js
 ```
 
 where
