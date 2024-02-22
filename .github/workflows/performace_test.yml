@@ -73,7 +73,8 @@ jobs:
           cd ./performance-test
           chmod +x ./prepare_performance_data.sh
           ./prepare_performance_data.sh ${{inputs.file-number}} ${{inputs.positions-per-file}}
-          jq '.scenarios.contacts.timeUnit |= "${{inputs.lifetime}}m" | .scenarios.contacts.duration |= "${{inputs.lifetime}}m"' constant.json > temp.json && mv temp.json constant.json
+          export BASE_PATH=./src/test-types
+          jq '.scenarios.contacts.timeUnit |= "${{inputs.lifetime}}m" | .scenarios.contacts.duration |= "${{inputs.lifetime}}m"' ${BASE_PATH}/constant.json > temp.json && mv temp.json ${BASE_PATH}/constant.json
  
       - name: Run k6 local test
         uses: grafana/k6-action@v0.3.1
