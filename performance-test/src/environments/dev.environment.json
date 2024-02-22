@@ -1,7 +1,7 @@
 {
   "environment": [
     {
-      "env": "local",
+      "env": "dev",
       "host": "https://api.dev.platform.pagopa.it/upload/gpd/debt-positions-service/v1",
       "basePath": "brokers/brokerperf/organizations/ecperf/debtpositions/file"
     }

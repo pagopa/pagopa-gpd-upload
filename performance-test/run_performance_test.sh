@@ -38,13 +38,6 @@ export sub_key=${API_SUBSCRIPTION_KEY}
 docker rm nginx
 docker rm k6
 
-# prepare zip files to upload
-mkdir src/files
-cd yarn
-yarn install
-yarn node data 100 ../src/files/ 10 # create 10 zip file with 100 debt positions in JSON format
-cd ..
-
 stack_name=$(cd .. && basename "$PWD")
 docker compose -p "${stack_name}-k6" up -d --remove-orphans --force-recreate --build
 docker logs -f k6

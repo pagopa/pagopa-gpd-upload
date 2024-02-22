@@ -16,7 +16,7 @@ const vars = varsArray[0];
 const rootUrl = `${vars.host}/${vars.basePath}`;
 
 let zipFiles = {};
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < __ENV.FILE_NUMBER; i++) {
     let fileName = `./files/test${i}.json.zip`;
     zipFiles[i] = open(fileName, 'b');
 }
@@ -45,7 +45,7 @@ const params = {
 
 export default function () {
 
-  let test_id = exec.scenario.iterationInInstance;
+  let test_id = exec.scenario.iterationInInstance % __ENV.FILE_NUMBER;
 
   console.log("Run perfromance scenario for user: " + test_id)
 

@@ -20,16 +20,26 @@ on:
         options:
           - smoke
           - constant
+      positions-per-file:
+        required: true
+        type: number
+        description: The number of debt positions each test file will contain
+        default: 100
+      file-number:
+          required: true
+          type: number
+          description: The number of test file
+          default: 10
+      lifetime:
+        required: true
+        type: number
+        description: The max expected duration to complete the test
+        default: 5
       canary:
         description: 'run the tests on canary version'
         required: false
         type: boolean
         default: false
-      notify:
-        required: false
-        type: boolean
-        description: 'send the slack notification'
-        default: true
 
 
 permissions:
@@ -62,8 +72,9 @@ jobs:
         run: |
           cd ./performance-test
           chmod +x ./prepare_performance_data.sh
-          ./prepare_performance_data.sh
-
+          ./prepare_performance_data.sh ${{inputs.file-number}} ${{inputs.positions-per-file}}
+          jq '.scenarios.contacts.timeUnit |= "${{inputs.lifetime}}m" | .scenarios.contacts.duration |= "${{inputs.lifetime}}m"' constant.json > temp.json && mv temp.json constant.json
+ 
       - name: Run k6 local test
         uses: grafana/k6-action@v0.3.1
         with:
@@ -71,6 +82,7 @@ jobs:
           flags: --env VARS=environments/${{inputs.environment}}.environment.json --env TEST_TYPE=./test-types/${{inputs.type}}.json
         env:
           API_SUBSCRIPTION_KEY: ${{ secrets.SUBKEY }}
+          FILE_NUMBER: ${{inputs.file-number}}
 
   delete_github_deployments:
     runs-on: ubuntu-latest
