@@ -13,6 +13,7 @@ on:
         options:
           - dev
           - uat
+        default: dev
       type:
         required: true
         type: choice
@@ -20,21 +21,22 @@ on:
         options:
           - smoke
           - constant
+        default: smoke
       positions-per-file:
         required: true
         type: number
         description: The number of debt positions each test file will contain
-        default: 100
+        default: 1
       file-number:
           required: true
           type: number
           description: The number of test file
-          default: 10
+          default: 1
       lifetime:
         required: true
         type: number
         description: The max expected duration to complete the test
-        default: 5
+        default: 1
       canary:
         description: 'run the tests on canary version'
         required: false
@@ -57,15 +59,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
-
-      - name: Login
-        id: login
-        # from https://github.com/Azure/login/commits/master
-        uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2
-        with:
-          client-id: ${{ secrets.CD_CLIENT_ID }}
-          tenant-id: ${{ secrets.TENANT_ID }}
-          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
       - name: Prepare performance data
         shell: bash
