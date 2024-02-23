@@ -1,7 +1,7 @@
 {
   "environment": [
     {
-      "env": "dev",
+      "env": "local",
       "host": "http://localhost:8080",
       "basePath": "brokers/brokerperf/organizations/ecperf/debtpositions/file"
     }

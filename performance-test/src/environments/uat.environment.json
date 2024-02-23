@@ -1,7 +1,7 @@
 {
   "environment": [
     {
-      "env": "local",
+      "env": "uat",
       "host": "https://api.uat.platform.pagopa.it/upload/gpd/debt-positions-service/v1",
       "basePath": "brokers/brokerperf/organizations/ecperf/debtpositions/file"
     }

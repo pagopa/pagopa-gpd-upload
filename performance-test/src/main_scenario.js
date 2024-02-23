@@ -14,7 +14,12 @@ const varsArray = new SharedArray('vars', function () {
 // workaround to use shared array (only array should be used)
 const vars = varsArray[0];
 const rootUrl = `${vars.host}/${vars.basePath}`;
-let zipFile = open('./files/test1.json.zip', 'b');
+
+let zipFiles = {};
+for (let i = 0; i < __ENV.FILE_NUMBER; i++) {
+    let fileName = `./files/test${i}.json.zip`;
+    zipFiles[i] = open(fileName, 'b');
+}
 
 export function setup() {
   // The setup code runs, setting up the test environment (optional) and generating data
@@ -40,9 +45,9 @@ const params = {
 
 export default function () {
 
-  let idx = exec.scenario.iterationInInstance;
+  let test_id = exec.scenario.iterationInInstance % __ENV.FILE_NUMBER;
 
-  console.log("idx: " + idx)
+  console.log("Run perfromance scenario for user: " + test_id)
 
   let tag = {
   };
@@ -52,7 +57,7 @@ export default function () {
 
   const data = {
     field: 'file',
-    file: http.file(zipFile, 'file.zip'),
+    file: http.file(zipFiles[test_id], 'file.zip'),
   };
 
   let r = http.post(url, data, params);
@@ -60,18 +65,15 @@ export default function () {
   // check(r, { 'check status is 202': (_r) => r.status === 202, }, tag);
 
   let statusURL = r.headers['Location']
-  console.log(statusURL)
-  r = http.get(`${vars.host}/${statusURL}`)
-
-  sleep(5)
+  r = http.get(`${vars.host}/${statusURL}`, params)
 
   while(r.json().processedItem !== r.json().submittedItem) {
-    r = http.get(`${vars.host}/${statusURL}`)
-    sleep(30)
+    r = http.get(`${vars.host}/${statusURL}`, params)
+    sleep(1)
   }
 
   let reportURL = statusURL.replace("/status", "/report")
-  r = http.get(`${vars.host}/${reportURL}`)
+  r = http.get(`${vars.host}/${reportURL}`, params)
 
   check(r, {
     'check report is created': (_r) => r.status === 200,

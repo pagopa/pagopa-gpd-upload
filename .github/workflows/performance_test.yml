@@ -13,6 +13,7 @@ on:
         options:
           - dev
           - uat
+        default: dev
       type:
         required: true
         type: choice
@@ -20,16 +21,27 @@ on:
         options:
           - smoke
           - constant
+        default: smoke
+      positions-per-file:
+        required: true
+        type: number
+        description: The number of debt positions each test file will contain
+        default: 1
+      file-number:
+          required: true
+          type: number
+          description: The number of test file
+          default: 1
+      lifetime:
+        required: true
+        type: number
+        description: The max expected duration to complete the test
+        default: 1
       canary:
         description: 'run the tests on canary version'
         required: false
         type: boolean
         default: false
-      notify:
-        required: false
-        type: boolean
-        description: 'send the slack notification'
-        default: true
 
 
 permissions:
@@ -48,29 +60,23 @@ jobs:
         id: checkout
         uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
 
-      - name: Login
-        id: login
-        # from https://github.com/Azure/login/commits/master
-        uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2
-        with:
-          client-id: ${{ secrets.CD_CLIENT_ID }}
-          tenant-id: ${{ secrets.TENANT_ID }}
-          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
-
       - name: Prepare performance data
         shell: bash
         run: |
           cd ./performance-test
           chmod +x ./prepare_performance_data.sh
-          ./prepare_performance_data.sh
-
+          ./prepare_performance_data.sh ${{inputs.file-number}} ${{inputs.positions-per-file}}
+          export BASE_PATH=./src/test-types
+          jq '.scenarios.contacts.timeUnit |= "${{inputs.lifetime}}m" | .scenarios.contacts.duration |= "${{inputs.lifetime}}m"' ${BASE_PATH}/${{inputs.type}}.json > temp.json && mv temp.json ${BASE_PATH}/${{inputs.type}}.json
+ 
       - name: Run k6 local test
         uses: grafana/k6-action@v0.3.1
         with:
           filename: performance-test/src/main_scenario.js
-          flags: --env VARS=${{inputs.environment}}.environment.json --env TEST_TYPE=./test-types/${{inputs.type}}.json
+          flags: --env VARS=environments/${{inputs.environment}}.environment.json --env TEST_TYPE=./test-types/${{inputs.type}}.json
         env:
           API_SUBSCRIPTION_KEY: ${{ secrets.SUBKEY }}
+          FILE_NUMBER: ${{inputs.file-number}}
 
   delete_github_deployments:
     runs-on: ubuntu-latest
