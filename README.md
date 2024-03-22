@@ -6,8 +6,9 @@
 
 This microservice has the responsibility of handling the upload of the files holding debt positions.
 It allows the creditor institutions to:
-- Upload file
-- Get file upload status
+- CRUD operations on Debt Positions through zip file Upload
+- Get Debt Positions massive Upload status
+- Get Debt Positions massive Upload report
 
 TODO: generate a index with this tool: https://ecotrust-canada.github.io/markdown-toc/
 
@@ -41,7 +42,7 @@ from `./docker` directory
 
 `sh ./run_docker.sh local`
 
-ℹ️ Note: for PagoPa ACR is required the login `az acr login -n <acr-name>`
+ℹ️ Note: for PagoPA ACR is required the login `az acr login -n <acr-name>`
 
 ---
 

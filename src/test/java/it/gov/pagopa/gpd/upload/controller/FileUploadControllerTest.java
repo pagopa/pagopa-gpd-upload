@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
-class FileControllerTest {
+class FileUploadControllerTest {
 
     private static String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
     private static String UPLOAD_KEY = "key";
@@ -67,7 +67,7 @@ class FileControllerTest {
     @Primary
     public BlobService fileUploadService() throws IOException {
         BlobService blobService = Mockito.mock(BlobService.class);
-        Mockito.when(blobService.upload(anyString(), anyString(), Mockito.any())).thenReturn(UPLOAD_KEY);
+        Mockito.when(blobService.upload(anyString(), anyString(), Mockito.any(), Mockito.any())).thenReturn(UPLOAD_KEY);
         return blobService;
     }
 
