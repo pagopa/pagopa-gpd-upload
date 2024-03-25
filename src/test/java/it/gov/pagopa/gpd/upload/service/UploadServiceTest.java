@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.upload.service;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.utils.FileUtils;
@@ -26,7 +27,7 @@ public class UploadServiceTest {
 
     @Test
     void upload_OK() throws IOException {
-        String uploadKey = blobService.upload(BROKER_CODE, FISCAL_CODE, FileUtils.getFileUpload());
+        String uploadKey = blobService.upload(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getFileUpload());
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }

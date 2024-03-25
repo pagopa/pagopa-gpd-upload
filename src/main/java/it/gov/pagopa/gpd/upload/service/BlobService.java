@@ -7,6 +7,8 @@ import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.UploadOperation;
+import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import jakarta.annotation.PostConstruct;
@@ -51,19 +53,28 @@ public class BlobService {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public String upload(String broker, String organizationFiscalCode, CompletedFileUpload fileUpload) {
+    public String upload(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
         File file = unzip(fileUpload);
         log.info("File with name " + file.getName() + " has been unzipped");
         PaymentPositionsModel paymentPositionsModel = null;
         try {
             paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
+
             if(!isValid(file.getName(), paymentPositionsModel)) {
                 log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
-            String fileId = null;
-            fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
 
+            UploadInput uploadInput = UploadInput.builder()
+                    .uploadOperation(uploadOperation)
+                    .paymentPositions(paymentPositionsModel.getPaymentPositions())
+                    .build();
+            // replace file content
+            FileWriter fw = new FileWriter(file.getName());
+            fw.write(objectMapper.writeValueAsString(uploadInput));
+            fw.close();
+            // upload blob
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
             statusService.createUploadStatus(organizationFiscalCode, broker, fileId, paymentPositionsModel);
 
             return fileId;
