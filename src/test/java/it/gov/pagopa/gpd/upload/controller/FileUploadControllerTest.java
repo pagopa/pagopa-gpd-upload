@@ -38,7 +38,7 @@ class FileUploadControllerTest {
     HttpClient client;
 
     @Test
-    void uploadFile_OK() throws IOException {
+    void createDebtPositionsByFile_OK() throws IOException {
         File file = File.createTempFile("test", ".zip");
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI)
@@ -53,8 +53,23 @@ class FileUploadControllerTest {
     }
 
     @Test
+    void updateDebtPositionsByFile_OK() throws IOException {
+        File file = File.createTempFile("test", ".zip");
+
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(MultipartBody.builder()
+                        .addPart("file", file.getName(), file)
+                        .build());
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(ACCEPTED, response.getStatus());
+    }
+
+    @Test
     void getUploadStatus_KO() throws IOException {
-        this.uploadFile_OK();
+        this.createDebtPositionsByFile_OK();
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report");
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
