@@ -17,7 +17,10 @@
         <jdk.version>17</jdk.version>
         <release.version>17</release.version>
         <micronaut.version>4.2.0</micronaut.version>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.32</lombok.version>
+        <azure.cosmos.version>4.57.0</azure.cosmos.version>
+        <azure.storage.version>12.25.3</azure.storage.version>
+        <jackson.datatype.version>2.17.0</jackson.datatype.version>
         <mockito-junit.version>4.1.0</mockito-junit.version>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
         <micronaut.aot.packageName>it.gov.pagopa.gpd.upload.aot.generated</micronaut.aot.packageName>
@@ -92,16 +95,17 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.13.4</version>
+            <version>${jackson.datatype.version}</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob</artifactId>
+            <version>${azure.storage.version}</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-cosmos</artifactId>
-            <version>4.41.0</version>
+            <version>${azure.cosmos.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

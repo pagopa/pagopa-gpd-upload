@@ -5,7 +5,6 @@ import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
-import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -41,10 +40,10 @@ public class StatusService {
         return mapReport(status);
     }
 
-    public Status createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, PaymentPositionsModel paymentPositionsModel) {
+    public Status createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem) {
         Upload upload = Upload.builder()
                 .current(0)
-                .total(paymentPositionsModel.getPaymentPositions().size())
+                .total(totalItem)
                 .responses(new ArrayList<>())
                 .start(LocalDateTime.now())
                 .build();
