@@ -113,12 +113,7 @@
               }
             }
           }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
-        } ]
+        }
       },
       "post" : {
         "tags" : [ "Debt Positions CRUD via file upload API" ],
@@ -227,12 +222,7 @@
               }
             }
           }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
-        } ]
+        }
       },
       "delete" : {
         "tags" : [ "Debt Positions CRUD via file upload API" ],
@@ -341,12 +331,7 @@
               }
             }
           }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
-        } ]
+        }
       }
     },
     "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/report" : {
@@ -451,12 +436,7 @@
               }
             }
           }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
-        } ]
+        }
       }
     },
     "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/status" : {
@@ -561,12 +541,7 @@
               }
             }
           }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
-        } ]
+        }
       }
     },
     "/info" : {
