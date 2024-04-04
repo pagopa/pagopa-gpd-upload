@@ -9,20 +9,19 @@ import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
+import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
+import it.gov.pagopa.gpd.upload.utils.GPDValidator;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.*;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -36,15 +35,18 @@ public class BlobService {
     private static final List<String> ALLOWABLE_EXTENSIONS = List.of("json");
     private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip");
     private ObjectMapper objectMapper;
-    private BlobStorageRepository blobStorageRepository;
-    private StatusService statusService;
-    private Validator validator;
+    private final BlobStorageRepository blobStorageRepository;
+    private final StatusService statusService;
+    private final GPDValidator<PaymentPositionsModel> paymentPositionsValidator;
+    private final GPDValidator<MultipleIUPDModel> multipleIUPDValidator;
 
     @Inject
-    public BlobService(BlobStorageRepository blobStorageRepository, StatusService statusService, Validator validator) {
+    public BlobService(BlobStorageRepository blobStorageRepository, StatusService statusService,
+                       GPDValidator<PaymentPositionsModel> paymentPositionsValidator, GPDValidator<MultipleIUPDModel> multipleIUPDValidator) {
         this.blobStorageRepository = blobStorageRepository;
         this.statusService = statusService;
-        this.validator = validator;
+        this.paymentPositionsValidator = paymentPositionsValidator;
+        this.multipleIUPDValidator = multipleIUPDValidator;
     }
 
     @PostConstruct
@@ -53,14 +55,13 @@ public class BlobService {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public String upload(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
-        File file = unzip(fileUpload);
+    public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
+        File file = this.unzip(fileUpload);
         log.info("File with name " + file.getName() + " has been unzipped");
-        PaymentPositionsModel paymentPositionsModel = null;
         try {
-            paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
+            PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
-            if(!isValid(file.getName(), paymentPositionsModel)) {
+            if (!paymentPositionsValidator.isValid(file.getName(), paymentPositionsModel)) {
                 log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
@@ -69,36 +70,53 @@ public class BlobService {
                     .uploadOperation(uploadOperation)
                     .paymentPositions(paymentPositionsModel.getPaymentPositions())
                     .build();
-            // replace file content
-            FileWriter fw = new FileWriter(file.getName());
-            fw.write(objectMapper.writeValueAsString(uploadInput));
-            fw.close();
-            // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
-            statusService.createUploadStatus(organizationFiscalCode, broker, fileId, paymentPositionsModel);
 
-            return fileId;
+            return upload(uploadInput, file, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
+        } catch (IOException e) {
+        log.error("[Error][BlobService@upload] " + e.getMessage());
+        throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
+        }
+    }
+
+    public String delete(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
+        File file = this.unzip(fileUpload);
+        log.info("File with name " + file.getName() + " has been unzipped");
+        try {
+            MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(new FileInputStream(file), MultipleIUPDModel.class);
+
+            if (!multipleIUPDValidator.isValid(file.getName(), multipleIUPDModel)) {
+                log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
+                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
+            }
+
+            UploadInput uploadInput = UploadInput.builder()
+                    .uploadOperation(uploadOperation)
+                    .paymentPositionIUPDs(multipleIUPDModel.getPaymentPositionIUPDs())
+                    .build();
+
+            return upload(uploadInput, file, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
-    private boolean isValid(String id, PaymentPositionsModel paymentPositionsModel) throws IOException {
-        log.info("Starting validation for object related to" + id);
-        Set<ConstraintViolation<PaymentPositionsModel>> constraintViolations;
-        constraintViolations = validator.validate(paymentPositionsModel);
-        if(!constraintViolations.isEmpty()) {
-            log.error("[Error][BlobService@isValid] Validation error for object related to " + id);
-            for(ConstraintViolation<PaymentPositionsModel> cv : constraintViolations) {
-                log.error("[Error][BlobService@isValid] Invalid value: " + cv.getInvalidValue());
-                log.error("[Error][BlobService@isValid] Invalid value message: " + cv.getMessage());
-                log.error("[Error][BlobService@isValid] Invalid value descriptor: " + cv.getConstraintDescriptor());
-            }
-            return false;
+
+    public String upload(UploadInput in, File file, String broker, String organizationFiscalCode, int totalItem) {
+        try {
+            // replace file content
+            FileWriter fw = new FileWriter(file.getName());
+            fw.write(objectMapper.writeValueAsString(in));
+            fw.close();
+            // upload blob
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
+            statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
+
+            return fileId;
+        } catch (IOException e) {
+            log.error("[Error][BlobService@upload] " + e.getMessage());
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
-        log.info("PaymentPosition with id " + id + " validated");
-        return true;
     }
 
     private File unzip(CompletedFileUpload file) {

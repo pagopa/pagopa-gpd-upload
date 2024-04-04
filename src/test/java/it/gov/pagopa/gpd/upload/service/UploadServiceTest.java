@@ -20,14 +20,21 @@ import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
 public class UploadServiceTest {
-    private static String FISCAL_CODE = "fiscal-code";
-    private static String BROKER_CODE = "broker-code";
+    private static final String FISCAL_CODE = "fiscal-code";
+    private static final String BROKER_CODE = "broker-code";
     @Inject
     BlobService blobService;
 
     @Test
-    void upload_OK() throws IOException {
-        String uploadKey = blobService.upload(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getFileUpload());
+    void upsert_OK() throws IOException {
+        String uploadKey = blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getUpsertFile());
+
+        Assertions.assertEquals(FISCAL_CODE, uploadKey);
+    }
+
+    @Test
+    void delete_OK() throws IOException {
+        String uploadKey = blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getDeleteFile());
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }

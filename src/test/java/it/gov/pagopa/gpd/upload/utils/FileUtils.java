@@ -11,14 +11,20 @@ import java.util.zip.ZipOutputStream;
 
 public class FileUtils {
 
-    public static CompletedFileUpload getFileUpload() throws IOException {
-        GPDCompletedFileUpload f = new GPDCompletedFileUpload("test.zip", MediaType.of("application/zip"), fromJSONtoZip());
+    public static CompletedFileUpload getUpsertFile() throws IOException {
+        GPDCompletedFileUpload f = new GPDCompletedFileUpload("test.zip", MediaType.of("application/zip"),
+                fromJSONtoZip(PaymentPositionUtils.createPaymentPositionsJSON("77777777777", 1)));
         return f;
     }
 
-    private static byte[] fromJSONtoZip() throws IOException {
-        String jsonString = PaymentPositionUtils.createPaymentPositionsJSON("77777777777", 1);
-        byte[] jsonBytes = jsonString.getBytes();
+    public static CompletedFileUpload getDeleteFile() throws IOException {
+        GPDCompletedFileUpload f = new GPDCompletedFileUpload("test.zip", MediaType.of("application/zip"),
+                fromJSONtoZip(PaymentPositionUtils.createMultipleIUPDJSON("77777777777", 1)));
+        return f;
+    }
+
+    private static byte[] fromJSONtoZip(String JSON) {
+        byte[] jsonBytes = JSON.getBytes();
 
         // Create a temporary directory to store the ZIP file
         String tempDir = System.getProperty("java.io.tmpdir");

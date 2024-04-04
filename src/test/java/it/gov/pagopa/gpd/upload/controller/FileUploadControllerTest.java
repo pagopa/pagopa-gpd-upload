@@ -28,8 +28,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 @MicronautTest
 class FileUploadControllerTest {
 
-    private static String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
-    private static String UPLOAD_KEY = "key";
+    private static final String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
+    private static final String UPLOAD_KEY = "key";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 
@@ -68,6 +68,21 @@ class FileUploadControllerTest {
     }
 
     @Test
+    void deleteDebtPositionsByFile_OK() throws IOException {
+        File file = File.createTempFile("test", ".zip");
+
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(MultipartBody.builder()
+                        .addPart("file", file.getName(), file)
+                        .build());
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(ACCEPTED, response.getStatus());
+    }
+
+    @Test
     void getUploadStatus_KO() throws IOException {
         this.createDebtPositionsByFile_OK();
 
@@ -82,7 +97,7 @@ class FileUploadControllerTest {
     @Primary
     public BlobService fileUploadService() throws IOException {
         BlobService blobService = Mockito.mock(BlobService.class);
-        Mockito.when(blobService.upload(anyString(), anyString(), Mockito.any(), Mockito.any())).thenReturn(UPLOAD_KEY);
+        Mockito.when(blobService.upsert(anyString(), anyString(), Mockito.any(), Mockito.any())).thenReturn(UPLOAD_KEY);
         return blobService;
     }
 

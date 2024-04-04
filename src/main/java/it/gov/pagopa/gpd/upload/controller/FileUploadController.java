@@ -64,8 +64,8 @@ public class FileUploadController {
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file) {
-        String uploadID = blobService.upload(brokerCode, organizationFiscalCode, UploadOperation.CREATE, file);
-        log.info("A file with name: " + file.getFilename() + " has been uploaded");
+        String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.CREATE, file);
+        log.info("[CREATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
         try {
@@ -97,8 +97,41 @@ public class FileUploadController {
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file) {
-        String uploadID = blobService.upload(brokerCode, organizationFiscalCode, UploadOperation.UPDATE, file);
-        log.info("A file with name: " + file.getFilename() + " has been uploaded");
+        String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.UPDATE, file);
+        log.info("[UPDATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
+        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
+
+        try {
+            HttpResponse response = HttpResponse.accepted(new URI(uri));
+            return response.toMutableResponse()
+                    .header(HttpHeaders.RETRY_AFTER, retryAfter + " ms");
+        } catch (URISyntaxException e) {
+            throw new AppException(AppError.INTERNAL_ERROR);
+        }
+    }
+
+    @Operation(summary = "The Organization deletes the debt positions based on IUPD listed in the file.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "delete-debt-positions-by-file-upload")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Request accepted."),
+            @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "Conflict: duplicate file found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+            @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Delete(BASE_PATH)
+    public HttpResponse deleteDebtPositionsByFileUpload(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+            @Parameter(
+                    description = "File to be uploaded",
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
+            ) CompletedFileUpload file) {
+        String uploadID = blobService.delete(brokerCode, organizationFiscalCode, UploadOperation.DELETE, file);
+        log.info("[DELETE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
         try {
