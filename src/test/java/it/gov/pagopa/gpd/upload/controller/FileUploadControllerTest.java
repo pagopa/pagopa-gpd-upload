@@ -20,8 +20,12 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
 
 import static io.micronaut.http.HttpStatus.*;
+import static java.nio.file.attribute.PosixFilePermission.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -39,7 +43,13 @@ class FileUploadControllerTest {
 
     @Test
     void createDebtPositionsByFile_OK() throws IOException {
-        File file = File.createTempFile("test", ".zip");
+        // Creating a temporary file with a non-randomly generated name
+        File file = new File(System.getProperty("java.io.tmpdir"), "/test.zip");
+        // Warning: This will fail on Windows as it doesn't support PosixFilePermissions.
+        Files.createFile(
+                file.toPath(),
+                PosixFilePermissions.asFileAttribute(EnumSet.of(OWNER_READ, OWNER_WRITE)) // permissions `-rw-------`
+        );
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI)
                 .contentType(MediaType.MULTIPART_FORM_DATA)

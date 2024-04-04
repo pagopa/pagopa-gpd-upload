@@ -158,6 +158,12 @@ public class BlobService {
 
                     // Disable auto-execution for extracted files
                     outputFile = new File(sanitizedOutputPath);
+
+                    if (!outputFile.toPath().normalize().startsWith(destinationDirectory)) {
+                        log.error("[Error][BlobService@unzip] Bad zip entry: the normalized file path does not start with the destination directory");
+                        throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Bad zip entry");
+                    }
+
                     boolean executableOff = outputFile.setExecutable(false);
                     if(!executableOff) {
                         log.error("[Error][BlobService@unzip] The underlying file system does not implement an execution permission and the operation failed.");
