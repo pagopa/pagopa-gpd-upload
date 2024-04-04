@@ -19,6 +19,7 @@ import jakarta.inject.Singleton;
 
 import java.io.*;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -34,6 +35,7 @@ public class BlobService {
     private int zipMaxEntries; // Maximum number of entries allowed in the zip file
     private static final List<String> ALLOWABLE_EXTENSIONS = List.of("json");
     private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip");
+    private static final String DESTINATION_DIRECTORY = "upload-directory";
     private ObjectMapper objectMapper;
     private final BlobStorageRepository blobStorageRepository;
     private final StatusService statusService;
@@ -53,6 +55,9 @@ public class BlobService {
     public void init() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        File directory = new File(DESTINATION_DIRECTORY);
+        if(!directory.exists())
+            directory.mkdir();
     }
 
     public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
@@ -71,7 +76,14 @@ public class BlobService {
                     .paymentPositions(paymentPositionsModel.getPaymentPositions())
                     .build();
 
-            return upload(uploadInput, file, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
+            String uploadKey = upload(uploadInput, file, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
+
+            if(!file.delete()) {
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+            }
+
+
+            return uploadKey;
         } catch (IOException e) {
         log.error("[Error][BlobService@upload] " + e.getMessage());
         throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
@@ -94,7 +106,13 @@ public class BlobService {
                     .paymentPositionIUPDs(multipleIUPDModel.getPaymentPositionIUPDs())
                     .build();
 
-            return upload(uploadInput, file, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
+            String uploadKey = upload(uploadInput, file, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
+
+            if(!file.delete()) {
+                log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
+            }
+
+            return uploadKey;
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
@@ -120,7 +138,6 @@ public class BlobService {
     }
 
     private File unzip(CompletedFileUpload file) {
-        String destinationDirectory = "./";
         int zipFiles = 0;
         int zipSize = 0;
         File outputFile = null;
@@ -154,10 +171,16 @@ public class BlobService {
 
                     // Sanitize file name to remove potentially malicious characters
                     String sanitizedFileName = sanitizeFileName(fileName);
-                    String sanitizedOutputPath = destinationDirectory + File.separator + sanitizedFileName;
+                    String sanitizedOutputPath = DESTINATION_DIRECTORY + File.separator + sanitizedFileName;
 
                     // Disable auto-execution for extracted files
                     outputFile = new File(sanitizedOutputPath);
+
+                    if (!outputFile.toPath().normalize().startsWith(DESTINATION_DIRECTORY)) {
+                        log.error("[Error][BlobService@unzip] Bad zip entry: the normalized file path does not start with the destination directory");
+                        throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Bad zip entry");
+                    }
+
                     boolean executableOff = outputFile.setExecutable(false);
                     if(!executableOff) {
                         log.error("[Error][BlobService@unzip] The underlying file system does not implement an execution permission and the operation failed.");
@@ -209,11 +232,13 @@ public class BlobService {
             return "";
         }
 
-        // Replace invalid characters with underscores
+        // Match a single character not present in the list below [^\w._-] and replace invalid characters with underscores
         fileName = fileName.replaceAll("[^\\w._-]", "_");
 
         // Normalize file name to lower case
         fileName = fileName.toLowerCase();
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0,8);
+        fileName = fileName.replace(".", uuid + ".");
 
         return fileName;
     }

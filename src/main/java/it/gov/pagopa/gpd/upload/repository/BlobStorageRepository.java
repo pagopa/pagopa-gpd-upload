@@ -70,6 +70,11 @@ public class BlobStorageRepository implements FileRepository {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String blobName = this.uploadFileBlocksAsBlockBlob(blockBlobClient, file);
+
+                if(!file.delete()) {
+                    log.error(String.format("[Error][BlobStorageRepository@uploadFileAsync] The file %s was not deleted", file.getName()));
+                }
+
                 return blobName;
             } catch (IOException e) {
                 throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Error uploading file asynchronously", e);
@@ -84,15 +89,15 @@ public class BlobStorageRepository implements FileRepository {
     private String uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, File file) throws IOException {
         InputStream inputStream = new FileInputStream(file);
         ByteArrayInputStream byteInputStream = null;
-        byte[] bytes = null;
         int blockSize = 1024 * 1024;
+
         try {
             // Split the file into 1 MB blocks (block size deliberately kept small for the demo) and upload all the blocks
             int blockNum = 0;
             String blockId = null;
             String blockIdEncoded = null;
-            ArrayList<String> blockList = new ArrayList<String>();
-            bytes = inputStream.readNBytes(blockSize);
+            ArrayList<String> blockList = new ArrayList<>();
+            byte[] bytes = inputStream.readNBytes(blockSize);
             while (bytes.length == blockSize) {
                 byteInputStream = new ByteArrayInputStream(bytes);
                 blockId = String.format("%05d", blockNum); // 5-digit number
