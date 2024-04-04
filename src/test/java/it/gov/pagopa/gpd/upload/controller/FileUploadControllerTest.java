@@ -21,6 +21,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 
@@ -43,13 +44,7 @@ class FileUploadControllerTest {
 
     @Test
     void createDebtPositionsByFile_OK() throws IOException {
-        // Creating a temporary file with a non-randomly generated name
-        File file = new File(System.getProperty("java.io.tmpdir"), "/test.zip");
-        // Warning: This will fail on Windows as it doesn't support PosixFilePermissions.
-        Files.createFile(
-                file.toPath(),
-                PosixFilePermissions.asFileAttribute(EnumSet.of(OWNER_READ, OWNER_WRITE)) // permissions `-rw-------`
-        );
+        File file = getTempFile();
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -60,11 +55,12 @@ class FileUploadControllerTest {
 
         assertNotNull(response);
         assertEquals(ACCEPTED, response.getStatus());
+        file.delete();
     }
 
     @Test
     void updateDebtPositionsByFile_OK() throws IOException {
-        File file = File.createTempFile("test", ".zip");
+        File file = getTempFile();
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -75,11 +71,12 @@ class FileUploadControllerTest {
 
         assertNotNull(response);
         assertEquals(ACCEPTED, response.getStatus());
+        file.delete();
     }
 
     @Test
     void deleteDebtPositionsByFile_OK() throws IOException {
-        File file = File.createTempFile("test", ".zip");
+        File file = getTempFile();
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -90,6 +87,15 @@ class FileUploadControllerTest {
 
         assertNotNull(response);
         assertEquals(ACCEPTED, response.getStatus());
+        file.delete();
+    }
+
+    File getTempFile() throws IOException {
+        // Warning: This will fail on Windows as it doesn't support PosixFilePermissions.
+        return Files.createTempFile(
+                Path.of("./"), "test", ".zip",
+                PosixFilePermissions.asFileAttribute(EnumSet.of(OWNER_READ, OWNER_WRITE)) // permissions `-rw-------`
+        ).toFile();
     }
 
     @Test
