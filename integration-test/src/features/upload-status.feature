@@ -2,7 +2,7 @@ Feature: upload status check
 
   Background:
     Given GPD-Upload running
-    And zip file of 10 payment-position
+    And zip file of 10 payment-positions
     And the client send file through POST to /brokers/brokertest/organizations/ectest/debtpositions/file
     And check statusCode is 202
     And upload UID is been extracted from location header
