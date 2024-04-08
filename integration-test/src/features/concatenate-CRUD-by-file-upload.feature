@@ -3,23 +3,23 @@ Feature: concatenate CRUD by file upload
   Background:
     Given GPD-Upload running
 
-  Scenario: Create and Update same Debt Position by file upload OK
+  Scenario: Create and Update same Debt Positions by file upload OK
   // todo
 
-  Scenario: Create and Delete same Debt Position by file upload OK
+  Scenario: Create and Delete same Debt Positions by file upload OK
   // todo
 
-  Scenario: Create, Update and Delete same Debt Position by file upload OK
+  Scenario: Create, Update and Delete same Debt Positions by file upload OK
   // todo
 
-  Scenario: N x Create same Debt Position by file upload OK
+  Scenario: Create same Debt Positions by file upload 3 times
   // todo
 
-  Scenario: N x Create different Debt Position by file upload OK
+  Scenario: Create different Debt Positions by file upload 3 times
   // todo
 
-  Scenario: N x Update different Debt Position by file upload OK
+  Scenario: Update different Debt Positions by file upload 3 times
   // todo
 
-  Scenario: N x Delete different Debt Position by file upload OK
+  Scenario: Delete different Debt Positions by file upload 3 times
   // todo
