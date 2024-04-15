@@ -62,7 +62,7 @@ public class BlobService {
 
     public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
         File file = this.unzip(fileUpload);
-        log.info("File with name " + file.getName() + " has been unzipped");
+        log.info("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
@@ -76,7 +76,7 @@ public class BlobService {
                     .paymentPositions(paymentPositionsModel.getPaymentPositions())
                     .build();
 
-            String uploadKey = upload(uploadInput, file, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
+            String uploadKey = upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
 
             if(!file.delete()) {
                 log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
@@ -106,7 +106,7 @@ public class BlobService {
                     .paymentPositionIUPDs(multipleIUPDModel.getPaymentPositionIUPDs())
                     .build();
 
-            String uploadKey = upload(uploadInput, file, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
+            String uploadKey = upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
 
             if(!file.delete()) {
                 log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
@@ -120,14 +120,19 @@ public class BlobService {
     }
 
 
-    public String upload(UploadInput in, File file, String broker, String organizationFiscalCode, int totalItem) {
+    public String upload(UploadInput in, String broker, String organizationFiscalCode, int totalItem) {
         try {
+            log.info(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
+                    in.getUploadOperation(), broker, organizationFiscalCode));
+
             // replace file content
-            FileWriter fw = new FileWriter(file.getName());
-            fw.write(objectMapper.writeValueAsString(in));
-            fw.close();
+            File uploadInputFile = new File("temp.json");
+            FileWriter fileWriter = new FileWriter(uploadInputFile);
+            fileWriter.write(objectMapper.writeValueAsString(in));
+            fileWriter.close();
+
             // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, uploadInputFile);
             statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
 
             return fileId;
