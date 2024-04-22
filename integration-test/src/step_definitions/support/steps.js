@@ -1,6 +1,6 @@
 const {Given, When, Then, setDefaultTimeout} = require('@cucumber/cucumber')
 const assert = require("assert");
-const {zipFile} = require('./data')
+const {zipFile, preparePayload} = require('./data')
 const {call, get, sleep} = require('./common')
 const {uploadFile} = require('./service')
 const fs = require("fs");
@@ -18,7 +18,20 @@ Given(/^zip file of (.*) payment-position$/, async function (n) {
     filePath = await zipFile(n);
 });
 
-Given(/^GPD-Upload running$/, async function () {
+/**
+ * This method allows the creation of the VALID or INVALID file zip payload
+ * to be sent via POST, PUT and DELETE operations depending on the contents
+ * of the file and the operation required by the test.
+ * @param {string} zip_type - The type of zip file {VALID, INVALID_ENTRIES, INVALID_FORMAT}
+ * @param {int} N - The number of payment positions or IUPD
+ * @param {string} pp_type - The type of payment positions JSON payload {VALID, INVALID}
+ * @param {string} method - The method under test {POST, PUT, DELETE}
+ */
+Given(/^(.*) zip file of (.*) (.*) payment-positions to be (.*)$/, async function (zip_type, n, pp_type, method) {
+    filePath = await preparePayload(zip_type, n, pp_type, method.substring(0, method.length - 1));
+});
+
+Given(/^GPD-Upload is running$/, async function () {
     await sleep(10000) // prevent rate-limit response
     let r = await get(app_host + '/info')
     assert.strictEqual(r.status, 200, r);
@@ -34,7 +47,7 @@ Given(/^upload UID is been extracted from (.*) header$/, async function (headerK
 When(/^the client send file through (GET|POST|PUT|DELETE) to (.*)$/,
     async function (method, url) {
         await sleep(10000) // prevent rate-limit response
-        responseToCheck = await uploadFile(app_host + url, filePath)
+        responseToCheck = await uploadFile(app_host + url, filePath, method)
     }
 );
 
@@ -66,7 +79,6 @@ When(/^the upload of (.*) and (.*) related to UID is completed$/,
         console.log("Upload duration: " + (Date.now() - start_time))
     }
 );
-
 
 Then(/^check statusCode is (\d+)$/, function (status) {
     assert.strictEqual(responseToCheck.status, status, responseToCheck);

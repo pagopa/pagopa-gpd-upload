@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.upload.controller;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.multipart.CompletedFileUpload;
@@ -64,6 +65,8 @@ public class FileUploadController {
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file) {
+        if (null == file)
+            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
         String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.CREATE, file);
         log.info("[CREATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
@@ -97,6 +100,8 @@ public class FileUploadController {
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file) {
+        if (null == file)
+            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
         String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.UPDATE, file);
         log.info("[UPDATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
@@ -130,6 +135,8 @@ public class FileUploadController {
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file) {
+        if (null == file)
+            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
         String uploadID = blobService.delete(brokerCode, organizationFiscalCode, UploadOperation.DELETE, file);
         log.info("[DELETE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";

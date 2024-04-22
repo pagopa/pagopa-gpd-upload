@@ -15,5 +15,3 @@ Feature: upload status check
       | processedItem   |
       | submittedItem   |
       | startTime       |
-
-
