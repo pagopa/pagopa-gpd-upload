@@ -14,7 +14,7 @@ let responseToCheck;
 let UID;
 
 
-Given(/^zip file of (.*) payment-position$/, async function (n) {
+Given(/^zip file of (.*) payment-positions$/, async function (n) {
     filePath = await zipFile(n);
 });
 
@@ -91,6 +91,14 @@ Then(/^body contains the following fields:$/, function (dataTable) {
             assert.ok(responseToCheck.data.cell !== null, "Value " + cell + " should not be null");
         });
     });
+});
+
+Then(/^body contains the field (.*) valued (\d+)$/, function (field, value) {
+    assert.strictEqual(responseToCheck.data[field], value, responseToCheck);
+});
+
+Then(/^body contains the path field (.*) 0 (.*) valued (\d+)$/, function (field1, field2, value) {
+    assert.strictEqual(responseToCheck.data[field1][0][field2], value, responseToCheck);
 });
 
 Then(/^check (.*) header regex (.*)$/, function (headerKey, expectedPattern) {
