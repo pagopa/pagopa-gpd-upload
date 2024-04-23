@@ -21,12 +21,12 @@ public class GPDValidator<T> {
         this.validator = validator;
     }
 
-    public boolean isValid(String id, T model) throws IOException {
-        log.info("[GPDValidator@isValid] Starting validation for object related to " + id);
+    public boolean isValid(T model) throws IOException {
+        log.info("[GPDValidator@isValid] Starting validation for object related to " + model.hashCode());
         Set<ConstraintViolation<T>> constraintViolations;
         constraintViolations = validator.validate(model);
         if(!constraintViolations.isEmpty()) {
-            log.error("[Error][GPDValidator@isValid] Validation error for object related to " + id);
+            log.error("[Error][GPDValidator@isValid] Validation error for object related to " + model.hashCode());
             for(ConstraintViolation<T> cv : constraintViolations) {
                 log.error("[Error][GPDValidator@isValid] Invalid value: " + cv.getInvalidValue());
                 log.error("[Error][GPDValidator@isValid] Invalid value message: " + cv.getMessage());
@@ -34,7 +34,7 @@ public class GPDValidator<T> {
             }
             return false;
         }
-        log.info("[GPDValidator@isValid] PaymentPosition with id " + id + " validated");
+        log.info("[GPDValidator@isValid] PaymentPosition with id " + model.hashCode() + " validated");
         return true;
     }
 }

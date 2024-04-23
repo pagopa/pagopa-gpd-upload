@@ -66,8 +66,13 @@ public class BlobService {
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
-            if (!paymentPositionsValidator.isValid(file.getName(), paymentPositionsModel)) {
-                log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
+            if(!file.delete()) {
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+            }
+
+            if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
+                log.error(String.format("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker %s and organization %s",
+                        broker, organizationFiscalCode));
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -76,17 +81,13 @@ public class BlobService {
                     .paymentPositions(paymentPositionsModel.getPaymentPositions())
                     .build();
 
-            String uploadKey = upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
-
-            if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
-            }
-
-
-            return uploadKey;
+            // return upload key
+            return upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
         } catch (IOException e) {
-        log.error("[Error][BlobService@upload] " + e.getMessage());
-        throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
+            log.error("[Error][BlobService@upload] " + e.getMessage());
+            if(!file.delete())
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
@@ -96,8 +97,13 @@ public class BlobService {
         try {
             MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(new FileInputStream(file), MultipleIUPDModel.class);
 
-            if (!multipleIUPDValidator.isValid(file.getName(), multipleIUPDModel)) {
-                log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
+            if(!file.delete()) {
+                log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
+            }
+
+            if (!multipleIUPDValidator.isValid(multipleIUPDModel)) {
+                log.error(String.format("[Error][BlobService@delete] Debt-Positions validation failed for upload from broker %s and organization %s",
+                        broker, organizationFiscalCode));
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -106,15 +112,12 @@ public class BlobService {
                     .paymentPositionIUPDs(multipleIUPDModel.getPaymentPositionIUPDs())
                     .build();
 
-            String uploadKey = upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
-
-            if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
-            }
-
-            return uploadKey;
+            // return upload key
+            return upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
+            if(!file.delete())
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
@@ -126,7 +129,7 @@ public class BlobService {
                     in.getUploadOperation(), broker, organizationFiscalCode));
 
             // replace file content
-            File uploadInputFile = new File("temp.json");
+            File uploadInputFile = File.createTempFile("gpd_upload_temp", ".json");
             FileWriter fileWriter = new FileWriter(uploadInputFile);
             fileWriter.write(objectMapper.writeValueAsString(in));
             fileWriter.close();
