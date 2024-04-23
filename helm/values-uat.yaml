@@ -46,10 +46,10 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "2Gi"
+      memory: "1Gi"
       cpu: "0.25"
     limits:
-      memory: "2Gi"
+      memory: "1Gi"
       cpu: "0.25"
   autoscaling:
     enable: true
@@ -121,3 +121,5 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+ghcr:
+  io/pagopa/pagopa-gpd-upload:
