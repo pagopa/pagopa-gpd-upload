@@ -18,6 +18,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -62,12 +64,17 @@ public class BlobService {
 
     public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
         File file = this.unzip(fileUpload);
-        log.info("File with name " + file.getName() + " has been unzipped");
+        log.info("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
-            if (!paymentPositionsValidator.isValid(file.getName(), paymentPositionsModel)) {
-                log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
+            if(!file.delete()) {
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+            }
+
+            if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
+                log.error(String.format("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker %s and organization %s",
+                        broker, organizationFiscalCode));
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -76,17 +83,13 @@ public class BlobService {
                     .paymentPositions(paymentPositionsModel.getPaymentPositions())
                     .build();
 
-            String uploadKey = upload(uploadInput, file, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
-
-            if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
-            }
-
-
-            return uploadKey;
+            // return upload key
+            return upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
         } catch (IOException e) {
-        log.error("[Error][BlobService@upload] " + e.getMessage());
-        throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
+            log.error("[Error][BlobService@upload] " + e.getMessage());
+            if(!file.delete())
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
@@ -96,8 +99,13 @@ public class BlobService {
         try {
             MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(new FileInputStream(file), MultipleIUPDModel.class);
 
-            if (!multipleIUPDValidator.isValid(file.getName(), multipleIUPDModel)) {
-                log.error("[Error][BlobService@upload] Debt-Positions validation failed for file " + file.getName());
+            if(!file.delete()) {
+                log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
+            }
+
+            if (!multipleIUPDValidator.isValid(multipleIUPDModel)) {
+                log.error(String.format("[Error][BlobService@delete] Debt-Positions validation failed for upload from broker %s and organization %s",
+                        broker, organizationFiscalCode));
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -106,28 +114,30 @@ public class BlobService {
                     .paymentPositionIUPDs(multipleIUPDModel.getPaymentPositionIUPDs())
                     .build();
 
-            String uploadKey = upload(uploadInput, file, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
-
-            if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
-            }
-
-            return uploadKey;
+            // return upload key
+            return upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
+            if(!file.delete())
+                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
 
-    public String upload(UploadInput in, File file, String broker, String organizationFiscalCode, int totalItem) {
+    public String upload(UploadInput in, String broker, String organizationFiscalCode, int totalItem) {
         try {
+            log.info(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
+                    in.getUploadOperation(), broker, organizationFiscalCode));
+
             // replace file content
-            FileWriter fw = new FileWriter(file.getName());
-            fw.write(objectMapper.writeValueAsString(in));
-            fw.close();
+            File uploadInputFile = Files.createTempFile(Path.of(DESTINATION_DIRECTORY), "gpd_upload_temp", ".json").toFile();
+            FileWriter fileWriter = new FileWriter(uploadInputFile);
+            fileWriter.write(objectMapper.writeValueAsString(in));
+            fileWriter.close();
+
             // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, file);
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, uploadInputFile);
             statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
 
             return fileId;
