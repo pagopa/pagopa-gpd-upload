@@ -19,6 +19,7 @@ import jakarta.inject.Singleton;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -130,7 +131,7 @@ public class BlobService {
                     in.getUploadOperation(), broker, organizationFiscalCode));
 
             // replace file content
-            File uploadInputFile = Files.createTempFile("gpd_upload_temp", ".json").toFile();
+            File uploadInputFile = Files.createTempFile(Path.of(DESTINATION_DIRECTORY), "gpd_upload_temp", ".json").toFile();
             FileWriter fileWriter = new FileWriter(uploadInputFile);
             fileWriter.write(objectMapper.writeValueAsString(in));
             fileWriter.close();
