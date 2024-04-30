@@ -1,38 +1,42 @@
 package it.gov.pagopa.gpd.upload.utils;
 
 import io.micronaut.context.annotation.Context;
-import jakarta.inject.Inject;
+import io.micronaut.http.HttpStatus;
+import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.metadata.BeanDescriptor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 @Singleton
 @Context
 @Slf4j
 public class GPDValidator<T> {
-    private final Validator validator;
-
-    @Inject
-    public GPDValidator(Validator validator) {
-        this.validator = validator;
-    }
 
     public boolean isValid(T model) throws IOException {
-        log.info("[GPDValidator@isValid] Starting validation for object related to " + model.hashCode());
+        ValidatorFactory factory = jakarta.validation.Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
         Set<ConstraintViolation<T>> constraintViolations;
         constraintViolations = validator.validate(model);
+        BeanDescriptor x = validator.getConstraintsForClass(PaymentPositionModel.class);
+        System.out.println(x.getConstraintDescriptors());
         if(!constraintViolations.isEmpty()) {
+            Set<String> invalidValues = new HashSet<>();
             log.error("[Error][GPDValidator@isValid] Validation error for object related to " + model.hashCode());
             for(ConstraintViolation<T> cv : constraintViolations) {
-                log.error("[Error][GPDValidator@isValid] Invalid value: " + cv.getInvalidValue());
-                log.error("[Error][GPDValidator@isValid] Invalid value message: " + cv.getMessage());
-                log.error("[Error][GPDValidator@isValid] Invalid value descriptor: " + cv.getConstraintDescriptor());
+                log.error(String.format("[Error][GPDValidator@isValid] Invalid value: %s, invalid value message: %s",
+                        cv.getInvalidValue(), cv.getMessage()));
+                invalidValues.add(cv.getMessage());
             }
-            return false;
+            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS",
+                    "The format of the debt positions in the uploaded file is invalid. Invalid values: " + invalidValues);
         }
         log.info("[GPDValidator@isValid] PaymentPosition with id " + model.hashCode() + " validated");
         return true;

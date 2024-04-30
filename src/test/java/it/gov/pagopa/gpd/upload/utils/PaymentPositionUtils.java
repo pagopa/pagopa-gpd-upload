@@ -56,7 +56,6 @@ public class PaymentPositionUtils {
                     .iupd("IUPD_" + ID)
                     .type(Type.F)
                     .fiscalCode(UUID.randomUUID().toString().substring(0,5))
-                    .email("malformed_email")
                     .fullName("Mario Rossi")
                     .companyName("Company Name")
                     .paymentOption(paymentOptionList)
