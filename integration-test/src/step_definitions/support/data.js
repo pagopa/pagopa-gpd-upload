@@ -59,28 +59,7 @@ function generateAndWritePaymentPositions(N) {
 
     fs.writeFileSync(filename, jsonPP);
 
-    return filename;
-}
-
-function generateAndWriteValidMultipleIUPD(N) {
-    const mutlipleIUPD = new MutlipleIUPD(N);
-    const jsonPP = JSON.stringify(mutlipleIUPD, null, 2);
-    const extender = uuidv4().substring(0, 4);
-    const filename = `test${extender}.json`;
-
-    fs.writeFileSync(filename, jsonPP);
-
-    return filename;
-}
-
-function generateAndWriteInvalidMultipleIUPD(N) {
-    const jsonPP = JSON.stringify({"name": "Aname"});
-    const extender = uuidv4().substring(0, 4);
-    const filename = `test${extender}.json`;
-
-    fs.writeFileSync(filename, jsonPP);
-
-    return filename;
+    return [filename, jsonPP]
 }
 
 function generateAndWriteInvalidPaymentPositions(N) {
@@ -93,36 +72,61 @@ function generateAndWriteInvalidPaymentPositions(N) {
 
     fs.writeFileSync(filename, jsonPP);
 
-    return filename;
+    return [filename, jsonPP];
 }
 
-async function zipFile(N) {
-    filePath = generateAndWritePaymentPositions(N)
+function generateAndWriteValidMultipleIUPD(item_number, iupd_array) {
+    let mutlipleIUPD = new MutlipleIUPD(item_number);
 
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    const output = fs.createWriteStream(`${filePath}.zip`);
+    if(iupd_array) { // !(undefined, null, empty string, 0, NaN, false)
+        mutlipleIUPD.paymentPositionIUPDs = iupd_array;
+    }
+    const jsonPP = JSON.stringify(mutlipleIUPD, null, 2);
+    const extender = uuidv4().substring(0, 4);
+    const filename = `test${extender}.json`;
 
-    archive.pipe(output);
+    fs.writeFileSync(filename, jsonPP);
 
-    // Explicitly filter out .DS_Store file
-    const stats = fs.statSync(filePath);
-    if (stats.isFile() && !filePath.endsWith('/.DS_Store')) {
-        archive.file(filePath, { name: 'payment-positions.json' });
+    return [filename, jsonPP];
+}
+
+function generateAndWriteInvalidMultipleIUPD(N) {
+    const jsonPP = JSON.stringify({"name": "John"});
+    const extender = uuidv4().substring(0, 4);
+    const filename = `test${extender}.json`;
+
+    fs.writeFileSync(filename, jsonPP);
+
+    return [filename, jsonPP];
+}
+
+async function extractIUPDs(filePath) {
+    iupds = []
+
+    try {
+        const payload = fs.readFileSync(filePath, 'utf8');
+        const data = JSON.parse(payload)
+        pps = data.paymentPositions;
+        for (key in pps) {
+            pp = pps[key]
+            iupds[key] = pp.iupd
+        }
+    } catch (err) {
+        console.error('Error while parsing JSON data:', err)
     }
 
-    await archive.finalize();
-
-    return `${filePath}.zip`;
+    return iupds;
 }
 
-async function preparePayload(zip_type, N, pp_type, method) {
+async function generate_zip_with_type(item_number, zip_type, pp_type, method, iupds) {
+    console.log(`Zip generation: {zip-type = ${zip_type}, pp-type = ${pp_type}, method = ${method}}`)
     if (method === 'create' || method === 'update') {
         switch (pp_type) {
             case 'INVALID':
-                filePath = generateAndWriteInvalidPaymentPositions(N);
+                filePath = generateAndWriteInvalidPaymentPositions(item_number)[0];
                 break;
             case 'VALID':
-                filePath = generateAndWritePaymentPositions(N);
+                filePath = generateAndWritePaymentPositions(item_number)[0];
                 break;
             default:
                 // Handle other cases if needed
@@ -131,10 +135,10 @@ async function preparePayload(zip_type, N, pp_type, method) {
     } else if(method === 'delete') {
         switch (pp_type) {
             case 'INVALID':
-                filePath = generateAndWriteInvalidMultipleIUPD(N);
+                filePath = generateAndWriteInvalidMultipleIUPD(item_number)[0];
                 break;
             case 'VALID':
-                filePath = generateAndWriteValidMultipleIUPD(N);
+                filePath = generateAndWriteValidMultipleIUPD(item_number, iupds)[0];
                 break;
             default:
                 // Handle other cases if needed
@@ -142,10 +146,10 @@ async function preparePayload(zip_type, N, pp_type, method) {
         }
     }
 
-    return zipFileOptions(zip_type, N, filePath)
+    return zip_with_options(zip_type, item_number, filePath)
 }
 
-async function zipFileOptions(zip_type, N, JSONpath) {
+async function zip_with_options(zip_type, N, JSONpath) {
     const archive = archiver('zip', { zlib: { level: 9 } });
     const output = fs.createWriteStream(`${JSONpath}.zip`);
 
@@ -162,7 +166,7 @@ async function zipFileOptions(zip_type, N, JSONpath) {
             if (stats.isFile()) {
                 archive.file(JSONpath, { name: 'payment-positions.json' });
                 // Add the second JSON file to the archive
-                archive.append(JSON.stringify({ "name": "Aname", "age": 99 }), { name: 'file2.json' });
+                archive.append(JSON.stringify({ "name": "John", "age": 99 }), { name: 'file2.json' });
             }
             break;
         case 'INVALID_FORMAT':
@@ -190,4 +194,51 @@ async function zipFileOptions(zip_type, N, JSONpath) {
     return `${JSONpath}.zip`;
 }
 
-module.exports = { preparePayload, zipFile }
+async function zip(filePath) {
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const output = fs.createWriteStream(`${filePath}.zip`);
+
+    archive.pipe(output);
+
+    // Explicitly filter out .DS_Store file
+    const stats = fs.statSync(filePath);
+    if (stats.isFile() && !filePath.endsWith('/.DS_Store')) {
+        archive.file(filePath, { name: 'payment-positions.json' });
+    }
+
+    await archive.finalize();
+
+    return `${filePath}.zip`;
+}
+
+async function zip_by_content(json_content) {
+    const file_name = `test_${uuidv4().substring(0, 10)}.zip`;
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const output = fs.createWriteStream(file_name);
+
+    archive.pipe(output);
+    archive.append(json_content, { name: 'data.json' });
+    archive.finalize();
+
+    return file_name
+}
+
+async function mock_zip(sizeMB) {
+    const file_name = "./file.zip"
+    const archive = archiver('zip', { zlib: { level: 0 } });
+    const output = fs.createWriteStream(file_name);
+    const dummyContent = Buffer.alloc(1024 * 1024, 'MOCK');
+
+    archive.pipe(output);
+
+    const fileSize = sizeMB * 1024 * 1024;
+    for (let i = 0; i < fileSize / dummyContent.length; i++) {
+        archive.append(dummyContent, { name: `file${i}.txt` });
+    }
+
+    await archive.finalize();
+
+    return file_name
+}
+
+module.exports = { zip, mock_zip, zip_by_content, extractIUPDs, generate_zip_with_type, generateAndWritePaymentPositions, generateAndWriteValidMultipleIUPD }

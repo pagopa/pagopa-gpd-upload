@@ -59,7 +59,8 @@ public class BlobStorageRepository implements FileRepository {
             // Handle the result asynchronously
             log.info(String.format("Asynchronous upload completed for blob %s", blobName));
         }).exceptionally(ex -> {
-            log.error(String.format("[Error][BlobStorageRepository@upload] Exception while uploading file %s asynchronously", file.getName()));
+            log.error(String.format("[Error][BlobStorageRepository@upload] Exception while uploading file %s asynchronously: %s",
+                    file.getName(), ex.getMessage()));
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Error uploading file asynchronously", ex);
         });
 

@@ -1,21 +1,37 @@
 const {Given, When, Then, setDefaultTimeout} = require('@cucumber/cucumber')
 const assert = require("assert");
-const {zipFile, preparePayload} = require('./data')
+const {zip_by_content, mock_zip, generate_zip_with_type, extractIUPDs, generateAndWritePaymentPositions, generateAndWriteValidMultipleIUPD} = require('./data')
 const {call, get, sleep} = require('./common')
 const {uploadFile} = require('./service')
-const fs = require("fs");
 
 const app_host = process.env.APP_HOST
 
 setDefaultTimeout(3600 * 1000);
 
-let filePath;
+let jsonPath
+let zipPath;
 let responseToCheck;
 let UID;
 
 
 Given(/^zip file of (.*) payment-positions$/, async function (n) {
-    filePath = await zipFile(n);
+    let pp = generateAndWritePaymentPositions(n);
+    jsonPath = pp[0]
+    let json = pp[1]
+    zipPath = await zip_by_content(json)
+});
+
+Given(/^zip file of (\d+) IUPD from payment-positons zip file$/, async function (n) {
+    let iupds = await extractIUPDs(jsonPath)
+    let pp = generateAndWriteValidMultipleIUPD(n, iupds);
+    jsonPath = pp[0]
+    let json = pp[1]
+    
+    zipPath = await zip_by_content(json)
+});
+
+Given(/^mock zip file with a size of (\d+) MB (.*)$/, async function (size, method) {
+    zipPath = await mock_zip(size)
 });
 
 /**
@@ -28,11 +44,11 @@ Given(/^zip file of (.*) payment-positions$/, async function (n) {
  * @param {string} method - The method under test {POST, PUT, DELETE}
  */
 Given(/^(.*) zip file of (.*) (.*) payment-positions to be (.*)$/, async function (zip_type, n, pp_type, method) {
-    filePath = await preparePayload(zip_type, n, pp_type, method.substring(0, method.length - 1));
+    zipPath = await generate_zip_with_type(n, zip_type, pp_type, method.substring(0, method.length - 1));
 });
 
 Given(/^GPD-Upload is running$/, async function () {
-    await sleep(10000) // prevent rate-limit response
+    await sleep(1000) // prevent rate-limit response
     let r = await get(app_host + '/info')
     assert.strictEqual(r.status, 200, r);
 });
@@ -46,8 +62,9 @@ Given(/^upload UID is been extracted from (.*) header$/, async function (headerK
 
 When(/^the client send file through (GET|POST|PUT|DELETE) to (.*)$/,
     async function (method, url) {
-        await sleep(10000) // prevent rate-limit response
-        responseToCheck = await uploadFile(app_host + url, filePath, method)
+        await sleep(1000) // prevent rate-limit response
+        console.log("call " + method + " to " + url);
+        responseToCheck = await uploadFile(app_host + url, zipPath, method)
     }
 );
 
@@ -58,21 +75,21 @@ When(/^the client send (GET|POST|PUT|DELETE) to (.*)$/,
         else console.log("URL does not contain 'UID'");
 
         console.log("call " + method + " to " + url);
-        await sleep(10000) // prevent rate-limit response
+        await sleep(1000) // prevent rate-limit response
         responseToCheck = await call(method, app_host + url, null);
     }
 );
 
 When(/^the upload of (.*) and (.*) related to UID is completed$/,
     async function (broker, ec) {
-        await sleep(10000) // prevent rate-limit response
+        await sleep(1000) // prevent rate-limit response
         let status_url = "/brokers/"+broker+"/organizations/"+ec+"/debtpositions/file/"+UID+"/status"
         let status_response = await call('GET', app_host + status_url, null);
         completed = false;
         const start_time = Date.now();
 
         while(status_response.data.processedItem - status_response.data.submittedItem !== 0) {
-            await sleep(10000) // prevent rate-limit response
+            await sleep(1000) // prevent rate-limit response
             status_response = await call('GET', app_host + status_url, null);
         }
 
@@ -97,7 +114,7 @@ Then(/^body contains the field (.*) valued (\d+)$/, function (field, value) {
     assert.strictEqual(responseToCheck.data[field], value, responseToCheck);
 });
 
-Then(/^body contains the path field (.*) 0 (.*) valued (\d+)$/, function (field1, field2, value) {
+Then(/^body contains the path field (.*) (.*) valued (\d+)$/, function (field1, field2, value) {
     assert.strictEqual(responseToCheck.data[field1][0][field2], value, responseToCheck);
 });
 

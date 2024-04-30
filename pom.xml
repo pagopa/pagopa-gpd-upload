@@ -18,8 +18,8 @@
         <release.version>17</release.version>
         <micronaut.version>4.2.0</micronaut.version>
         <lombok.version>1.18.32</lombok.version>
-        <azure.cosmos.version>4.57.0</azure.cosmos.version>
-        <azure.storage.version>12.25.3</azure.storage.version>
+        <azure.cosmos.version>4.58.0</azure.cosmos.version>
+        <azure.storage.version>12.25.4</azure.storage.version>
         <jackson.datatype.version>2.17.0</jackson.datatype.version>
         <mockito-junit.version>4.1.0</mockito-junit.version>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
@@ -187,6 +187,12 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
 </project>
