@@ -65,7 +65,9 @@ function generateAndWritePaymentPositions(N) {
 function generateAndWriteInvalidPaymentPositions(N) {
     const fiscalCode = uuidv4().substring(0, 11);
     const paymentPositions = new PaymentPositions(fiscalCode, N);
-    paymentPositions.paymentPositions.at(0).companyName = null;
+    for(i in paymentPositions.paymentPositions) {
+        paymentPositions.paymentPositions.at(i).companyName = null
+    }
     const jsonPP = JSON.stringify(paymentPositions, null, 2);
     const extender = uuidv4().substring(0, 4);
     const filename = `test${extender}.json`;
