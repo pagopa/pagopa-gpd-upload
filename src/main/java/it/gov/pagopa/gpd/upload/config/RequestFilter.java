@@ -9,16 +9,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 
 @Slf4j
-@Filter("/**")
+@Filter("/brokers")
 public class RequestFilter implements HttpServerFilter {
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
-        if(!request.getPath().equals("/info")) {
-            log.info("Request: " + request.getMethodName() + request.getPath() + ", content-length: " + request.getContentLength());
-            request.getHeaders().forEach(h -> log.debug(
-                    "header: " + h.getKey() + " = " + h.getValue())
-            );
-        }
+        log.info("Request: " + request.getMethodName() + request.getPath() + ", content-length: " + request.getContentLength());
+        request.getHeaders().forEach(h -> log.debug(
+                "header: " + h.getKey() + " = " + h.getValue())
+        );
+
         return chain.proceed(request);
     }
 }

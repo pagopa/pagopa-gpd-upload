@@ -14,7 +14,10 @@
       "url": "https://{host}{basePath}",
       "variables": {
         "basePath": {
-          "default": "/upload/gpd/debt-positions-service/v1"
+          "default": "/upload/gpd/debt-positions-service/v1",
+          "enum": [
+            "/upload/gpd/debt-positions-service/v1"
+          ]
         },
         "host": {
           "default": "api.dev.platform.pagopa.it",
