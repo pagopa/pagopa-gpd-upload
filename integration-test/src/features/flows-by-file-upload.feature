@@ -1,4 +1,4 @@
-Feature: concatenate CRUD by file upload
+Feature: Operation flows by file upload
 
   Background:
     Given GPD-Upload is running

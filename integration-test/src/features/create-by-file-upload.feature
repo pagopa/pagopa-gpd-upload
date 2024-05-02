@@ -19,7 +19,7 @@ Feature: CREATE by file upload
     When the client send file through POST to /brokers/brokertest/organizations/77777777777/debtpositions/file
     Then check statusCode is 400
 
-  Scenario: Create Debt Positions by file upload KO: invalid zip containing a file with a format different from JSON
+  Scenario: Create Debt Positions by file upload KO: zip file is missing
     Given EMPTY zip file of 2 VALID payment-positions to be created
     When the client send file through POST to /brokers/brokertest/organizations/77777777777/debtpositions/file
     Then check statusCode is 400

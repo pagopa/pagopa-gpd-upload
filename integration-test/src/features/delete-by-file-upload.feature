@@ -20,7 +20,7 @@ Feature: DELETE by file upload
     Then check statusCode is 400
 
   Scenario: Delete Debt Positions by file upload KO: zip file is missing
-    Given EMPTY zip file of 2 VALID payment-positions to be updated
+    Given EMPTY zip file of 2 VALID payment-positions to be deleted
     When the client send file through DELETE to /brokers/brokertest/organizations/77777777777/debtpositions/file
     Then check statusCode is 400
 
