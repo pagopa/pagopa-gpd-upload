@@ -25,8 +25,7 @@ public class GPDValidator<T> {
         Validator validator = factory.getValidator();
         Set<ConstraintViolation<T>> constraintViolations;
         constraintViolations = validator.validate(model);
-        BeanDescriptor x = validator.getConstraintsForClass(PaymentPositionModel.class);
-        System.out.println(x.getConstraintDescriptors());
+
         if(!constraintViolations.isEmpty()) {
             Set<String> invalidValues = new HashSet<>();
             log.error("[Error][GPDValidator@isValid] Validation error for object related to " + model.hashCode());
@@ -38,6 +37,7 @@ public class GPDValidator<T> {
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS",
                     "The format of the debt positions in the uploaded file is invalid. Invalid values: " + invalidValues);
         }
+
         log.info("[GPDValidator@isValid] PaymentPosition with id " + model.hashCode() + " validated");
         return true;
     }
