@@ -13,10 +13,12 @@ import org.reactivestreams.Publisher;
 public class RequestFilter implements HttpServerFilter {
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
-        log.info("Request: " + request.getMethodName() + request.getPath() + ", content-length: " + request.getContentLength());
-        request.getHeaders().forEach(h -> log.debug(
-                "header: " + h.getKey() + " = " + h.getValue())
-        );
+        if(!request.getPath().equals("/info")) {
+            log.info("Request: " + request.getMethodName() + request.getPath() + ", content-length: " + request.getContentLength());
+            request.getHeaders().forEach(h -> log.debug(
+                    "header: " + h.getKey() + " = " + h.getValue())
+            );
+        }
         return chain.proceed(request);
     }
 }
