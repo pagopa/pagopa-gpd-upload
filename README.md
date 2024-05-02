@@ -1,7 +1,7 @@
 ## GPD Massive Upload µ-service
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TODO-set-your-id&metric=alert_status)](https://sonarcloud.io/dashboard?id=TODO-set-your-id)
-[![Integration Tests](https://github.com/pagopa/<TODO-repo>/actions/workflows/integration_test.yml/badge.svg?branch=main)](https://github.com/pagopa/<TODO-repo>/actions/workflows/integration_test.yml)
+[![Integration Tests](https://github.com/pagopa/pagopa-gpd-upload/actions/workflows/integration_test.yml/badge.svg)](https://github.com/pagopa/pagopa-gpd-upload/actions/workflows/integration_test.yml)
 
 
 This microservice has the responsibility of handling the upload of the files holding debt positions.
