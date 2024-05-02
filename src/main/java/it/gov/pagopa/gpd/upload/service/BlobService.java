@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
@@ -64,6 +65,8 @@ public class BlobService {
 
     public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
         File file = this.unzip(fileUpload);
+        if (null == file)
+            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
         log.info("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
@@ -89,12 +92,18 @@ public class BlobService {
             log.error("[Error][BlobService@upload] " + e.getMessage());
             if(!file.delete())
                 log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+
+            if(e instanceof JsonMappingException)
+                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
+
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
     public String delete(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
         File file = this.unzip(fileUpload);
+        if (null == file)
+            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
         log.info("File with name " + file.getName() + " has been unzipped");
         try {
             MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(new FileInputStream(file), MultipleIUPDModel.class);
@@ -120,6 +129,10 @@ public class BlobService {
             log.error("[Error][BlobService@upload] " + e.getMessage());
             if(!file.delete())
                 log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+
+            if(e instanceof JsonMappingException)
+                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
+
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }

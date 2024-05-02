@@ -38,12 +38,15 @@ See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubuserc
 
 ### Run docker container
 
-from `./docker` directory
-
-`sh ./run_docker.sh local`
-
-ℹ️ Note: for PagoPA ACR is required the login `az acr login -n <acr-name>`
-
+1. From `./docker` directory
+```
+sh ./run_docker.sh local
+```
+2. From `root` directory
+```
+docker build -t <container-name> .
+docker run -p 8080:8080 --env-file <docker-env-file> <container-name>
+```
 ---
 
 ## Develop Locally 💻

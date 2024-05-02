@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.1.19</version>
+    <version>0.1.19-3-PAGOPA-1365</version>
     <packaging>${packaging}</packaging>
 
     <parent>
@@ -18,8 +18,8 @@
         <release.version>17</release.version>
         <micronaut.version>4.2.0</micronaut.version>
         <lombok.version>1.18.32</lombok.version>
-        <azure.cosmos.version>4.57.0</azure.cosmos.version>
-        <azure.storage.version>12.25.3</azure.storage.version>
+        <azure.cosmos.version>4.58.0</azure.cosmos.version>
+        <azure.storage.version>12.25.4</azure.storage.version>
         <jackson.datatype.version>2.17.0</jackson.datatype.version>
         <mockito-junit.version>4.1.0</mockito-junit.version>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
@@ -107,11 +107,25 @@
             <artifactId>azure-cosmos</artifactId>
             <version>${azure.cosmos.version}</version>
         </dependency>
+        <!-- validation START -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-            <scope>compile</scope>
+            <version>3.0.2</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-validator -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>8.0.1.Final</version>
+        </dependency>
+        <!-- https://github.com/hibernate/hibernate-validator -->
+        <dependency>
+            <groupId>org.glassfish.expressly</groupId>
+            <artifactId>expressly</artifactId>
+            <version>5.0.0</version>
+        </dependency>
+        <!-- validation END -->
     </dependencies>
     <build>
         <plugins>
@@ -187,6 +201,12 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
 </project>
