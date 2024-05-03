@@ -1,16 +1,17 @@
 #
 # Build stage
 #
-FROM maven:3.8.2-openjdk-17-slim AS build
-COPY src /home/app/src
-COPY pom.xml /home/app
-RUN mvn -f /home/app/pom.xml clean package -Dmaven.test.skip=true
+FROM maven:3.8.4-openjdk-17-slim AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -DskipTests=true clean package -Dmaven.test.skip=true
 
 #
 # Package stage
 #
 FROM openjdk:17-alpine
-COPY --from=build /home/app/target/pagopa-gpd-upload*.jar /usr/local/lib/app.jar
-RUN true
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.25.1/opentelemetry-javaagent.jar /opt/opentelemetry-javaagent.jar
+COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/usr/local/lib/app.jar"]
+ENTRYPOINT ["java", "-javaagent:/opt/opentelemetry-javaagent.jar", "-jar", "/app/app.jar"]

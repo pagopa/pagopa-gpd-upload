@@ -1,6 +1,6 @@
 ## GPD Massive Upload µ-service
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TODO-set-your-id&metric=alert_status)](https://sonarcloud.io/dashboard?id=TODO-set-your-id)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-gpd-upload&metric=alert_status)](https://sonarcloud.io/dashboard?id=pagopa_pagopa-gpd-upload)
 [![Integration Tests](https://github.com/pagopa/pagopa-gpd-upload/actions/workflows/integration_test.yml/badge.svg)](https://github.com/pagopa/pagopa-gpd-upload/actions/workflows/integration_test.yml)
 
 
@@ -9,10 +9,6 @@ It allows the creditor institutions to:
 - CRUD operations on Debt Positions through zip file Upload
 - Get Debt Positions massive Upload status
 - Get Debt Positions massive Upload report
-
-TODO: generate a index with this tool: https://ecotrust-canada.github.io/markdown-toc/
-
-TODO: resolve all the TODOs in this template
 
 ---
 
