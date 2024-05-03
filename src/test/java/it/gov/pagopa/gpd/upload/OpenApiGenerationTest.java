@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @MicronautTest
 class OpenApiGenerationTest {
 
-    @Value("${info.application.version}")
+    @Value("${openapi.application.version}")
     private String version;
 
     @Inject
@@ -35,7 +35,7 @@ class OpenApiGenerationTest {
 
     @Test
     void swaggerSpringPlugin() throws Exception {
-        boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version.substring(1) + ".json", "openapi.json");
+        boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version + ".json", "openapi.json");
 
         assertTrue(result);
     }
