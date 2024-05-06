@@ -4,7 +4,7 @@
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagoPA GPD Upload",
-    "version": "0.1.23-1-PAGOPA-1595-elk"
+    "version": "0.1.23-2-PAGOPA-1595-elk"
   },
   "servers": [
     {
