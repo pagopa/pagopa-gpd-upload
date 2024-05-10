@@ -34,7 +34,8 @@ public class LogAspect implements HttpServerFilter {
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
         long startTime = System.currentTimeMillis();
-        MDC.put(METHOD, request.getMethodName());
+        String path = request.getPath();
+        MDC.put(METHOD, request.getMethod() + " " + path.substring(path.lastIndexOf('/')));
         MDC.put(START_TIME, String.valueOf(System.currentTimeMillis()));
         MDC.put(OPERATION_ID, UUID.randomUUID().toString());
         if(MDC.get(REQUEST_ID) == null) {
