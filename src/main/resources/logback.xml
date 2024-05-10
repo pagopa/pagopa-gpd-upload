@@ -1,14 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- encoders are assigned the type
-             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-        <encoder>
-            <pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) - %msg%n</pattern>
+        <encoder class="co.elastic.logging.logback.EcsEncoder">
+            <serviceName>${OTEL_SERVICE_NAME}</serviceName>
         </encoder>
     </appender>
 
-    <root level="info">
-        <appender-ref ref="STDOUT" />
+    <logger name="io.micronaut" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
     </root>
+
 </configuration>

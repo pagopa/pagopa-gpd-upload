@@ -55,6 +55,18 @@ docker run -p 8080:8080 --env-file <docker-env-file> <container-name>
 
 ### Run the project
 
+```
+cp .env.sample .env
+```
+
+After setting all required environment variables
+
+```
+set -o allexport                       
+source .env     
+set +o allexport
+```
+
 Start the micronaut application with this command:
 
 `mvn mn:run`
