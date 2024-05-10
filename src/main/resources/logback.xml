@@ -4,6 +4,8 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="co.elastic.logging.logback.EcsEncoder">
             <serviceName>${OTEL_SERVICE_NAME}</serviceName>
+            <serviceVersion>${project.version}</serviceVersion>
+            <serviceEnvironment>${ENV}</serviceEnvironment>
         </encoder>
     </appender>
 
