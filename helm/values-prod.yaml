@@ -78,17 +78,14 @@ microservice-chart:
     CONTAINER_NAME: "gpd_upload_status"
     POST_FILE_RETRY_AFTER: '2000'
     LOG_LEVEL: "INFO"
-    #    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-    #    OTEL_SERVICE_NAME: # TODO
-    #    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=prod"
-    #    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
-    #    OTEL_TRACES_EXPORTER: otlp
-    #    OTEL_METRICS_EXPORTER: otlp
-    #    OTEL_LOGS_EXPORTER: none
-    #    OTEL_TRACES_SAMPLER: "always_on"
+    OTEL_SERVICE_NAME: "pagopa-gpd-upload"
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=prod"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: "always_on"
   envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
-    #    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
+    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
     BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'
     COSMOS_KEY: 'gpd-upload-db-key'
   keyvault:
