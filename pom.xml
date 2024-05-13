@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.1.23</version>
+    <version>0.1.23-6-PAGOPA-1595-elk</version>
     <packaging>${packaging}</packaging>
 
     <parent>
@@ -23,6 +23,8 @@
         <jackson.datatype.version>2.17.0</jackson.datatype.version>
         <mockito-junit.version>4.1.0</mockito-junit.version>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
+        <logback.ecs.version>1.6.0</logback.ecs.version>
+        <reactivex.rxjava.version>3.1.8</reactivex.rxjava.version>
         <micronaut.aot.packageName>it.gov.pagopa.gpd.upload.aot.generated</micronaut.aot.packageName>
         <micronaut.runtime>netty</micronaut.runtime>
         <exec.mainClass>it.gov.pagopa.gpd.upload.Application</exec.mainClass>
@@ -36,6 +38,11 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${reactivex.rxjava.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
@@ -126,6 +133,11 @@
             <version>5.0.0</version>
         </dependency>
         <!-- validation END -->
+        <dependency>
+            <groupId>co.elastic.logging</groupId>
+            <artifactId>logback-ecs-encoder</artifactId>
+            <version>${logback.ecs.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

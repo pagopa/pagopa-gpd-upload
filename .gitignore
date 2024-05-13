@@ -32,7 +32,8 @@ hs_err_pid*
 # Project files
 /target/
 **/node_modules
-**/.env
+**/**.env
+**.env
 .cache_ggshield
 
 # Helm
