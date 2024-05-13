@@ -13,8 +13,9 @@ RUN mvn -B clean package -Dmaven.test.skip=true
 FROM openjdk:17-alpine
 ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.25.1/opentelemetry-javaagent.jar /opt/opentelemetry-javaagent.jar
 
+COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
+
 RUN chown -R nobody:nobody /app
 
-COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-javaagent:/opt/opentelemetry-javaagent.jar", "-jar", "/app/app.jar"]
