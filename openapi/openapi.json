@@ -4,7 +4,7 @@
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagoPA GPD Upload",
-    "version": "0.1.24"
+    "version": "0.1.24-2-pagopa-update-dockerfile"
   },
   "servers": [
     {
