@@ -3,12 +3,10 @@ package it.gov.pagopa.gpd.upload.utils;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.exception.AppException;
-import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import jakarta.validation.metadata.BeanDescriptor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -28,7 +26,7 @@ public class GPDValidator<T> {
 
         if(!constraintViolations.isEmpty()) {
             Set<String> invalidValues = new HashSet<>();
-            log.error("[Error][GPDValidator@isValid] Validation error for object related to " + model.hashCode());
+            log.error("[Error][GPDValidator@isValid] Validation error for object related to {}", model.hashCode());
             for(ConstraintViolation<T> cv : constraintViolations) {
                 log.error(String.format("[Error][GPDValidator@isValid] Invalid value: %s, invalid value message: %s",
                         cv.getInvalidValue(), cv.getMessage()));
@@ -38,7 +36,7 @@ public class GPDValidator<T> {
                     "The format of the debt positions in the uploaded file is invalid. Invalid values: " + invalidValues);
         }
 
-        log.info("[GPDValidator@isValid] PaymentPosition with id " + model.hashCode() + " validated");
+        log.info("[GPDValidator@isValid] PaymentPosition with id {} validated", model.hashCode());
         return true;
     }
 }
