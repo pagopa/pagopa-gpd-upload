@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.1.25-2-PAGOPA-1787-status-update</version>
+    <version>0.1.25-3-PAGOPA-1787-status-update</version>
     <packaging>${packaging}</packaging>
 
     <parent>
