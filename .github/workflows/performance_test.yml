@@ -70,7 +70,7 @@ jobs:
           jq '.scenarios.contacts.timeUnit |= "${{inputs.lifetime}}m" | .scenarios.contacts.duration |= "${{inputs.lifetime}}m"' ${BASE_PATH}/${{inputs.type}}.json > temp.json && mv temp.json ${BASE_PATH}/${{inputs.type}}.json
  
       - name: Run k6 local test
-        uses: grafana/k6-action@v0.3.1
+        uses: grafana/k6-action@e4714b734f2b0afaabeb7b4a69142745548ab9ec # v0.3.1
         with:
           filename: performance-test/src/main_scenario.js
           flags: --env VARS=environments/${{inputs.environment}}.environment.json --env TEST_TYPE=./test-types/${{inputs.type}}.json
@@ -84,7 +84,7 @@ jobs:
     if: ${{ always() }}
     steps:
       - name: Delete Previous deployments
-        uses: actions/github-script@v6
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         env:
           SHA_HEAD: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || github.sha}}
         with:
