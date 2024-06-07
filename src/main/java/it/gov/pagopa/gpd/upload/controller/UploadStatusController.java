@@ -17,12 +17,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
+
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
 @Tag(name = "Upload Status API")
 @ExecuteOn(TaskExecutors.IO)
@@ -30,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY,  in = SecuritySchemeIn.HEADER)
 public class UploadStatusController {
+    @Inject
+    BlobService blobService;
     @Inject
     StatusService statusService;
     private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
@@ -79,7 +85,12 @@ public class UploadStatusController {
             @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "file-id") String fileID) {
 
-        UploadReport uploadReport = statusService.getReport(brokerCode, organizationFiscalCode, fileID);
+        UploadReport uploadReport = statusService.getReport(organizationFiscalCode, fileID);
+        if(uploadReport == null) {
+            uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID);
+            if(uploadReport == null)
+                throw new AppException(NOT_FOUND, "Report Not Found", "The Upload Report for given file id " + fileID + " does not exist");
+        }
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
