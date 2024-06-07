@@ -4,7 +4,7 @@
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagoPA GPD Upload",
-    "version": "0.1.25-5-PAGOPA-1787-status-update"
+    "version": "0.1.25-6-PAGOPA-1787-status-update"
   },
   "servers": [
     {
