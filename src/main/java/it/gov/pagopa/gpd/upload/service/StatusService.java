@@ -18,7 +18,7 @@ public class StatusService {
     private StatusRepository statusRepository;
 
     @Inject
-    public StatusService(StatusRepository statusRepository, BlobService blobService) {
+    public StatusService(StatusRepository statusRepository) {
         this.statusRepository = statusRepository;
     }
 
