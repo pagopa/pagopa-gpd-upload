@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.repository;
 
+import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -28,7 +29,8 @@ public class BlobStorageRepository implements FileRepository {
     private String connectionString;
 
     private static final String INPUT_DIRECTORY = "input";
-    
+    private static final String OUTPUT_DIRECTORY = "output";
+
     private BlobServiceClient blobServiceClient;
 
     @PostConstruct
@@ -126,5 +128,20 @@ public class BlobStorageRepository implements FileRepository {
             }
         }
         return blockBlob.getBlobName();
+    }
+
+    public BinaryData downloadOutput(String broker, String fiscalCode, String filekey) {
+        BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
+        String blobName = filekey + ".json";
+
+        if(!blobContainerClient.exists())
+            log.error(String.format("[Error][BlobStorageRepository@getReport] Container doesn't exist: %s, for upload: %s", broker, filekey));
+
+        BlobClient blobClient = blobContainerClient.getBlobClient("/" + OUTPUT_DIRECTORY + "/" + fiscalCode + "/" + blobName);
+
+        if(Boolean.FALSE.equals(blobClient.exists()))
+            log.error(String.format("[Error][BlobStorageRepository@getReport] Blob doesn't exist: %s", filekey));
+
+        return blobClient.downloadContent();
     }
 }

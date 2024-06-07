@@ -79,7 +79,7 @@ public class UploadStatusController {
             @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "file-id") String fileID) {
 
-        UploadReport uploadReport = statusService.getReport(fileID, organizationFiscalCode);
+        UploadReport uploadReport = statusService.getReport(brokerCode, organizationFiscalCode, fileID);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
