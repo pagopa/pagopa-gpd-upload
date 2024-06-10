@@ -68,7 +68,6 @@ export default function () {
   }
 
   let statusURL = r.headers['Location']
-  console.log(`url-upload-key: ${statusURL}`)
   r = callStatus(statusURL)
 
   while(r.json().processedItem !== r.json().submittedItem) {

@@ -67,9 +67,10 @@ public class StatusRepository {
         } catch (CosmosException ex) {
             log.error("[Error][StatusRepository@findStatusById] The Status retrieval was not successful: {}", ex.getStatusCode());
             if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
-                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "The Status for given fileId " + id + " is not available");
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(),
+                        String.format("The Status for given fileId %s is not available", id));
             else if(ex.getStatusCode() == NOT_FOUND.getCode())
-                throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given fileId " + id + " does not exist");
+                throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist", id));
             else throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
         }
     }
