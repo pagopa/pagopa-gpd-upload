@@ -85,11 +85,15 @@ public class UploadStatusController {
             @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "file-id") String fileID) {
 
-        UploadReport uploadReport = statusService.getReport(organizationFiscalCode, fileID);
-        if(uploadReport == null) {
-            uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID);
-            if(uploadReport == null)
-                throw new AppException(NOT_FOUND, "Report Not Found", "The Upload Report for given file id " + fileID + " does not exist");
+        UploadReport uploadReport = null;
+        try {
+            uploadReport = statusService.getReport(organizationFiscalCode, fileID);
+        } catch (AppException e) {
+            if(e.getHttpStatus() == NOT_FOUND) {
+                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID);
+                if(uploadReport == null)
+                    throw e;
+            }
         }
 
         return HttpResponse.status(HttpStatus.OK)
