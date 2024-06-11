@@ -15,6 +15,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
+
 @Singleton
 @Context
 @Slf4j
@@ -32,12 +34,11 @@ public class StatusRepository {
     @Value("${cosmos.container.name}")
     private String containerName;
 
-    private CosmosClient cosmosClient;
     private CosmosContainer container;
 
     @PostConstruct
     public void init() {
-        cosmosClient = new CosmosClientBuilder()
+        CosmosClient cosmosClient = new CosmosClientBuilder()
                 .endpoint(cosmosURI)
                 .key(cosmosKey)
                 .buildClient();
@@ -49,7 +50,7 @@ public class StatusRepository {
             CosmosItemResponse<Status> response = container.createItem(status);
             return response.getItem();
         } catch (CosmosException ex) {
-            log.error("[Error][StatusRepository@saveStatus] The Status saving was not successful: " + ex.getStatusCode());
+            log.error("[Error][StatusRepository@saveStatus] The Status saving was not successful: {}", ex.getStatusCode());
             if(ex.getStatusCode() == HttpStatus.CONFLICT.getCode())
                 return findStatusById(status.getId(), status.fiscalCode); // already exists, created by blob-consumer function
             if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
@@ -64,11 +65,13 @@ public class StatusRepository {
             CosmosItemResponse<Status> response = container.readItem(id, new PartitionKey(fiscalCode), Status.class);
             return response.getItem();
         } catch (CosmosException ex) {
-            log.error("[Error][StatusRepository@findStatusById] The Status retrieval was not successful: " + ex.getStatusCode());
+            log.error("[Error][StatusRepository@findStatusById] The Status retrieval was not successful: {}", ex.getStatusCode());
             if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
-                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "Status saving unavailable");
-            else
-                throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(),
+                        String.format("The Status for given fileId %s is not available", id));
+            else if(ex.getStatusCode() == NOT_FOUND.getCode())
+                throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist", id));
+            else throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
         }
     }
 }

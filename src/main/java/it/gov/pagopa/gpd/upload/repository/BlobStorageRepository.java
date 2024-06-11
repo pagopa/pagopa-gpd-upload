@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.repository;
 
+import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -19,6 +20,8 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
+
 @Context
 @Singleton
 @Slf4j
@@ -28,7 +31,8 @@ public class BlobStorageRepository implements FileRepository {
     private String connectionString;
 
     private static final String INPUT_DIRECTORY = "input";
-    
+    private static final String OUTPUT_DIRECTORY = "output";
+
     private BlobServiceClient blobServiceClient;
 
     @PostConstruct
@@ -126,5 +130,22 @@ public class BlobStorageRepository implements FileRepository {
             }
         }
         return blockBlob.getBlobName();
+    }
+
+    public BinaryData downloadOutput(String broker, String fiscalCode, String uploadKey) {
+        BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
+        String blobName = uploadKey.concat(".json");
+
+        if(!blobContainerClient.exists())
+            log.error(String.format("[Error][BlobStorageRepository@getReport] Container doesn't exist: %s, for upload: %s", broker, uploadKey));
+
+        BlobClient blobClient = blobContainerClient.getBlobClient("/" + fiscalCode + "/" + OUTPUT_DIRECTORY + "/report" + blobName);
+
+        if(Boolean.FALSE.equals(blobClient.exists())) {
+            log.error(String.format("[Error][BlobStorageRepository@getReport] Blob doesn't exist: %s", uploadKey));
+            throw new AppException(NOT_FOUND, "REPORT NOT FOUND", "The Report for the given upload " + uploadKey + " does not exist");
+        }
+
+        return blobClient.downloadContent();
     }
 }

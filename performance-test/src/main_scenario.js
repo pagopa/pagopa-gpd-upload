@@ -61,25 +61,40 @@ export default function () {
   };
 
   let r = http.post(url, data, params);
+  let checkOutput = check(r, { 'check file upload response is 202': (_r) => r.status === 202, }, { tag: "File Upload API" });
 
-  // check(r, { 'check status is 202': (_r) => r.status === 202, }, tag);
-
-  let statusURL = r.headers['Location']
-  r = http.get(`${vars.host}/${statusURL}`, params)
-
-  while(r.json().processedItem !== r.json().submittedItem) {
-    r = http.get(`${vars.host}/${statusURL}`, params)
-    sleep(1)
+  if (!checkOutput) {
+    console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
   }
 
+  let statusURL = r.headers['Location']
+  r = callStatus(statusURL)
+
+  while(r.json().processedItem !== r.json().submittedItem) {
+    r = callStatus(statusURL)
+  }
+
+  sleep(1)
   let reportURL = statusURL.replace("/status", "/report")
   r = http.get(`${vars.host}/${reportURL}`, params)
 
-  check(r, {
-    'check report is created': (_r) => r.status === 200,
-  }, tag);
+  checkOutput =   check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, tag = "Report retrieve API");
+  if (!checkOutput) {
+    console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
+  }
 
   postcondition();
+}
+
+function callStatus(statusURL) {
+  sleep(1)
+  let r = http.get(`${vars.host}/${statusURL}`, params)
+
+  const checkOutput = check(r, { 'check status check is 200': (_r) => r.status === 200, }, { tag: "Status check API" });
+  if (!checkOutput) {
+    console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
+  }
+  return r;
 }
 
 export function teardown(data) {

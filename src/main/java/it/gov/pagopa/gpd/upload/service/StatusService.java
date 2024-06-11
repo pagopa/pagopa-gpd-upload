@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.upload.service;
 
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
-import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -11,9 +10,7 @@ import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
-import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
 @Singleton
 @Slf4j
@@ -28,23 +25,17 @@ public class StatusService {
     public UploadStatus getStatus(String fileId, String organizationFiscalCode) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
         log.info("[getStatus] status: " + status.getId());
-        if(status == null)
-            throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given fileId "+ fileId + " does not exist");
         return map(status);
     }
 
-    public UploadReport getReport(String fileId, String organizationFiscalCode) {
-        Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
-        if(status == null)
-            throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given fileId "+ fileId + " does not exist");
-        return mapReport(status);
+    public UploadReport getReport(String orgFiscalCode, String fileId) {
+        return mapReport(statusRepository.findStatusById(fileId, orgFiscalCode));
     }
 
     public Status createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem) {
         Upload upload = Upload.builder()
                 .current(0)
                 .total(totalItem)
-                .responses(new ArrayList<>())
                 .start(LocalDateTime.now())
                 .build();
         Status status = Status.builder()

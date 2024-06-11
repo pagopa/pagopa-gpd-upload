@@ -19,6 +19,7 @@ class PaymentOption {
         this.amount = 100;
         this.isPartialPayment = false;
         this.dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000) .toISOString().slice(0, 23);; // Plus 1 day
+        this.description = "GPD Upload performance test description"
         this.transfer = [new Transfer()];
         this.paymentOptionMetadata = [];
     }
@@ -29,8 +30,8 @@ class PaymentPosition {
         this.iupd = "IUPD_GPD_UPLOAD_TEST" + uuidv4().substring(0, 11);
         this.type = "F";
         this.fiscalCode = fiscalCode;
-        this.fullName = uuidv4().substring(0, 4);
-        this.companyName = uuidv4().substring(0, 4);
+        this.fullName = "pagoPA Performance";
+        this.companyName = "Performance SpA";
         this.paymentOption = [new PaymentOption()];
         this.switchToExpired = false;
     }

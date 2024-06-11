@@ -18,8 +18,10 @@ import java.util.List;
 @Introspected
 public class MultipleIUPDModel {
 
+    private static final int MAX_IUPD = 100000;
+
     @NotEmpty
-    @Size(max = 100000)
+    @Size(min = 1, max = 100000, message = "The list of payment positions IUPD must contain at least one element and at the most " + MAX_IUPD)
     @NotNull
     private List<String> paymentPositionIUPDs;
 }
