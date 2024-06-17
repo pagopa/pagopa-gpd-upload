@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.1.28</version>
+    <version>0.1.28-1-update-memory-tuning</version>
     <packaging>${packaging}</packaging>
 
     <parent>
