@@ -43,7 +43,7 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     @Override
-    public String upload(String broker, String fiscalCode, File file) throws FileNotFoundException {
+    public String upload(String broker, String fiscalCode, InputStream inputStream) throws FileNotFoundException {
         blobServiceClient.createBlobContainerIfNotExists(broker);
         BlobContainerClient container = blobServiceClient.getBlobContainerClient(broker + "/" + fiscalCode + "/" + INPUT_DIRECTORY);
         String key = this.createRandomName(broker + "_" + fiscalCode);
@@ -57,30 +57,23 @@ public class BlobStorageRepository implements FileRepository {
 
         BlockBlobClient blockBlobClient = blobClient.getBlockBlobClient();
 
-        CompletableFuture<String> uploadFuture = uploadFileAsync(blockBlobClient, file);
+        CompletableFuture<String> uploadFuture = uploadFileAsync(blockBlobClient, inputStream);
 
         uploadFuture.thenAccept(blobName -> {
             // Handle the result asynchronously
             log.info(String.format("Asynchronous upload completed for blob %s", blobName));
         }).exceptionally(ex -> {
-            log.error(String.format("[Error][BlobStorageRepository@upload] Exception while uploading file %s asynchronously: %s",
-                    file.getName(), ex.getMessage()));
+            log.error(String.format("[Error][BlobStorageRepository@upload] Exception while uploading file asynchronously: %s", ex.getMessage()));
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Error uploading file asynchronously", ex);
         });
 
         return key;
     }
 
-    private CompletableFuture<String> uploadFileAsync(BlockBlobClient blockBlobClient, File file) {
+    private CompletableFuture<String> uploadFileAsync(BlockBlobClient blockBlobClient, InputStream inputStream) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String blobName = this.uploadFileBlocksAsBlockBlob(blockBlobClient, file);
-
-                if(!file.delete()) {
-                    log.error(String.format("[Error][BlobStorageRepository@uploadFileAsync] The file %s was not deleted", file.getName()));
-                }
-
-                return blobName;
+                return this.uploadFileBlocksAsBlockBlob(blockBlobClient, inputStream);
             } catch (IOException e) {
                 throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Error uploading file asynchronously", e);
             }
@@ -91,8 +84,7 @@ public class BlobStorageRepository implements FileRepository {
         return namePrefix + "_" + UUID.randomUUID().toString().replace("-", "");
     }
 
-    private String uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, File file) throws IOException {
-        InputStream inputStream = new FileInputStream(file);
+    private String uploadFileBlocksAsBlockBlob(BlockBlobClient blockBlob, InputStream inputStream) throws IOException {
         ByteArrayInputStream byteInputStream = null;
         int blockSize = 1024 * 1024;
 
