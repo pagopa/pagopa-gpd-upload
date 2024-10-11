@@ -24,7 +24,7 @@ public class StatusService {
 
     public UploadStatus getStatus(String fileId, String organizationFiscalCode) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
-        log.info("[getStatus] status: " + status.getId());
+        log.debug("[getStatus] status: " + status.getId());
         return map(status);
     }
 

@@ -11,11 +11,14 @@ RUN mvn -B clean package -Dmaven.test.skip=true
 # Package stage
 #
 FROM openjdk:17-alpine@sha256:4b6abae565492dbe9e7a894137c966a7485154238902f2f25e9dbd9784383d81
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.25.1/opentelemetry-javaagent.jar /opt/opentelemetry-javaagent.jar
+
+# https://github.com/microsoft/ApplicationInsights-Java/releases
+ADD --chown=spring:spring https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.6.0/applicationinsights-agent-3.6.0.jar /applicationinsights-agent.jar
+COPY --chown=spring:spring docker/applicationinsights.json ./applicationinsights.json
 
 COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
 
 RUN chown -R nobody:nobody /app
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-javaagent:/opt/opentelemetry-javaagent.jar", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-javaagent:/applicationinsights-agent.jar", "-jar", "/app/app.jar"]

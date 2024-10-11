@@ -70,7 +70,7 @@ public class BlobService {
         File file = this.unzip(fileUpload);
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
-        log.info("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
+        log.debug("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
@@ -107,7 +107,7 @@ public class BlobService {
         File file = this.unzip(fileUpload);
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
-        log.info("File with name " + file.getName() + " has been unzipped");
+        log.debug("File with name " + file.getName() + " has been unzipped");
         try {
             MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(new FileInputStream(file), MultipleIUPDModel.class);
 
@@ -152,7 +152,7 @@ public class BlobService {
 
     public String upload(UploadInput in, String broker, String organizationFiscalCode, int totalItem) {
         try {
-            log.info(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
+            log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
                     in.getUploadOperation(), broker, organizationFiscalCode));
 
             // replace file content
