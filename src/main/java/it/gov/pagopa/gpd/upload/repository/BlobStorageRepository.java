@@ -61,7 +61,7 @@ public class BlobStorageRepository implements FileRepository {
 
         uploadFuture.thenAccept(blobName -> {
             // Handle the result asynchronously
-            log.info(String.format("Asynchronous upload completed for blob %s", blobName));
+            log.debug(String.format("Asynchronous upload completed for blob %s", blobName));
         }).exceptionally(ex -> {
             log.error(String.format("[Error][BlobStorageRepository@upload] Exception while uploading file %s asynchronously: %s",
                     file.getName(), ex.getMessage()));

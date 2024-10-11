@@ -36,7 +36,7 @@ public class GPDValidator<T> {
                     "The format of the debt positions in the uploaded file is invalid. Invalid values: " + invalidValues);
         }
 
-        log.info("[GPDValidator@isValid] PaymentPosition with id {} validated", model.hashCode());
+        log.debug("[GPDValidator@isValid] PaymentPosition with id {} validated", model.hashCode());
         return true;
     }
 }

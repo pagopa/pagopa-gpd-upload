@@ -10,12 +10,12 @@ RUN mvn -B clean package -Dmaven.test.skip=true
 #
 # Package stage
 #
-FROM openjdk:17-alpine@sha256:4b6abae565492dbe9e7a894137c966a7485154238902f2f25e9dbd9784383d81
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.25.1/opentelemetry-javaagent.jar /opt/opentelemetry-javaagent.jar
+FROM ghcr.io/pagopa/docker-base-springboot-openjdk17:v2.2.0@sha256:b866656c31f2c6ebe6e78b9437ce930d6c94c0b4bfc8e9ecc1076a780b9dfb18
 
-COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
+COPY --chown=spring:spring  --from=builder dependencies/ ./
+COPY --chown=spring:spring  --from=builder snapshot-dependencies/ ./
 
-RUN chown -R nobody:nobody /app
-
-EXPOSE 8080
-ENTRYPOINT ["java", "-javaagent:/opt/opentelemetry-javaagent.jar", "-jar", "/app/app.jar"]
+# https://github.com/moby/moby/issues/37965#issuecomment-426853382
+RUN true
+COPY --chown=spring:spring  --from=builder spring-boot-loader/ ./
+COPY --chown=spring:spring  --from=builder application/ ./

@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.slf4j.MDC;
 
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -45,7 +46,7 @@ public class LogAspect implements HttpServerFilter {
         String params = request.getParameters().asMap().toString();
         MDC.put(ARGS, params);
 
-        log.info("Invoking API operation {} - args: {}", request.getMethodName(), params);
+        log.debug("Invoking API operation {} - args: {}", request.getMethodName(), params);
 
         return Flowable.fromPublisher(chain.proceed(request)).flatMap(response -> {
 
