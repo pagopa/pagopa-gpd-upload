@@ -12,10 +12,8 @@ RUN mvn -B clean package -Dmaven.test.skip=true
 #
 FROM ghcr.io/pagopa/docker-base-springboot-openjdk17:v2.2.0@sha256:b866656c31f2c6ebe6e78b9437ce930d6c94c0b4bfc8e9ecc1076a780b9dfb18
 
-COPY --chown=spring:spring  --from=builder dependencies/ ./
-COPY --chown=spring:spring  --from=builder snapshot-dependencies/ ./
+COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
 
-# https://github.com/moby/moby/issues/37965#issuecomment-426853382
-RUN true
-COPY --chown=spring:spring  --from=builder spring-boot-loader/ ./
-COPY --chown=spring:spring  --from=builder application/ ./
+RUN chown -R nobody:nobody /app
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
