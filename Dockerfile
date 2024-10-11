@@ -10,10 +10,15 @@ RUN mvn -B clean package -Dmaven.test.skip=true
 #
 # Package stage
 #
-FROM ghcr.io/pagopa/docker-base-springboot-openjdk17:v2.2.0@sha256:b866656c31f2c6ebe6e78b9437ce930d6c94c0b4bfc8e9ecc1076a780b9dfb18
+FROM openjdk:17-alpine@sha256:4b6abae565492dbe9e7a894137c966a7485154238902f2f25e9dbd9784383d81
+
+# https://github.com/microsoft/ApplicationInsights-Java/releases
+ADD --chown=spring:spring https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.6.0/applicationinsights-agent-3.6.0.jar /applicationinsights-agent.jar
+COPY --chown=spring:spring docker/applicationinsights.json ./applicationinsights.json
 
 COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
 
 RUN chown -R nobody:nobody /app
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-javaagent:/applicationinsights-agent.jar", "-jar", "/app/app.jar"]
