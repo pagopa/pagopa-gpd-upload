@@ -6,10 +6,13 @@ import it.gov.pagopa.gpd.upload.entity.ResponseEntry;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
+import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +36,10 @@ public class RecoveryService {
         Status current = statusService.getStatus(organizationFiscalCode, uploadId);
         UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
 
+        if(!uploadInput.getUploadOperation().equals(UploadOperation.CREATE))
+            throw new AppException(HttpStatus.NOT_FOUND,
+                    "Upload operation not processable", String.format("Not exists create operation with upload-id %s", uploadId));
+
         // check if upload is pending
         if(current.upload.getCurrent() >= current.upload.getTotal())
             return current;
@@ -54,6 +61,7 @@ public class RecoveryService {
                 .statusCode(HttpStatus.CREATED.getCode())
                 .statusMessage(statusService.getDetail(HttpStatus.CREATED))
                 .build());
+        current.upload.setEnd(LocalDateTime.now());
 
         return statusService.upsert(current);
     }

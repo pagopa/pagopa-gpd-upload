@@ -4,8 +4,8 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
-import io.micronaut.http.annotation.Post;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +23,9 @@ import it.gov.pagopa.gpd.upload.service.RecoveryService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Tag(name = "Support API")
 @ExecuteOn(TaskExecutors.IO)
 @Controller("support")
@@ -35,7 +37,7 @@ public class SupportController {
     @Inject
     StatusService statusService;
 
-    @Operation(summary = "Support API to recover status", description = "Returns the debt positions upload status.", tags = {"support"})
+    @Operation(summary = "Support API to recover status on CREATE operation", description = "Returns the debt positions upload report recovered.", tags = {"support"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AppInfo.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -43,7 +45,7 @@ public class SupportController {
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Post(value = "brokers/{broker}/organizations/{organization}/{upload}/status")
+    @Get(value = "brokers/{broker}/organizations/{organization}/{upload}/status/created/refresh")
     public HttpResponse<UploadReport> recoverStatus(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker") String broker,
@@ -53,7 +55,8 @@ public class SupportController {
             @NotBlank @PathVariable(name = "upload") String upload
     ) {
         Status status = recoveryService.recover(broker, organization, upload);
-        UploadReport report = statusService.mapReport(status);
+        log.info("[Support-API] Status {} recovered", status.getId());
+        UploadReport report = statusService.getReport(organization, upload);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
