@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.job;
+package it.gov.pagopa.gpd.upload.scheduled;
 
 import io.micronaut.scheduling.annotation.Scheduled;
 import it.gov.pagopa.gpd.upload.entity.Status;
@@ -38,7 +38,7 @@ public class CronJob {
         List<Status> statusList = statusRepository.find("SELECT c.upload FROM c WHERE c.upload['end'] = null and c.upload.current = c.upload.total");
         statusList.forEach(status -> {
             status.upload.setEnd(LocalDateTime.now());
-            statusRepository.saveStatus(status);
+            statusRepository.upsert(status);
 
             try {
                 Thread.sleep(sleepTimeMillis);
