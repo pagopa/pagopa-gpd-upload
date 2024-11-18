@@ -32,13 +32,14 @@ public class CronJob {
         this.statusRepository = statusRepository;
     }
 
-    @Scheduled(fixedDelay = "60s", initialDelay = "5s") // todo extract env variables
+    @Scheduled(cron = "0 0 * * * *") // every hour
     void execute() {
         LOG.info("Start recovery job: {}", new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(new Date()));
         List<Status> statusList = statusRepository.find("SELECT c.upload FROM c WHERE c.upload['end'] = null and c.upload.current = c.upload.total");
         statusList.forEach(status -> {
             status.upload.setEnd(LocalDateTime.now());
             statusRepository.saveStatus(status);
+
             try {
                 Thread.sleep(sleepTimeMillis);
             } catch (InterruptedException e) {

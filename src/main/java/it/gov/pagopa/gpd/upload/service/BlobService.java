@@ -149,7 +149,6 @@ public class BlobService {
         }
     }
 
-
     public String upload(UploadInput in, String broker, String organizationFiscalCode, int totalItem) {
         try {
             log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
