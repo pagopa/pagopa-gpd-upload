@@ -1,0 +1,60 @@
+package it.gov.pagopa.gpd.upload.controller;
+
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import it.gov.pagopa.gpd.upload.entity.Status;
+import it.gov.pagopa.gpd.upload.model.AppInfo;
+import it.gov.pagopa.gpd.upload.model.ProblemJson;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.service.RecoveryService;
+import it.gov.pagopa.gpd.upload.service.StatusService;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.NotBlank;
+
+@ExecuteOn(TaskExecutors.IO)
+@Controller("support")
+public class SupportController {
+
+    @Inject
+    RecoveryService recoveryService;
+
+    @Inject
+    StatusService statusService;
+
+    @Operation(summary = "Support API to recover status", description = "Returns the debt positions upload status.", tags = {"support"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AppInfo.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+            @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+    @Post(value = "brokers/{broker}/organizations/{organization}/{upload}/status")
+    public HttpResponse<UploadReport> recoverStatus(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker") String broker,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization") String organization,
+            @Parameter(description = "The unique identifier for file upload", required = true)
+            @NotBlank @PathVariable(name = "upload") String upload
+    ) {
+        Status status = recoveryService.recover(broker, organization, upload);
+        UploadReport report = statusService.mapReport(status);
+
+        return HttpResponse.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(report);
+    }
+}

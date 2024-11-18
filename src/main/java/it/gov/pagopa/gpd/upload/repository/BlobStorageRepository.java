@@ -148,4 +148,21 @@ public class BlobStorageRepository implements FileRepository {
 
         return blobClient.downloadContent();
     }
+
+    public BinaryData downloadInput(String broker, String fiscalCode, String uploadKey) {
+        BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
+        String blobName = uploadKey.concat(".json");
+
+        if(!blobContainerClient.exists())
+            log.error(String.format("[Error][BlobStorageRepository@getUploadBlob] Container doesn't exist: %s, for upload: %s", broker, uploadKey));
+
+        BlobClient blobClient = blobContainerClient.getBlobClient("/" + fiscalCode + "/" + INPUT_DIRECTORY + "/" + blobName);
+
+        if(Boolean.FALSE.equals(blobClient.exists())) {
+            log.error(String.format("[Error][BlobStorageRepository@getUploadBlob] Blob doesn't exist: %s", uploadKey));
+            throw new AppException(NOT_FOUND, "UPLOAD NOT FOUND", "The Blob-Upload for the given upload " + uploadKey + " does not exist");
+        }
+
+        return blobClient.downloadContent();
+    }
 }
