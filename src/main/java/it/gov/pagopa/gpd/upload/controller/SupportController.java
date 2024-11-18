@@ -54,8 +54,8 @@ public class SupportController {
             @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "upload") String upload
     ) {
-        Status status = recoveryService.recover(broker, organization, upload);
-        log.info("[Support-API] Status {} recovered", status.getId());
+        recoveryService.recover(broker, organization, upload);
+        log.info("[Support-API] Status {} recovered", upload);
         UploadReport report = statusService.getReport(organization, upload);
 
         return HttpResponse.status(HttpStatus.OK)
