@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.model.AppInfo;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
@@ -23,6 +24,7 @@ import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 
+@Tag(name = "Support API")
 @ExecuteOn(TaskExecutors.IO)
 @Controller("support")
 public class SupportController {

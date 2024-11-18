@@ -52,8 +52,8 @@ public class StatusService {
         statusRepository.saveStatus(status);
     }
 
-    public void save(Status status) {
-        statusRepository.saveStatus(status);
+    public Status upsert(Status status) {
+        return statusRepository.upsert(status);
     }
 
     private UploadStatus map(Status status) {

@@ -54,9 +54,8 @@ public class RecoveryService {
                 .statusCode(HttpStatus.CREATED.getCode())
                 .statusMessage(statusService.getDetail(HttpStatus.CREATED))
                 .build());
-        statusService.save(current);
 
-        return current;
+        return statusService.upsert(current);
     }
 
     private List<String> getAlreadyCreatedIUPD(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD) {

@@ -65,6 +65,21 @@ public class StatusRepository {
         }
     }
 
+    public Status upsert(Status status) {
+        try {
+            CosmosItemResponse<Status> response = container.upsertItem(status);
+            return response.getItem();
+        } catch (CosmosException ex) {
+            log.error("[Error][StatusRepository@saveStatus] The Status upsert was not successful: {}", ex.getStatusCode());
+            if(ex.getStatusCode() == HttpStatus.CONFLICT.getCode())
+                return findStatusById(status.getId(), status.fiscalCode); // already exists, created by blob-consumer function
+            if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "Status upsert unavailable");
+            else
+                throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status upsert failed");
+        }
+    }
+
     public Status findStatusById(String id, String fiscalCode) {
         try {
             CosmosItemResponse<Status> response = container.readItem(id, new PartitionKey(fiscalCode), Status.class);
