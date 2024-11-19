@@ -23,29 +23,32 @@ import java.util.List;
 public class CronJob {
     private static final Logger LOG = LoggerFactory.getLogger(CronJob.class);
 
-    private final StatusRepository statusRepository;
+    private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
 
-    private final long sleepTimeMillis = 200;
+    private final long SLEEP_TIME_MILLIS = 100;
+
+    private final StatusRepository statusRepository;
 
     @Inject
     public CronJob(StatusRepository statusRepository) {
         this.statusRepository = statusRepository;
     }
 
-    @Scheduled(cron = "0 0 * * * *") // every hour
+    @Scheduled(fixedRate = "${cron.recovery.rate}") // every hour
     void execute() {
-        LOG.info("Start recovery job: {}", new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(new Date()));
-        List<Status> statusList = statusRepository.find("SELECT c.upload FROM c WHERE c.upload['end'] = null and c.upload.current = c.upload.total");
+        LOG.info("[Recovery] Start cron job: {}", DATE_FORMAT.format(new Date()));
+        List<Status> statusList = statusRepository.find("SELECT * FROM c WHERE c.upload['end'] = null and c.upload.current = c.upload.total");
         statusList.forEach(status -> {
             status.upload.setEnd(LocalDateTime.now());
+            LOG.info("[Recovery] Recovered status with upload-id: {} at {}", status.getId(), DATE_FORMAT.format(new Date()));
             statusRepository.upsert(status);
 
             try {
-                Thread.sleep(sleepTimeMillis);
+                Thread.sleep(SLEEP_TIME_MILLIS);
             } catch (InterruptedException e) {
-                log.error("[Exception] Cron Job: thread sleep interrupted: {}", e.getMessage());
+                log.error("[Recovery][Exception] cron job: thread sleep interrupted: {}", e.getMessage());
             }
         });
-        LOG.info("Termination recovery job: {}", new SimpleDateFormat("dd-M-yyyy hh:mm:ss").format(new Date()));
+        LOG.info("[Recovery] End cron job: {}", DATE_FORMAT.format(new Date()));
     }
 }

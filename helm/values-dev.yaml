@@ -74,6 +74,7 @@ microservice-chart:
     POST_FILE_RETRY_AFTER: '10000'
     LOG_LEVEL: "DEBUG"
     GPD_API_URL: "https://api.dev.platform.pagopa.it/gpd/api/v1"
+    CRON_RECOVERY_RATE: "60s"
     OTEL_SERVICE_NAME: "pagopa-gpd-upload"
     OTEL_RESOURCE_ATTRIBUTES: "service.name=pagopa-gpd-upload,deployment.environment=dev"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"

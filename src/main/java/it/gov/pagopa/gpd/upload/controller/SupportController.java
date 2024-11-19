@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.model.AppInfo;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.UploadReport;

@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.slf4j.MDC;
 
-import java.util.Map;
 import java.util.UUID;
 
 
@@ -50,16 +49,18 @@ public class LogAspect implements HttpServerFilter {
 
         return Flowable.fromPublisher(chain.proceed(request)).flatMap(response -> {
 
-            MDC.put(STATUS, "OK");
-            MDC.put(CODE, String.valueOf(response.getStatus().getCode()));
-            MDC.put(RESPONSE_TIME, String.valueOf(System.currentTimeMillis() - startTime));
-            MDC.put(RESPONSE, toJsonString(response.getBody().toString()));
-            log.info("Successful API operation {} - result: {}", request.getMethodName(), response);
-            MDC.remove(RESPONSE);
-            MDC.remove(STATUS);
-            MDC.remove(CODE);
-            MDC.remove(RESPONSE_TIME);
-            MDC.remove(START_TIME);
+            if(!path.equals("/info")) { // skip liveliness calls
+                MDC.put(STATUS, "OK");
+                MDC.put(CODE, String.valueOf(response.getStatus().getCode()));
+                MDC.put(RESPONSE_TIME, String.valueOf(System.currentTimeMillis() - startTime));
+                MDC.put(RESPONSE, toJsonString(response.getBody().toString()));
+                log.info("Successful API operation {} - result: {}", request.getMethodName(), response);
+                MDC.remove(RESPONSE);
+                MDC.remove(STATUS);
+                MDC.remove(CODE);
+                MDC.remove(RESPONSE_TIME);
+                MDC.remove(START_TIME);
+            }
 
             return Flowable.just(response);
         });
