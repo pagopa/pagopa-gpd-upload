@@ -59,7 +59,7 @@ public class UploadStatusController {
             @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "file-id") String fileID) {
 
-        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getStatus(fileID, organizationFiscalCode);
+        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(fileID, organizationFiscalCode);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)

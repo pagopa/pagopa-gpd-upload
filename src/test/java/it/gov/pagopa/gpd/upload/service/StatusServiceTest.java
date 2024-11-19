@@ -25,8 +25,8 @@ public class StatusServiceTest {
     StatusService statusService;
 
     @Test
-    void getStatus_OK() {
-        UploadStatus uploadStatus = statusService.getStatus("fileId", "organizationFiscalCode");
+    void getUploadStatus_OK() {
+        UploadStatus uploadStatus = statusService.getUploadStatus("fileId", "organizationFiscalCode");
 
         Assertions.assertEquals(UPLOAD_KEY, uploadStatus.getUploadID());
     }

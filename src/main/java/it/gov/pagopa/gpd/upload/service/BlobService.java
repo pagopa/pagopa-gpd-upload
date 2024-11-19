@@ -140,6 +140,15 @@ public class BlobService {
         }
     }
 
+    public UploadInput getUploadInput(String broker, String fiscalCode, String uploadId) {
+        BinaryData binaryDataReport = blobStorageRepository.downloadInput(broker, fiscalCode, uploadId);
+        try {
+            return objectMapper.readValue(binaryDataReport.toString(), UploadInput.class);
+        } catch (JsonProcessingException e) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during upload-input deserialization", e.getCause());
+        }
+    }
+
     public UploadReport getReport(String broker, String fiscalCode, String uploadKey) {
         BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
         try {
@@ -149,16 +158,15 @@ public class BlobService {
         }
     }
 
-
-    public String upload(UploadInput in, String broker, String organizationFiscalCode, int totalItem) {
+    public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem) {
         try {
             log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
-                    in.getUploadOperation(), broker, organizationFiscalCode));
+                    uploadInput.getUploadOperation(), broker, organizationFiscalCode));
 
             // replace file content
             File uploadInputFile = Files.createTempFile(Path.of(DESTINATION_DIRECTORY), "gpd_upload_temp", ".json").toFile();
             FileWriter fileWriter = new FileWriter(uploadInputFile);
-            fileWriter.write(objectMapper.writeValueAsString(in));
+            fileWriter.write(objectMapper.writeValueAsString(uploadInput));
             fileWriter.close();
 
             // upload blob
