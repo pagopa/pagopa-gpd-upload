@@ -36,7 +36,7 @@ public class SupportController {
     @Inject
     StatusService statusService;
 
-    @Operation(summary = "Support API to recover status on CREATE operation", description = "Returns the debt positions upload report recovered.", tags = {"support"})
+    @Operation(summary = "Support API to recover status on CREATE operation", description = "Returns the debt positions upload report recovered.", tags = {"Support API"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AppInfo.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
