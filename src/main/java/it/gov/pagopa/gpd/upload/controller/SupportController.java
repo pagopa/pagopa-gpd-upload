@@ -45,7 +45,7 @@ public class SupportController {
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = "brokers/{broker}/organizations/{organization}/{upload}/status/created/refresh")
-    public HttpResponse<UploadReport> recoverStatus(
+    public HttpResponse<UploadReport> recoverCreateOperationStatus(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker") String broker,
             @Parameter(description = "The organization fiscal code", required = true)
@@ -53,7 +53,33 @@ public class SupportController {
             @Parameter(description = "The unique identifier for file upload", required = true)
             @NotBlank @PathVariable(name = "upload") String upload
     ) {
-        recoveryService.recover(broker, organization, upload);
+        recoveryService.recoverCreated(broker, organization, upload);
+        log.info("[Support-API] Status {} recovered", upload);
+        UploadReport report = statusService.getReport(organization, upload);
+
+        return HttpResponse.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(report);
+    }
+
+    @Operation(summary = "Support API to recover status on CREATE operation", description = "Returns the debt positions upload report recovered.", tags = {"Support API"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AppInfo.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+            @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+    @Get(value = "brokers/{broker}/organizations/{organization}/{upload}/status/deleted/refresh")
+    public HttpResponse<UploadReport> recoverDeleteOperationStatus(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker") String broker,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization") String organization,
+            @Parameter(description = "The unique identifier for file upload", required = true)
+            @NotBlank @PathVariable(name = "upload") String upload
+    ) {
+        recoveryService.recoverDeleted(broker, organization, upload);
         log.info("[Support-API] Status {} recovered", upload);
         UploadReport report = statusService.getReport(organization, upload);
 

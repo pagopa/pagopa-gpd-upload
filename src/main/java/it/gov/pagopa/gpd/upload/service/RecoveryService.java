@@ -32,41 +32,53 @@ public class RecoveryService {
         this.gpdClient = gpdClient;
     }
 
-    public Status recover(String brokerId, String organizationFiscalCode, String uploadId) {
-        Status current = statusService.getStatus(organizationFiscalCode, uploadId);
+    public Status recoverCreated(String brokerId, String organizationFiscalCode, String uploadId) {
         UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
-
         if(!uploadInput.getUploadOperation().equals(UploadOperation.CREATE))
             throw new AppException(HttpStatus.NOT_FOUND,
                     "Upload operation not processable", String.format("Not exists create operation with upload-id %s", uploadId));
+
+        List<String> inputIUPD = uploadInput.getPaymentPositionIUPDs();
+        return this.recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.OK, HttpStatus.CREATED);
+    }
+
+    public Status recoverDeleted(String brokerId, String organizationFiscalCode, String uploadId) {
+        UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
+        if(!uploadInput.getUploadOperation().equals(UploadOperation.DELETE))
+            throw new AppException(HttpStatus.NOT_FOUND,
+                    "Upload operation not processable", String.format("Not exists delete operation with upload-id %s", uploadId));
+        List<String> inputIUPD = uploadInput.getPaymentPositionIUPDs();
+        return this.recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    public Status recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus statusToCheck, HttpStatus uploadStatus) {
+        Status current = statusService.getStatus(organizationFiscalCode, uploadId);
 
         // check if upload is pending
         if(current.upload.getCurrent() >= current.upload.getTotal())
             return current;
 
         // extract debt position id list
-        List<String> inputIUPD = uploadInput.getPaymentPositions().stream()
-                .map(PaymentPositionModel::getIupd).toList();
         List<String> processedIUPD = new ArrayList<>();
         current.upload.getResponses().forEach(
                 res -> processedIUPD.addAll(res.getRequestIDs())
         );
 
-        // sync with core to check if debt positions are already created
-        List<String> createdIUPD = getAlreadyCreatedIUPD(organizationFiscalCode, inputIUPD, processedIUPD);
+        // sync with core to check if debt positions are already processed (DELETED or CREATED -> NOT_EXISTS, EXISTS)
+        List<String> deletedIUPD = getAlreadyIUPD(organizationFiscalCode, inputIUPD, processedIUPD, statusToCheck);
 
         // update status and save
         current.upload.addResponse(ResponseEntry.builder()
-                .requestIDs(createdIUPD)
-                .statusCode(HttpStatus.CREATED.getCode())
-                .statusMessage(statusService.getDetail(HttpStatus.CREATED))
+                .requestIDs(deletedIUPD)
+                .statusCode(uploadStatus.getCode())
+                .statusMessage(statusService.getDetail(uploadStatus))
                 .build());
         current.upload.setEnd(LocalDateTime.now());
 
         return statusService.upsert(current);
     }
 
-    private List<String> getAlreadyCreatedIUPD(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD) {
+    private List<String> getAlreadyIUPD(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD, HttpStatus target) {
         Set<String> inputIUPDSet = new HashSet<>(inputIUPD);
         Set<String> processedIUPDSet = new HashSet<>(processedIUPD);
 
@@ -74,16 +86,16 @@ public class RecoveryService {
         if(!inputIUPDSet.removeAll(processedIUPDSet))
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Internal Server Error");
 
-        List<String> createdIUPD = new ArrayList<>();
+        List<String> alreadyIUPD = new ArrayList<>();
 
         // for each check if position is processed
         inputIUPDSet.forEach(id -> {
             // request to GPD
             HttpStatus httpStatus = gpdClient.getDebtPosition(organizationFiscalCode, id).getStatus();
-            if(httpStatus.equals(HttpStatus.OK)) { // if request was successful
-                createdIUPD.add(id);
+            if(httpStatus.equals(target)) { // if request was successful
+                alreadyIUPD.add(id);
             }
         });
-        return createdIUPD;
+        return alreadyIUPD;
     }
 }

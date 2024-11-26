@@ -70,17 +70,16 @@ public class BlobService {
         File file = this.unzip(fileUpload);
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
-        log.debug("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
+        log.debug("File with name {} has been unzipped, upload operation: {}", file.getName(), uploadOperation);
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
             if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+                log.error("[Error][BlobService@upsert] The file {} was not deleted", file.getName());
             }
 
             if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
-                log.error(String.format("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker %s and organization %s",
-                        broker, organizationFiscalCode));
+                log.error("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker {} and organization {}", broker, organizationFiscalCode);
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -94,7 +93,7 @@ public class BlobService {
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
             if(!file.delete())
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+                log.error("[Error][BlobService@upsert] The file {} was not deleted", file.getName());
 
             if(e instanceof JsonMappingException)
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
