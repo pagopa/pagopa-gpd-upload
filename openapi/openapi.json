@@ -4,7 +4,7 @@
     "title": "pagopa-gpd-upload",
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.1.32"
+    "version": "0.1.32-1-recover-delete-operation-status"
   },
   "servers": [
     {
