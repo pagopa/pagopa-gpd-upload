@@ -4,6 +4,7 @@ import com.azure.core.util.BinaryData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -22,8 +23,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -162,14 +161,12 @@ public class BlobService {
             log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
                     uploadInput.getUploadOperation(), broker, organizationFiscalCode));
 
-            // replace file content
-            File uploadInputFile = Files.createTempFile(Path.of(DESTINATION_DIRECTORY), "gpd_upload_temp", ".json").toFile();
-            FileWriter fileWriter = new FileWriter(uploadInputFile);
-            fileWriter.write(objectMapper.writeValueAsString(uploadInput));
-            fileWriter.close();
+            // from UploadInput Object to ByteArrayInputStream
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(uploadInput));
 
             // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, uploadInputFile);
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, inputStream);
             statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
 
             return fileId;
