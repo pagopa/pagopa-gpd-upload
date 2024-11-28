@@ -51,8 +51,14 @@ public class RecoveryService {
         Status current = statusService.getStatus(organizationFiscalCode, uploadId);
 
         // check if upload is pending
-        if(current.upload.getCurrent() >= current.upload.getTotal())
-            return false;
+        if(current.upload.getCurrent() >= current.upload.getTotal()) {
+            if(current.upload.getEnd() != null)
+                return false;
+            // update end-upload-time if it is null
+            current.upload.setEnd(LocalDateTime.now());
+            Status updated = statusService.upsert(current);
+            return updated != null;
+        }
 
         // extract debt position id list
         List<String> processedIUPD = new ArrayList<>();
@@ -69,12 +75,15 @@ public class RecoveryService {
                 .statusCode(toWrite.getCode())
                 .statusMessage(statusService.getDetail(toWrite))
                 .build());
+
         // for non-matching IUPD the code is 500
-        current.upload.addResponse(ResponseEntry.builder()
-                .requestIDs(result.nonMatchingIUPD())
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
-                .statusMessage(statusService.getDetail(toWrite))
-                .build());
+        if(!result.nonMatchingIUPD().isEmpty()) {
+            current.upload.addResponse(ResponseEntry.builder()
+                    .requestIDs(result.nonMatchingIUPD())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                    .statusMessage(statusService.getDetail(toWrite))
+                    .build());
+        }
         current.upload.setEnd(LocalDateTime.now());
 
         Status updated = statusService.upsert(current);

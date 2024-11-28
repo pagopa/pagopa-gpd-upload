@@ -65,7 +65,7 @@ public class SupportControllerTest {
     @Primary
     public RecoveryService recoveryService() {
         RecoveryService recoveryService = Mockito.mock(RecoveryService.class);
-        Mockito.doNothing().when(recoveryService).recover(anyString(), anyString(), anyString());
+        Mockito.when(recoveryService.recover(anyString(), anyString(), anyString())).thenReturn(true);
         return recoveryService;
     }
 
