@@ -33,7 +33,7 @@ public class GPDValidator<T> {
                 invalidValues.add(cv.getMessage());
             }
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS",
-                    "The format of the debt positions in the uploaded file is invalid. Invalid values: " + invalidValues);
+                    "Debt positions format is invalid or duplicates were found. Invalid values: " + invalidValues);
         }
 
         log.debug("[GPDValidator@isValid] PaymentPosition with id {} validated", model.hashCode());
