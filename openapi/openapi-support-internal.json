@@ -883,6 +883,6 @@
     }
   },
   "info": {
-    "version": "0.1.32-5-recover-delete-operation-status"
+    "version": "0.1.32-6-recover-delete-operation-status"
   }
 }
