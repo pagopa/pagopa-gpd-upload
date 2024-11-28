@@ -2,11 +2,11 @@ package it.gov.pagopa.gpd.upload.service;
 
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.client.GPDClient;
+import it.gov.pagopa.gpd.upload.entity.MatchResult;
 import it.gov.pagopa.gpd.upload.entity.ResponseEntry;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
-import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -14,9 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Singleton
 @Slf4j
@@ -32,26 +30,24 @@ public class RecoveryService {
         this.gpdClient = gpdClient;
     }
 
-    public Status recoverCreated(String brokerId, String organizationFiscalCode, String uploadId) {
+    public void recover(String brokerId, String organizationFiscalCode, String uploadId) {
         UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
-        if(!uploadInput.getUploadOperation().equals(UploadOperation.CREATE))
-            throw new AppException(HttpStatus.NOT_FOUND,
-                    "Upload operation not processable", String.format("Not exists create operation with upload-id %s", uploadId));
+        List<String> inputIUPD;
 
-        List<String> inputIUPD = uploadInput.getPaymentPositionIUPDs();
-        return this.recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.OK, HttpStatus.CREATED);
+        switch (uploadInput.getUploadOperation()) {
+            case CREATE:
+                inputIUPD = uploadInput.getPaymentPositions().stream().map(PaymentPositionModel::getIupd).toList();
+                recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.OK, HttpStatus.CREATED);
+            case DELETE:
+                inputIUPD = uploadInput.getPaymentPositionIUPDs();
+                recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND);
+            default:
+                throw new AppException(HttpStatus.NOT_FOUND,
+                        "Upload operation not processable", String.format("Not exists CREATE or DELETE operation with upload-id %s", uploadId));
+        }
     }
 
-    public Status recoverDeleted(String brokerId, String organizationFiscalCode, String uploadId) {
-        UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
-        if(!uploadInput.getUploadOperation().equals(UploadOperation.DELETE))
-            throw new AppException(HttpStatus.NOT_FOUND,
-                    "Upload operation not processable", String.format("Not exists delete operation with upload-id %s", uploadId));
-        List<String> inputIUPD = uploadInput.getPaymentPositionIUPDs();
-        return this.recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND);
-    }
-
-    public Status recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus statusToCheck, HttpStatus uploadStatus) {
+    private Status recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus toGetFromGPD, HttpStatus toWrite) {
         Status current = statusService.getStatus(organizationFiscalCode, uploadId);
 
         // check if upload is pending
@@ -65,37 +61,45 @@ public class RecoveryService {
         );
 
         // sync with core to check if debt positions are already processed (DELETED or CREATED -> NOT_EXISTS, EXISTS)
-        List<String> deletedIUPD = getAlreadyIUPD(organizationFiscalCode, inputIUPD, processedIUPD, statusToCheck);
+        MatchResult result = match(organizationFiscalCode, inputIUPD, processedIUPD, toGetFromGPD);
 
         // update status and save
         current.upload.addResponse(ResponseEntry.builder()
-                .requestIDs(deletedIUPD)
-                .statusCode(uploadStatus.getCode())
-                .statusMessage(statusService.getDetail(uploadStatus))
+                .requestIDs(result.matchingIUPD())
+                .statusCode(toWrite.getCode())
+                .statusMessage(statusService.getDetail(toWrite))
+                .build());
+        // for non-matching IUPD the code is 500
+        current.upload.addResponse(ResponseEntry.builder()
+                .requestIDs(result.nonMatchingIUPD())
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                .statusMessage(statusService.getDetail(toWrite))
                 .build());
         current.upload.setEnd(LocalDateTime.now());
 
         return statusService.upsert(current);
     }
 
-    private List<String> getAlreadyIUPD(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD, HttpStatus target) {
-        Set<String> inputIUPDSet = new HashSet<>(inputIUPD);
-        Set<String> processedIUPDSet = new HashSet<>(processedIUPD);
+    private MatchResult match(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD, HttpStatus target) {
+        List<String> differenceIUPD = inputIUPD.stream()
+                .filter(iupd -> !processedIUPD.contains(iupd))
+                .toList();
 
-        // diff
-        if(!inputIUPDSet.removeAll(processedIUPDSet))
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Internal Server Error");
-
-        List<String> alreadyIUPD = new ArrayList<>();
+        List<String> matchingIUPD = new ArrayList<>();
+        List<String> nonMatchingIUPD = new ArrayList<>();
 
         // for each check if position is processed
-        inputIUPDSet.forEach(id -> {
+        differenceIUPD.forEach(id -> {
             // request to GPD
             HttpStatus httpStatus = gpdClient.getDebtPosition(organizationFiscalCode, id).getStatus();
-            if(httpStatus.equals(target)) { // if request was successful
-                alreadyIUPD.add(id);
+            // if status code match the target
+            if(httpStatus.equals(target)) {
+                matchingIUPD.add(id);
+            } else {
+                nonMatchingIUPD.add(id);
             }
         });
-        return alreadyIUPD;
+
+        return new MatchResult(matchingIUPD, nonMatchingIUPD);
     }
 }

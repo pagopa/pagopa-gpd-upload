@@ -36,8 +36,10 @@ class OpenApiGenerationTest {
     @Test
     void swaggerSpringPlugin() throws Exception {
         boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version + ".json", "openapi.json");
-
         assertTrue(result);
+
+        boolean resultSupportAPI = saveOpenAPI("/swagger/pagopa-gpd-upload-support.json", "openapi-support-internal.json");
+        assertTrue(resultSupportAPI);
     }
 
         private boolean saveOpenAPI(String fromUri, String toFile) throws IOException {
