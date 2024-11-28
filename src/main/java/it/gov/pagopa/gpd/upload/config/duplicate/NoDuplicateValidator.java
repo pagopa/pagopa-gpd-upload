@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.upload.config.duplicate;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@Slf4j
 public class NoDuplicateValidator implements ConstraintValidator<NoDuplicate, List<?>> {
 
     private String fieldName;
@@ -40,7 +42,7 @@ public class NoDuplicateValidator implements ConstraintValidator<NoDuplicate, Li
                         return false;
                     }
                 } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
+                    log.error("Exception while detect duplicates: {}, cause: {}", e.getMessage(), e.getCause().getMessage());
                     return false;
                 }
             }

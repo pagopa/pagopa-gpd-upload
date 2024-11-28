@@ -7,6 +7,7 @@ import it.gov.pagopa.gpd.upload.entity.ResponseEntry;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
+import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -30,29 +31,28 @@ public class RecoveryService {
         this.gpdClient = gpdClient;
     }
 
-    public void recover(String brokerId, String organizationFiscalCode, String uploadId) {
+    public boolean recover(String brokerId, String organizationFiscalCode, String uploadId) {
         UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
         List<String> inputIUPD;
 
-        switch (uploadInput.getUploadOperation()) {
-            case CREATE:
-                inputIUPD = uploadInput.getPaymentPositions().stream().map(PaymentPositionModel::getIupd).toList();
-                recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.OK, HttpStatus.CREATED);
-            case DELETE:
-                inputIUPD = uploadInput.getPaymentPositionIUPDs();
-                recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND);
-            default:
-                throw new AppException(HttpStatus.NOT_FOUND,
-                        "Upload operation not processable", String.format("Not exists CREATE or DELETE operation with upload-id %s", uploadId));
+        if(uploadInput.getUploadOperation().equals(UploadOperation.CREATE)) {
+            inputIUPD = uploadInput.getPaymentPositions().stream().map(PaymentPositionModel::getIupd).toList();
+            return recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.OK, HttpStatus.CREATED);
+        } else if(uploadInput.getUploadOperation().equals(UploadOperation.DELETE)) {
+            inputIUPD = uploadInput.getPaymentPositionIUPDs();
+            return recover(organizationFiscalCode, uploadId, inputIUPD, HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND);
+        } else {
+            throw new AppException(HttpStatus.NOT_FOUND, "Upload operation not processable",
+                    String.format("Not exists CREATE or DELETE operation with upload-id %s", uploadId));
         }
     }
 
-    private Status recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus toGetFromGPD, HttpStatus toWrite) {
+    private boolean recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus toGetFromGPD, HttpStatus toWrite) {
         Status current = statusService.getStatus(organizationFiscalCode, uploadId);
 
         // check if upload is pending
         if(current.upload.getCurrent() >= current.upload.getTotal())
-            return current;
+            return false;
 
         // extract debt position id list
         List<String> processedIUPD = new ArrayList<>();
@@ -77,7 +77,8 @@ public class RecoveryService {
                 .build());
         current.upload.setEnd(LocalDateTime.now());
 
-        return statusService.upsert(current);
+        Status updated = statusService.upsert(current);
+        return updated != null;
     }
 
     private MatchResult match(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD, HttpStatus target) {
