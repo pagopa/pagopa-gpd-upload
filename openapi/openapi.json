@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "pagopa-gpd-upload",
+    "title" : "GPD-Upload-API",
     "description" : "Microservice to manage PagoPA GPD Upload",
     "termsOfService" : "https://www.pagopa.gov.it/",
     "version" : "0.1.22"
