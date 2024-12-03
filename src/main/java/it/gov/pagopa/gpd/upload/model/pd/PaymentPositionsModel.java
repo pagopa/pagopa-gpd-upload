@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.upload.model.pd;
 
 import io.micronaut.core.annotation.Introspected;
+import it.gov.pagopa.gpd.upload.config.duplicate.NoDuplicate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class PaymentPositionsModel {
     @Size(min = 1, message = "The list of payment positions must contain at least one element")
     private List<@Valid PaymentPositionModel> paymentPositions;
 
+    @NoDuplicate
     public @Valid List<@Valid PaymentPositionModel> getPaymentPositions() {
         return this.paymentPositions;
     }

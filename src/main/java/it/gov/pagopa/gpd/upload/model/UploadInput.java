@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.upload.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.gov.pagopa.gpd.upload.config.duplicate.NoDuplicate;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -22,5 +23,6 @@ public class UploadInput {
     @Valid
     private List<@Valid PaymentPositionModel> paymentPositions;
     @Valid
+    @NoDuplicate
     private List<String> paymentPositionIUPDs;
 }

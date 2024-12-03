@@ -1,8 +1,8 @@
 package it.gov.pagopa.gpd.upload.repository;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public interface FileRepository {
-    String upload(String container, String directory, File file) throws IOException;
+    String upload(String container, String directory, InputStream inputStream) throws IOException;
 }

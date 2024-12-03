@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.servers.ServerVariable;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "pagopa-gpd-upload",
+                title = "${info.application.title}",
                 version =  "${openapi.application.version}",
                 description = "Microservice to manage PagoPA GPD Upload",
                 termsOfService = "https://www.pagopa.gov.it/"
