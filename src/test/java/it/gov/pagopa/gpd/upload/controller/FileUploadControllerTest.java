@@ -109,6 +109,10 @@ class FileUploadControllerTest {
         assertEquals(OK, response.getStatus());
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////MOCK//////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////
+
     @Bean
     @Primary
     public BlobService fileUploadService() throws IOException {
@@ -124,7 +128,6 @@ class FileUploadControllerTest {
         Mockito.when(statusService.getReport(anyString(), anyString())).thenReturn(UploadReport.builder().build());
         return statusService;
     }
-
 
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean

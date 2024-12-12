@@ -33,24 +33,30 @@ class OpenApiGenerationTest {
     @Client("/")
     HttpClient client;
 
+    @Value("${info.application.title}")
+    String title;
+
     @Test
     void swaggerSpringPlugin() throws Exception {
-        boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version + ".json", "openapi.json");
-
+        boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version + ".json", "openapi.json", "GPD-Upload-API");
         assertTrue(result);
+
+        boolean resultSupportAPI = saveOpenAPI("/swagger/pagopa-gpd-upload-support.json", "openapi-support-internal.json", "GPD-Upload-Support-API");
+        assertTrue(resultSupportAPI);
     }
 
-        private boolean saveOpenAPI(String fromUri, String toFile) throws IOException {
-            HttpResponse<String> response = client.toBlocking().exchange(fromUri, String.class);
-            ObjectMapper objectMapper = new ObjectMapper();
-            String responseBody = response.getBody().get();
-            Object openAPI = objectMapper.readValue(responseBody, Object.class);
-            String formatted = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(openAPI);
-            Path basePath = Paths.get("openapi/");
-            Files.createDirectories(basePath);
-            Files.write(basePath.resolve(toFile), formatted.getBytes());
-            return true;
-        }
+    private boolean saveOpenAPI(String fromUri, String toFile, String newTitle) throws IOException {
+        HttpResponse<String> response = client.toBlocking().exchange(fromUri, String.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String responseBody = response.getBody().get();
+        responseBody = responseBody.replace(title, newTitle);
+        Object openAPI = objectMapper.readValue(responseBody, Object.class);
+        String formatted = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(openAPI);
+        Path basePath = Paths.get("openapi/");
+        Files.createDirectories(basePath);
+        Files.write(basePath.resolve(toFile), formatted.getBytes());
+        return true;
+    }
 
     @Bean
     @Primary

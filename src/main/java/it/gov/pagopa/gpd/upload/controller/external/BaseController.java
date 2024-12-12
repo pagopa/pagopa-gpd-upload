@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller;
+package it.gov.pagopa.gpd.upload.controller.external;
 
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpResponse;

@@ -4,6 +4,7 @@ import com.azure.core.util.BinaryData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -22,8 +23,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -70,17 +69,16 @@ public class BlobService {
         File file = this.unzip(fileUpload);
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
-        log.debug("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
+        log.debug("File with name {} has been unzipped, upload operation: {}", file.getName(), uploadOperation);
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
 
             if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+                log.error("[Error][BlobService@upsert] The file {} was not deleted", file.getName());
             }
 
             if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
-                log.error(String.format("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker %s and organization %s",
-                        broker, organizationFiscalCode));
+                log.error("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker {} and organization {}", broker, organizationFiscalCode);
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -94,7 +92,7 @@ public class BlobService {
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
             if(!file.delete())
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
+                log.error("[Error][BlobService@upsert] The file {} was not deleted", file.getName());
 
             if(e instanceof JsonMappingException)
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
@@ -163,14 +161,12 @@ public class BlobService {
             log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
                     uploadInput.getUploadOperation(), broker, organizationFiscalCode));
 
-            // replace file content
-            File uploadInputFile = Files.createTempFile(Path.of(DESTINATION_DIRECTORY), "gpd_upload_temp", ".json").toFile();
-            FileWriter fileWriter = new FileWriter(uploadInputFile);
-            fileWriter.write(objectMapper.writeValueAsString(uploadInput));
-            fileWriter.close();
+            // from UploadInput Object to ByteArrayInputStream
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(uploadInput));
 
             // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, uploadInputFile);
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, inputStream);
             statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
 
             return fileId;

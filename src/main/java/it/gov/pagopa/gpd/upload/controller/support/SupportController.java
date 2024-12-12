@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller;
+package it.gov.pagopa.gpd.upload.controller.support;
 
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.AppInfo;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
@@ -36,7 +37,7 @@ public class SupportController {
     @Inject
     StatusService statusService;
 
-    @Operation(summary = "Support API to recover status on CREATE operation", description = "Returns the debt positions upload report recovered.", tags = {"Support API"})
+    @Operation(summary = "Support API to recover status on CREATE and DELETE operation", description = "Returns the debt positions upload report recovered.", tags = {"Support API"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AppInfo.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -44,15 +45,17 @@ public class SupportController {
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = "brokers/{broker}/organizations/{organization}/{upload}/status/created/refresh")
+    @Get(value = "uploads/{upload}/status/refresh")
     public HttpResponse<UploadReport> recoverStatus(
-            @Parameter(description = "The broker code", required = true)
-            @NotBlank @PathVariable(name = "broker") String broker,
-            @Parameter(description = "The organization fiscal code", required = true)
-            @NotBlank @PathVariable(name = "organization") String organization,
             @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "upload") String upload
-    ) {
+            @NotBlank @PathVariable(name = "upload") String upload) {
+        String[] strings = upload.split("_");
+
+        if(strings.length < 3)
+            throw new AppException(HttpStatus.BAD_REQUEST, "Recover bad request", "The upload UUID should be formatted as <broker>_<organization>_<id>");
+
+        String broker = strings[0];
+        String organization = strings[1];
         recoveryService.recover(broker, organization, upload);
         log.info("[Support-API] Status {} recovered", upload);
         UploadReport report = statusService.getReport(organization, upload);
