@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.1.34</version>
+    <version>0.1.35</version>
     <packaging>${packaging}</packaging>
 
     <parent>
