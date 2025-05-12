@@ -90,6 +90,7 @@ jobs:
           github_token: ${{ secrets.BOT_TOKEN_GITHUB }}
           beta: ${{ inputs.beta }}
           skip_ci: ${{ inputs.beta }}
+          java_version: 17
 
   image:
     needs: [ setup, release ]
