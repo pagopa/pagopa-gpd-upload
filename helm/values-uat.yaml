@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.1.38"
+    tag: "0.1.39-skip-file-rewrite"
     pullPolicy: Always
   livenessProbe:
     httpGet:
