@@ -4,6 +4,7 @@ import com.azure.core.util.BinaryData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -22,8 +23,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -67,20 +66,13 @@ public class BlobService {
     }
 
     public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
-        File file = this.unzip(fileUpload);
-        if (null == file)
-            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
-        log.info("File with name " + file.getName() + " has been unzipped, upload operation: " + uploadOperation);
-        try {
-            PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(new FileInputStream(file), PaymentPositionsModel.class);
+        InputStream is = this.unzip(fileUpload);
 
-            if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
-            }
+        try {
+            PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(is, PaymentPositionsModel.class);
 
             if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
-                log.error(String.format("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker %s and organization %s",
-                        broker, organizationFiscalCode));
+                log.error("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker {} and organization {}", broker, organizationFiscalCode);
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
             }
 
@@ -93,8 +85,6 @@ public class BlobService {
             return upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
-            if(!file.delete())
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
 
             if(e instanceof JsonMappingException)
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
@@ -104,16 +94,10 @@ public class BlobService {
     }
 
     public String delete(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
-        File file = this.unzip(fileUpload);
-        if (null == file)
-            throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The JSON file is missing");
-        log.info("File with name " + file.getName() + " has been unzipped");
-        try {
-            MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(new FileInputStream(file), MultipleIUPDModel.class);
+        InputStream is = this.unzip(fileUpload);
 
-            if(!file.delete()) {
-                log.error(String.format("[Error][BlobService@delete] The file %s was not deleted", file.getName()));
-            }
+        try {
+            MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(is, MultipleIUPDModel.class);
 
             if (!multipleIUPDValidator.isValid(multipleIUPDModel)) {
                 log.error(String.format("[Error][BlobService@delete] Debt-Positions validation failed for upload from broker %s and organization %s",
@@ -130,13 +114,20 @@ public class BlobService {
             return upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
-            if(!file.delete())
-                log.error(String.format("[Error][BlobService@upsert] The file %s was not deleted", file.getName()));
 
             if(e instanceof JsonMappingException)
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
 
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during delete operation", e.getCause());
+        }
+    }
+
+    public UploadInput getUploadInput(String broker, String fiscalCode, String uploadId) {
+        BinaryData binaryDataReport = blobStorageRepository.downloadInput(broker, fiscalCode, uploadId);
+        try {
+            return objectMapper.readValue(binaryDataReport.toString(), UploadInput.class);
+        } catch (JsonProcessingException e) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during upload-input deserialization", e.getCause());
         }
     }
 
@@ -149,20 +140,17 @@ public class BlobService {
         }
     }
 
-
-    public String upload(UploadInput in, String broker, String organizationFiscalCode, int totalItem) {
+    public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem) {
         try {
-            log.info(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
-                    in.getUploadOperation(), broker, organizationFiscalCode));
+            log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
+                    uploadInput.getUploadOperation(), broker, organizationFiscalCode));
 
-            // replace file content
-            File uploadInputFile = Files.createTempFile(Path.of(DESTINATION_DIRECTORY), "gpd_upload_temp", ".json").toFile();
-            FileWriter fileWriter = new FileWriter(uploadInputFile);
-            fileWriter.write(objectMapper.writeValueAsString(in));
-            fileWriter.close();
+            // from UploadInput Object to ByteArrayInputStream
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(uploadInput));
 
             // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, uploadInputFile);
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, inputStream);
             statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
 
             return fileId;
@@ -172,80 +160,63 @@ public class BlobService {
         }
     }
 
-    private File unzip(CompletedFileUpload file) {
+    private InputStream unzip(CompletedFileUpload file) {
         int zipFiles = 0;
         int zipSize = 0;
-        File outputFile = null;
-        final byte[] buffer = new byte[1024];
 
-        if(!VALID_UPLOAD_EXTENSION.contains(getFileExtension(file.getFilename()))) {
-            log.error("[Error][BlobService@unzip] The file " + file.getFilename() + " with extension " + getFileExtension(file.getFilename()) + " is not a zip file ");
-            throw new AppException(HttpStatus.BAD_REQUEST, "NOT A ZIP FILE", "Only zip file can be uploaded.");
+        if (!VALID_UPLOAD_EXTENSION.contains(getFileExtension(file.getFilename()))) {
+            log.error("[Error][BlobService@unzip] Invalid extension: " + file.getFilename());
+            throw new AppException(HttpStatus.BAD_REQUEST, "NOT A ZIP FILE", "Only ZIP files can be uploaded.");
         }
 
-        try {
-            ZipInputStream zis = new ZipInputStream(file.getInputStream());
+        try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
+            ZipEntry entry;
 
-            ZipEntry entry = zis.getNextEntry();
-            while (entry != null) {
+            while ((entry = zis.getNextEntry()) != null) {
                 zipFiles++;
                 if (zipFiles > zipMaxEntries) {
-                    zis.closeEntry();
-                    zis.close();
-                    log.error("[Error][BlobService@unzip] Zip content has too many entries");
-                    throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Zip content has too many entries (check for hidden files)");
+                    log.error("[Error][BlobService@unzip] Too many entries in ZIP");
+                    throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Too many entries in ZIP file.");
                 }
 
-                if (!entry.isDirectory()) {
-                    String fileName = entry.getName();
-
-                    // Validate file extension against whitelist
-                    if (!ALLOWABLE_EXTENSIONS.contains(getFileExtension(fileName))) {
-                        continue;
-                    }
-
-                    // Sanitize file name to remove potentially malicious characters
-                    String sanitizedFileName = sanitizeFileName(fileName);
-                    String sanitizedOutputPath = DESTINATION_DIRECTORY + File.separator + sanitizedFileName;
-
-                    // Disable auto-execution for extracted files
-                    outputFile = new File(sanitizedOutputPath);
-
-                    if (!outputFile.toPath().normalize().startsWith(DESTINATION_DIRECTORY)) {
-                        log.error("[Error][BlobService@unzip] Bad zip entry: the normalized file path does not start with the destination directory");
-                        throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Bad zip entry");
-                    }
-
-                    boolean executableOff = outputFile.setExecutable(false);
-                    if(!executableOff) {
-                        log.error("[Error][BlobService@unzip] The underlying file system does not implement an execution permission and the operation failed.");
-                    }
-
-                    final FileOutputStream fos = new FileOutputStream(outputFile);
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        zipSize += len;
-                        if(zipSize > zipMaxSize) {
-                            zis.closeEntry();
-                            zis.close();
-                            fos.close();
-                            log.error("[Error][BlobService@unzip] Zip content too large");
-                            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Zip content too large");
-                        }
-
-                        fos.write(buffer, 0, len);
-                    }
-                    fos.close();
+                if (entry.isDirectory()) {
+                    continue; // Skip folders
                 }
-                entry = zis.getNextEntry();
+
+                String entryName = entry.getName();
+                if (!ALLOWABLE_EXTENSIONS.contains(getFileExtension(entryName))) {
+                    log.error("[Error][BlobService@unzip] Disallowed file type: " + entryName);
+                    throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "ZIP contains unsupported file type.");
+                }
+
+                // Read entry content into memory
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[4096];
+                int len;
+
+                while ((len = zis.read(buffer)) > 0) {
+                    zipSize += len;
+                    if (zipSize > zipMaxSize) {
+                        zis.closeEntry();
+                        zis.close();
+                        log.error("[Error][BlobService@unzip] ZIP file too large");
+                        throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "Unzipped content exceeds size limit.");
+                    }
+                    baos.write(buffer, 0, len);
+                }
+
+                // Return the first valid file as InputStream
+                zis.closeEntry();
+                zis.close();
+                log.debug("File with name " + file.getName() + " has been unzipped");
+                return new ByteArrayInputStream(baos.toByteArray());
             }
-            zis.closeEntry();
-            zis.close();
 
-            return outputFile;
+            log.error("[Error][BlobService@unzip] No valid file in ZIP");
+            throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "No valid file found in ZIP.");
         } catch (IOException e) {
-            log.error("[Error][BlobService@unzip] " + e.getMessage());
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
+            log.error("[Error][BlobService@unzip] " + e.getMessage(), e);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Could not unzip file", e);
         }
     }
 

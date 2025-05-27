@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.1.28"
+    tag: "0.1.40"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -22,6 +22,7 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
+    replicas: 1
   service:
     create: true
     type: ClusterIP
@@ -35,9 +36,9 @@ microservice-chart:
     proxyBodySize: 5m
     annotations: {nginx.ingress.kubernetes.io/proxy-read-timeout: '130'}
   serviceAccount:
-    create: false
-    annotations: {}
-    name: ""
+    name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
@@ -73,6 +74,8 @@ microservice-chart:
     CONTAINER_NAME: "gpd_upload_status"
     POST_FILE_RETRY_AFTER: '10000'
     LOG_LEVEL: "INFO"
+    GPD_API_URL: "https://api.uat.platform.pagopa.it/gpd/api/v1"
+    CRON_RECOVERY_RATE: "900s" # 15 minutes
     OTEL_SERVICE_NAME: "pagopa-gpd-upload"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"

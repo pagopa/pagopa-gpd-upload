@@ -1,0 +1,53 @@
+{
+    "paymentPositions": [
+        {
+            "iupd": "IUPD_WEBINAR_001",
+            "type": "F",
+            "payStandIn": false,
+            "fiscalCode": "77777777777",
+            "fullName": "Mario Rossi",
+            "streetName": null,
+            "civicNumber": null,
+            "postalCode": null,
+            "city": null,
+            "province": null,
+            "region": null,
+            "country": null,
+            "email": null,
+            "phone": null,
+            "switchToExpired": false,
+            "companyName": "PA Company",
+            "officeName": "PA Office",
+            "validityDate": null,
+            "paymentDate": null,
+            "status": null,
+            "paymentOption": [
+                {
+                    "nav": null,
+                    "iuv": "4700000000000003",
+                    "amount": 100,
+                    "description": "Webinar Caricamento Massivo",
+                    "isPartialPayment": false,
+                    "dueDate": "2025-07-18T00:00:00.000",
+                    "retentionDate": null,
+                    "fee": 0,
+                    "notificationFee": 0,
+                    "transfer": [
+                        {
+                            "idTransfer": "1",
+                            "amount": 100,
+                            "organizationFiscalCode": null,
+                            "remittanceInformation": "remittance_information_webinar",
+                            "category": "category_webinar",
+                            "iban": "IT0000000000000000000000000",
+                            "postalIban": null,
+                            "stamp": null,
+                            "transferMetadata": []
+                        }
+                    ],
+                    "paymentOptionMetadata": []
+                }
+            ]
+        }
+    ]
+}

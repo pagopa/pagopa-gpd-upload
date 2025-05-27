@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
@@ -8,9 +9,7 @@ import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-
 import java.time.LocalDateTime;
-
 
 @Singleton
 @Slf4j
@@ -22,9 +21,9 @@ public class StatusService {
         this.statusRepository = statusRepository;
     }
 
-    public UploadStatus getStatus(String fileId, String organizationFiscalCode) {
+    public UploadStatus getUploadStatus(String fileId, String organizationFiscalCode) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
-        log.info("[getStatus] status: " + status.getId());
+        log.debug("[getStatus] status: " + status.getId());
         return map(status);
     }
 
@@ -32,7 +31,12 @@ public class StatusService {
         return mapReport(statusRepository.findStatusById(fileId, orgFiscalCode));
     }
 
-    public Status createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem) {
+    public Status getStatus(String orgFiscalCode, String fileId) {
+        return statusRepository.findStatusById(fileId, orgFiscalCode);
+    }
+
+
+    public void createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem) {
         Upload upload = Upload.builder()
                 .current(0)
                 .total(totalItem)
@@ -45,7 +49,11 @@ public class StatusService {
                 .upload(upload)
                 .build();
 
-        return statusRepository.saveStatus(status);
+        statusRepository.saveStatus(status);
+    }
+
+    public Status upsert(Status status) {
+        return statusRepository.upsert(status);
     }
 
     private UploadStatus map(Status status) {
@@ -57,7 +65,7 @@ public class StatusService {
                 .build();
     }
 
-    private UploadReport mapReport(Status status) {
+    public UploadReport mapReport(Status status) {
         return UploadReport.builder()
                 .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
@@ -66,5 +74,19 @@ public class StatusService {
                 .startTime(status.upload.getStart())
                 .endTime(status.upload.getEnd())
                 .build();
+    }
+
+    public String getDetail(HttpStatus status) {
+        return switch (status) {
+            case CREATED -> "Debt position CREATED";
+            case OK -> "Debt position operation OK";
+            case NOT_FOUND -> "Debt position NOT FOUND";
+            case CONFLICT -> "Debt position IUPD or NAV/IUV already exists for organization code";
+            case UNAUTHORIZED -> "UNAUTHORIZED";
+            case FORBIDDEN -> "FORBIDDEN";
+            case INTERNAL_SERVER_ERROR -> "Internal Server Error: operation not completed";
+            case BAD_REQUEST -> "Bad request";
+            default -> status.toString();
+        };
     }
 }

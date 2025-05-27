@@ -1,8 +1,7 @@
-version: '3.8'
 
 services:
   app:
-    container_name: 'service' # TODO
+    container_name: 'gpd-upload'
     image: ${image}
     platform: linux/amd64
     build:

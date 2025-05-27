@@ -14,7 +14,9 @@ It allows the creditor institutions to:
 
 ## Api Documentation 📖
 
-See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/pagopa-gpd-upload/main/openapi/openapi.json)
+See the external [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/pagopa-gpd-upload/main/openapi/openapi.json)
+
+See the internal [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/pagopa-gpd-upload/main/openapi/openapi-support-internal.json)
 
 ---
 

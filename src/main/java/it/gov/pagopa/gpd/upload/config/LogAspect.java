@@ -45,20 +45,22 @@ public class LogAspect implements HttpServerFilter {
         String params = request.getParameters().asMap().toString();
         MDC.put(ARGS, params);
 
-        log.info("Invoking API operation {} - args: {}", request.getMethodName(), params);
+        log.debug("Invoking API operation {} - args: {}", request.getMethodName(), params);
 
         return Flowable.fromPublisher(chain.proceed(request)).flatMap(response -> {
 
-            MDC.put(STATUS, "OK");
-            MDC.put(CODE, String.valueOf(response.getStatus().getCode()));
-            MDC.put(RESPONSE_TIME, String.valueOf(System.currentTimeMillis() - startTime));
-            MDC.put(RESPONSE, toJsonString(response.getBody().toString()));
-            log.info("Successful API operation {} - result: {}", request.getMethodName(), response);
-            MDC.remove(RESPONSE);
-            MDC.remove(STATUS);
-            MDC.remove(CODE);
-            MDC.remove(RESPONSE_TIME);
-            MDC.remove(START_TIME);
+            if(!path.equals("/info")) { // skip liveliness calls
+                MDC.put(STATUS, "OK");
+                MDC.put(CODE, String.valueOf(response.getStatus().getCode()));
+                MDC.put(RESPONSE_TIME, String.valueOf(System.currentTimeMillis() - startTime));
+                MDC.put(RESPONSE, toJsonString(response.getBody().toString()));
+                log.info("Successful API operation {} - result: {}", request.getMethodName(), response);
+                MDC.remove(RESPONSE);
+                MDC.remove(STATUS);
+                MDC.remove(CODE);
+                MDC.remove(RESPONSE_TIME);
+                MDC.remove(START_TIME);
+            }
 
             return Flowable.just(response);
         });

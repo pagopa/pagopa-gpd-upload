@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller;
+package it.gov.pagopa.gpd.upload.controller.external;
 
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpHeaders;
@@ -68,7 +68,7 @@ public class FileUploadController {
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
         String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.CREATE, file);
-        log.info("[CREATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
+        log.debug("[CREATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
         try {
@@ -103,7 +103,7 @@ public class FileUploadController {
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
         String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.UPDATE, file);
-        log.info("[UPDATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
+        log.debug("[UPDATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
         try {
@@ -138,7 +138,7 @@ public class FileUploadController {
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
         String uploadID = blobService.delete(brokerCode, organizationFiscalCode, UploadOperation.DELETE, file);
-        log.info("[DELETE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
+        log.debug("[DELETE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
         String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
 
         try {
