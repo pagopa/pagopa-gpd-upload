@@ -46,11 +46,11 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "1Gi"
+      memory: "640Mi"
       cpu: "0.25"
     limits:
       memory: "1Gi"
-      cpu: "0.25"
+      cpu: "0.30"
   autoscaling:
     enable: true
     minReplica: 1
