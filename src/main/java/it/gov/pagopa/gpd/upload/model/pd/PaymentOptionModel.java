@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,7 @@ public class PaymentOptionModel implements Serializable {
     @NotBlank(message = "iuv is required")
     private String iuv;
     @NotNull(message = "amount is required")
+    @Min(value= 1L, message = "minimum amount is 1 eurocent")
     private Long amount;
     @NotBlank(message = "payment option description is required")
     @Size(max = 140) // compliant to paForNode.xsd
