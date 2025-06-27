@@ -4,7 +4,7 @@
     "title": "GPD-Upload-Support-API",
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.1.41"
+    "version": "0.1.42"
   },
   "servers": [
     {
