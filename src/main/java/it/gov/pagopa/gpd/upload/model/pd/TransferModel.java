@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,7 @@ public class TransferModel implements Serializable {
     private String idTransfer;
 
     @NotNull(message = "amount is required")
+    @Min(value= 1L, message = "minimum amount is 1 eurocent")
     private Long amount;
 
     @Schema(description = "Fiscal code related to the organization targeted by this transfer.", example = "00000000000")
