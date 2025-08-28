@@ -9,6 +9,7 @@ import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
@@ -28,6 +29,7 @@ import java.util.EnumSet;
 import static io.micronaut.http.HttpStatus.*;
 import static java.nio.file.attribute.PosixFilePermission.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
@@ -35,6 +37,7 @@ class FileUploadControllerTest {
 
     private static final String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
     private static final String UPLOAD_KEY = "key";
+    private static final String QUERY_PARAM_SERVICE_TYPE = String.format("?serviceType=%s",ServiceType.GPD.name());
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 
@@ -46,7 +49,7 @@ class FileUploadControllerTest {
     void createDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI + QUERY_PARAM_SERVICE_TYPE)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -62,7 +65,7 @@ class FileUploadControllerTest {
     void updateDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI + QUERY_PARAM_SERVICE_TYPE)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -78,7 +81,7 @@ class FileUploadControllerTest {
     void deleteDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI + QUERY_PARAM_SERVICE_TYPE)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -102,7 +105,7 @@ class FileUploadControllerTest {
     void getUploadStatus_KO() throws IOException {
         this.createDebtPositionsByFile_OK();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report");
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report" + QUERY_PARAM_SERVICE_TYPE);
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
 
         assertNotNull(response);
@@ -117,7 +120,7 @@ class FileUploadControllerTest {
     @Primary
     public BlobService fileUploadService() throws IOException {
         BlobService blobService = Mockito.mock(BlobService.class);
-        Mockito.when(blobService.upsert(anyString(), anyString(), Mockito.any(), Mockito.any())).thenReturn(UPLOAD_KEY);
+        Mockito.when(blobService.upsert(anyString(), anyString(), any(), any(), any())).thenReturn(UPLOAD_KEY);
         return blobService;
     }
 
@@ -125,7 +128,7 @@ class FileUploadControllerTest {
     @Primary
     public StatusService statusService() throws IOException {
         StatusService statusService = Mockito.mock(StatusService.class);
-        Mockito.when(statusService.getReport(anyString(), anyString())).thenReturn(UploadReport.builder().build());
+        Mockito.when(statusService.getReport(anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
         return statusService;
     }
 

@@ -4,6 +4,7 @@ import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.utils.FileUtils;
@@ -27,14 +28,14 @@ public class UploadServiceTest {
 
     @Test
     void upsert_OK() throws IOException {
-        String uploadKey = blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getUpsertFile());
+        String uploadKey = blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getUpsertFile(), ServiceType.GPD);
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }
 
     @Test
     void delete_OK() throws IOException {
-        String uploadKey = blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getDeleteFile());
+        String uploadKey = blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getDeleteFile(), ServiceType.GPD);
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }
@@ -44,7 +45,7 @@ public class UploadServiceTest {
     @Primary
     public static BlobStorageRepository blobStorageRepository() throws FileNotFoundException {
         BlobStorageRepository blobStorageRepository = Mockito.mock(BlobStorageRepository.class);
-        Mockito.when(blobStorageRepository.upload(anyString(), anyString(), any())).thenReturn(FISCAL_CODE);
+        Mockito.when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
         return blobStorageRepository;
     }
     @Bean
