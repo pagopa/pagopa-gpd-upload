@@ -10,6 +10,7 @@ import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,6 +29,7 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Slf4j
 public class BlobStorageRepository implements FileRepository {
 
+    public static final String SERVICE_TYPE_METADATA = "serviceType";
     @Value("${blob.sas.connection}")
     private String connectionString;
 
@@ -43,10 +46,11 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     @Override
-    public String upload(String broker, String fiscalCode, InputStream inputStream) throws FileNotFoundException {
+    public String upload(String broker, String fiscalCode, InputStream inputStream, ServiceType serviceType) throws FileNotFoundException {
         blobServiceClient.createBlobContainerIfNotExists(broker);
         BlobContainerClient container = blobServiceClient.getBlobContainerClient(broker + "/" + fiscalCode + "/" + INPUT_DIRECTORY);
         String key = this.createRandomName(broker + "_" + fiscalCode);
+        Map<String, String> metadata = Map.of(SERVICE_TYPE_METADATA, serviceType.name());
 
         BlobClient blobClient = container.getBlobClient(key + ".json");
         // retry in case of pseudo random collision
@@ -56,6 +60,7 @@ public class BlobStorageRepository implements FileRepository {
         }
 
         BlockBlobClient blockBlobClient = blobClient.getBlockBlobClient();
+        blockBlobClient.setMetadata(metadata);
 
         CompletableFuture<String> uploadFuture = uploadFileAsync(blockBlobClient, inputStream);
 

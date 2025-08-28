@@ -11,9 +11,10 @@ import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
-import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
+import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
@@ -21,14 +22,13 @@ import it.gov.pagopa.gpd.upload.utils.GPDValidator;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Context
@@ -61,11 +61,11 @@ public class BlobService {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         File directory = new File(DESTINATION_DIRECTORY);
-        if(!directory.exists())
+        if (!directory.exists())
             directory.mkdir();
     }
 
-    public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
+    public String upsert(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload, ServiceType serviceType) {
         InputStream is = this.unzip(fileUpload);
 
         try {
@@ -82,18 +82,18 @@ public class BlobService {
                     .build();
 
             // return upload key
-            return upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size());
+            return upload(uploadInput, broker, organizationFiscalCode, paymentPositionsModel.getPaymentPositions().size(), serviceType);
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
 
-            if(e instanceof JsonMappingException)
+            if (e instanceof JsonMappingException)
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
 
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR", "Internal server error", e.getCause());
         }
     }
 
-    public String delete(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload) {
+    public String delete(String broker, String organizationFiscalCode, UploadOperation uploadOperation, CompletedFileUpload fileUpload, ServiceType serviceType) {
         InputStream is = this.unzip(fileUpload);
 
         try {
@@ -111,11 +111,11 @@ public class BlobService {
                     .build();
 
             // return upload key
-            return upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size());
+            return upload(uploadInput, broker, organizationFiscalCode, multipleIUPDModel.getPaymentPositionIUPDs().size(), serviceType);
         } catch (IOException e) {
             log.error("[Error][BlobService@upload] " + e.getMessage());
 
-            if(e instanceof JsonMappingException)
+            if (e instanceof JsonMappingException)
                 throw new AppException(HttpStatus.BAD_REQUEST, "INVALID JSON", "Given JSON is invalid for required API payload: " + e.getMessage());
 
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during delete operation", e.getCause());
@@ -140,7 +140,7 @@ public class BlobService {
         }
     }
 
-    public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem) {
+    public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem, ServiceType serviceType) {
         try {
             log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
                     uploadInput.getUploadOperation(), broker, organizationFiscalCode));
@@ -150,8 +150,8 @@ public class BlobService {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(uploadInput));
 
             // upload blob
-            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, inputStream);
-            statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem);
+            String fileId = blobStorageRepository.upload(broker, organizationFiscalCode, inputStream, serviceType);
+            statusService.createUploadStatus(organizationFiscalCode, broker, fileId, totalItem, serviceType);
 
             return fileId;
         } catch (IOException e) {
@@ -243,7 +243,7 @@ public class BlobService {
 
         // Normalize file name to lower case
         fileName = fileName.toLowerCase();
-        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0,8);
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         fileName = fileName.replace(".", uuid + ".");
 
         return fileName;

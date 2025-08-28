@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.upload.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class Upload {
     private LocalDateTime start;
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime end;
+    private ServiceType serviceType;
 
     public void addResponse(ResponseEntry responseEntry) {
         if(responses == null) responses = new ArrayList<>();
