@@ -3,13 +3,18 @@ package it.gov.pagopa.gpd.upload.service;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
+import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
+import java.util.Objects;
+
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
 @Singleton
 @Slf4j
@@ -21,14 +26,22 @@ public class StatusService {
         this.statusRepository = statusRepository;
     }
 
-    public UploadStatus getUploadStatus(String fileId, String organizationFiscalCode) {
+    public UploadStatus getUploadStatus(String fileId, String organizationFiscalCode, ServiceType serviceType) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
-        return map(status);
+
+        if(Objects.equals(serviceType, status.getUpload().getServiceType())){
+            return map(status);
+        }
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
     }
 
-    public UploadReport getReport(String orgFiscalCode, String fileId) {
-        return mapReport(statusRepository.findStatusById(fileId, orgFiscalCode));
+    public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
+        Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
+        if(status.getUpload().getServiceType().equals(serviceType)){
+            return mapReport(status);
+        }
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
     }
 
     public Status getStatus(String orgFiscalCode, String fileId) {
@@ -36,11 +49,12 @@ public class StatusService {
     }
 
 
-    public void createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem) {
+    public void createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem, ServiceType serviceType) {
         Upload upload = Upload.builder()
                 .current(0)
                 .total(totalItem)
                 .start(LocalDateTime.now())
+                .serviceType(serviceType)
                 .build();
         Status status = Status.builder()
                 .id(fileId)
