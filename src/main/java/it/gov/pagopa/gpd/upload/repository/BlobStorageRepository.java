@@ -29,7 +29,7 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Slf4j
 public class BlobStorageRepository implements FileRepository {
 
-    public static final String SERVICE_TYPE_METADATA = "serviceType";
+    private static final String SERVICE_TYPE_METADATA = "serviceType";
     @Value("${blob.sas.connection}")
     private String connectionString;
 
