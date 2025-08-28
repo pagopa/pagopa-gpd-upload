@@ -22,13 +22,13 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.upload.exception.AppError;
 import it.gov.pagopa.gpd.upload.exception.AppException;
-import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
+import it.gov.pagopa.gpd.upload.model.UploadOperation;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
-
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,7 +37,7 @@ import java.net.URISyntaxException;
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
-@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY,  in = SecuritySchemeIn.HEADER)
+@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class FileUploadController {
     @Inject
     BlobService blobService;
@@ -64,12 +64,14 @@ public class FileUploadController {
             @Parameter(
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
-            ) CompletedFileUpload file) {
+            ) CompletedFileUpload file,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
-        String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.CREATE, file);
+        String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.CREATE, file, serviceType);
         log.debug("[CREATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
-        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
+        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode + "/debtpositions/file/" + uploadID + "/status";
 
         try {
             HttpResponse response = HttpResponse.accepted(new URI(uri));
@@ -99,12 +101,14 @@ public class FileUploadController {
             @Parameter(
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
-            ) CompletedFileUpload file) {
+            ) CompletedFileUpload file,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
-        String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.UPDATE, file);
+        String uploadID = blobService.upsert(brokerCode, organizationFiscalCode, UploadOperation.UPDATE, file, serviceType);
         log.debug("[UPDATE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
-        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
+        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode + "/debtpositions/file/" + uploadID + "/status";
 
         try {
             HttpResponse response = HttpResponse.accepted(new URI(uri));
@@ -134,12 +138,14 @@ public class FileUploadController {
             @Parameter(
                     description = "File to be uploaded",
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
-            ) CompletedFileUpload file) {
+            ) CompletedFileUpload file,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
         if (null == file)
             throw new AppException(HttpStatus.BAD_REQUEST, "EMPTY FILE", "The zip file is missing");
-        String uploadID = blobService.delete(brokerCode, organizationFiscalCode, UploadOperation.DELETE, file);
+        String uploadID = blobService.delete(brokerCode, organizationFiscalCode, UploadOperation.DELETE, file, serviceType);
         log.debug("[DELETE by file UPLOAD] A file with name: " + file.getFilename() + " has been uploaded");
-        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode +"/debtpositions/file/" + uploadID +"/status";
+        String uri = "brokers/" + brokerCode + "/organizations/" + organizationFiscalCode + "/debtpositions/file/" + uploadID + "/status";
 
         try {
             HttpResponse response = HttpResponse.accepted(new URI(uri));
