@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.1.42-1-PAGOPA-3220-aca-massive-upload"
+    tag: "0.1.43-PAGOPA-3220-aca-massive-upload"
     pullPolicy: Always
   livenessProbe:
     httpGet:
