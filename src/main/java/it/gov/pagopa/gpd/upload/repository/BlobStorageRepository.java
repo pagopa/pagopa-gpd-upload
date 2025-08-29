@@ -60,12 +60,14 @@ public class BlobStorageRepository implements FileRepository {
         }
 
         BlockBlobClient blockBlobClient = blobClient.getBlockBlobClient();
-        blockBlobClient.setMetadata(metadata);
 
         CompletableFuture<String> uploadFuture = uploadFileAsync(blockBlobClient, inputStream);
 
         uploadFuture.thenAccept(blobName -> {
             // Handle the result asynchronously
+            String[] blobNameSplit = blobName.split("/");
+            String fileName = blobNameSplit[blobNameSplit.length - 1];
+            container.getBlobClient(fileName).setMetadata(metadata);
             log.debug("Asynchronous upload completed for blob {}", blobName);
         }).exceptionally(ex -> {
             log.error("[Error][BlobStorageRepository@upload] Exception while uploading file asynchronously: {}", ex.getMessage());
