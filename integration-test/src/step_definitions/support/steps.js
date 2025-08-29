@@ -4,7 +4,7 @@ const {zip_by_content, mock_zip, generate_zip_with_type, extractIUPDs, generateA
 const {call, get, sleep} = require('./common')
 const {uploadFile} = require('./service')
 
-const service_type = "gpd";
+var service_type = "gpd";
 if(process.env.SERVICE_TYPE){
     service_type = process.env.SERVICE_TYPE;
 }
