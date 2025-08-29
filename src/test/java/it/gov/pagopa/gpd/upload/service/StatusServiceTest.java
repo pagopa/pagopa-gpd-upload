@@ -51,11 +51,11 @@ public class StatusServiceTest {
         StatusRepository statusRepository = Mockito.mock(StatusRepository.class);
         Status status = Status.builder()
                 .id(UPLOAD_KEY)
+                .serviceType(ServiceType.GPD)
                 .upload(Upload.builder()
                         .current(0)
                         .total(0)
                         .start(LocalDateTime.now())
-                        .serviceType(ServiceType.GPD)
                         .build())
                 .build();
         Mockito.when(statusRepository.findStatusById(anyString(), anyString())).thenReturn(status);

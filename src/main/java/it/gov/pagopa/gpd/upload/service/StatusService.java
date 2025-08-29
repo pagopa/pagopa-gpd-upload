@@ -30,7 +30,7 @@ public class StatusService {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
 
-        if(Objects.equals(serviceType, status.getUpload().getServiceType())){
+        if(Objects.equals(serviceType, status.getServiceType())){
             return map(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
@@ -38,7 +38,7 @@ public class StatusService {
 
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
         Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
-        if(status.getUpload().getServiceType().equals(serviceType)){
+        if(status.getServiceType().equals(serviceType)){
             return mapReport(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
@@ -54,12 +54,12 @@ public class StatusService {
                 .current(0)
                 .total(totalItem)
                 .start(LocalDateTime.now())
-                .serviceType(serviceType)
                 .build();
         Status status = Status.builder()
                 .id(fileId)
                 .brokerID(brokerId)
                 .fiscalCode(organizationFiscalCode)
+                .serviceType(serviceType)
                 .upload(upload)
                 .build();
 
