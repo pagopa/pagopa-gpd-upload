@@ -4,7 +4,11 @@ const {zip_by_content, mock_zip, generate_zip_with_type, extractIUPDs, generateA
 const {call, get, sleep} = require('./common')
 const {uploadFile} = require('./service')
 
-const app_host = process.env.APP_HOST
+var service_type = "gpd";
+if(process.env.SERVICE_TYPE){
+    service_type = process.env.SERVICE_TYPE;
+}
+const app_host = process.env.APP_HOST.replace("*service-type*", service_type);
 
 setDefaultTimeout(3600 * 1000);
 

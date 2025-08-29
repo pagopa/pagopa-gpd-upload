@@ -25,7 +25,8 @@ import io.swagger.v3.oas.annotations.servers.ServerVariable;
                                         name = "basePath",
                                         defaultValue = "/upload/gpd/debt-positions-service/v1",
                                         allowableValues = {
-                                                "/upload/gpd/debt-positions-service/v1"
+                                                "/upload/gpd/debt-positions-service/v1",
+                                                "/upload/aca/debt-positions-service/v1"
                                         }
                                 ),
                                 @ServerVariable(

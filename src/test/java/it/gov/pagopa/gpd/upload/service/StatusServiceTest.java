@@ -7,6 +7,7 @@ import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
@@ -26,14 +27,14 @@ public class StatusServiceTest {
 
     @Test
     void getUploadStatus_OK() {
-        UploadStatus uploadStatus = statusService.getUploadStatus("fileId", "organizationFiscalCode");
+        UploadStatus uploadStatus = statusService.getUploadStatus("fileId", "organizationFiscalCode", ServiceType.GPD);
 
         Assertions.assertEquals(UPLOAD_KEY, uploadStatus.getUploadID());
     }
 
     @Test
     void getReport_OK() {
-        UploadReport uploadReport = statusService.getReport("fileId", "organizationFiscalCode");
+        UploadReport uploadReport = statusService.getReport("fileId", "organizationFiscalCode", ServiceType.GPD);
 
         Assertions.assertEquals(UPLOAD_KEY, uploadReport.getUploadID());
     }
@@ -50,6 +51,7 @@ public class StatusServiceTest {
         StatusRepository statusRepository = Mockito.mock(StatusRepository.class);
         Status status = Status.builder()
                 .id(UPLOAD_KEY)
+                .serviceType(ServiceType.GPD)
                 .upload(Upload.builder()
                         .current(0)
                         .total(0)

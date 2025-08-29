@@ -6,6 +6,7 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,7 @@ import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.AppInfo;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.service.RecoveryService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
@@ -48,17 +50,19 @@ public class SupportController {
     @Get(value = "uploads/{upload}/status/refresh")
     public HttpResponse<UploadReport> recoverStatus(
             @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "upload") String upload) {
+            @NotBlank @PathVariable(name = "upload") String upload,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
         String[] strings = upload.split("_");
 
-        if(strings.length < 3)
+        if (strings.length < 3)
             throw new AppException(HttpStatus.BAD_REQUEST, "Recover bad request", "The upload UUID should be formatted as <broker>_<organization>_<id>");
 
         String broker = strings[0];
         String organization = strings[1];
         recoveryService.recover(broker, organization, upload);
         log.info("[Support-API] Status {} recovered", upload);
-        UploadReport report = statusService.getReport(organization, upload);
+        UploadReport report = statusService.getReport(organization, upload, serviceType);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)

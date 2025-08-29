@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import static io.micronaut.http.HttpStatus.OK;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @MicronautTest
@@ -57,7 +58,7 @@ public class SupportControllerTest {
     @Primary
     public StatusService statusService() throws IOException {
         StatusService statusService = Mockito.mock(StatusService.class);
-        Mockito.when(statusService.getReport(anyString(), anyString())).thenReturn(UploadReport.builder().build());
+        Mockito.when(statusService.getReport(anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
         return statusService;
     }
 

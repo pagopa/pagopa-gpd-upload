@@ -10,6 +10,7 @@ import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,6 +29,7 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Slf4j
 public class BlobStorageRepository implements FileRepository {
 
+    private static final String SERVICE_TYPE_METADATA = "serviceType";
     @Value("${blob.sas.connection}")
     private String connectionString;
 
@@ -43,10 +46,11 @@ public class BlobStorageRepository implements FileRepository {
     }
 
     @Override
-    public String upload(String broker, String fiscalCode, InputStream inputStream) throws FileNotFoundException {
+    public String upload(String broker, String fiscalCode, InputStream inputStream, ServiceType serviceType) throws FileNotFoundException {
         blobServiceClient.createBlobContainerIfNotExists(broker);
         BlobContainerClient container = blobServiceClient.getBlobContainerClient(broker + "/" + fiscalCode + "/" + INPUT_DIRECTORY);
         String key = this.createRandomName(broker + "_" + fiscalCode);
+        Map<String, String> metadata = Map.of(SERVICE_TYPE_METADATA, serviceType.name());
 
         BlobClient blobClient = container.getBlobClient(key + ".json");
         // retry in case of pseudo random collision
@@ -61,6 +65,9 @@ public class BlobStorageRepository implements FileRepository {
 
         uploadFuture.thenAccept(blobName -> {
             // Handle the result asynchronously
+            String[] blobNameSplit = blobName.split("/");
+            String fileName = blobNameSplit[blobNameSplit.length - 1];
+            container.getBlobClient(fileName).setMetadata(metadata);
             log.debug("Asynchronous upload completed for blob {}", blobName);
         }).exceptionally(ex -> {
             log.error("[Error][BlobStorageRepository@upload] Exception while uploading file asynchronously: {}", ex.getMessage());

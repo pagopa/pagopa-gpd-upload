@@ -1,35 +1,5 @@
 {
   "openapi": "3.0.1",
-  "info": {
-    "title": "GPD-Upload-API",
-    "description": "Microservice to manage PagoPA GPD Upload",
-    "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.1.42"
-  },
-  "servers": [
-    {
-      "url": "http://localhost:8080"
-    },
-    {
-      "url": "https://{host}{basePath}",
-      "variables": {
-        "basePath": {
-          "default": "/upload/gpd/debt-positions-service/v1",
-          "enum": [
-            "/upload/gpd/debt-positions-service/v1"
-          ]
-        },
-        "host": {
-          "default": "api.dev.platform.pagopa.it",
-          "enum": [
-            "api.dev.platform.pagopa.it",
-            "api.uat.platform.pagopa.it",
-            "api.platform.pagopa.it"
-          ]
-        }
-      }
-    }
-  ],
   "paths": {
     "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file": {
       "put": {
@@ -40,9 +10,9 @@
         "operationId": "update-debt-positions-by-file-upload",
         "parameters": [
           {
-            "name": "broker-code",
+            "name": "organization-fiscal-code",
             "in": "path",
-            "description": "The broker code",
+            "description": "The organization fiscal code",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -50,9 +20,9 @@
             }
           },
           {
-            "name": "organization-fiscal-code",
+            "name": "broker-code",
             "in": "path",
-            "description": "The organization fiscal code",
+            "description": "The broker code",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -64,20 +34,53 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "description": "File to be uploaded",
-                    "format": "binary"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "description": "File to be uploaded",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "allOf": [
+                              {
+                                "type": "string",
+                                "description": "File to be uploaded",
+                                "format": "binary"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "description": "File to be uploaded",
+                            "format": "binary"
+                          }
+                        }
+                      }
+                    ]
                   }
-                }
+                ]
               },
               "encoding": {
                 "file": {
                   "contentType": "application/octet-stream"
                 }
-              }
+              },
+              "example": null
             }
           },
           "required": true
@@ -89,43 +92,25 @@
           "400": {
             "description": "Malformed request.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "401": {
             "description": "Wrong or missing function key.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "409": {
             "description": "Conflict: duplicate file found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "429": {
@@ -137,11 +122,7 @@
           "500": {
             "description": "Service unavailable.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           }
         },
@@ -162,9 +143,9 @@
         "operationId": "create-debt-positions-by-file-upload",
         "parameters": [
           {
-            "name": "broker-code",
+            "name": "organization-fiscal-code",
             "in": "path",
-            "description": "The broker code",
+            "description": "The organization fiscal code",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -172,9 +153,9 @@
             }
           },
           {
-            "name": "organization-fiscal-code",
+            "name": "broker-code",
             "in": "path",
-            "description": "The organization fiscal code",
+            "description": "The broker code",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -186,20 +167,53 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "description": "File to be uploaded",
-                    "format": "binary"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "description": "File to be uploaded",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "allOf": [
+                              {
+                                "type": "string",
+                                "description": "File to be uploaded",
+                                "format": "binary"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "description": "File to be uploaded",
+                            "format": "binary"
+                          }
+                        }
+                      }
+                    ]
                   }
-                }
+                ]
               },
               "encoding": {
                 "file": {
                   "contentType": "application/octet-stream"
                 }
-              }
+              },
+              "example": null
             }
           },
           "required": true
@@ -211,43 +225,25 @@
           "400": {
             "description": "Malformed request.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "401": {
             "description": "Wrong or missing function key.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "409": {
             "description": "Conflict: duplicate file found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "429": {
@@ -259,11 +255,7 @@
           "500": {
             "description": "Service unavailable.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           }
         },
@@ -284,9 +276,9 @@
         "operationId": "delete-debt-positions-by-file-upload",
         "parameters": [
           {
-            "name": "broker-code",
+            "name": "organization-fiscal-code",
             "in": "path",
-            "description": "The broker code",
+            "description": "The organization fiscal code",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -294,9 +286,9 @@
             }
           },
           {
-            "name": "organization-fiscal-code",
+            "name": "broker-code",
             "in": "path",
-            "description": "The organization fiscal code",
+            "description": "The broker code",
             "required": true,
             "schema": {
               "minLength": 1,
@@ -308,20 +300,53 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "description": "File to be uploaded",
-                    "format": "binary"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "description": "File to be uploaded",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "allOf": [
+                              {
+                                "type": "string",
+                                "description": "File to be uploaded",
+                                "format": "binary"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "description": "File to be uploaded",
+                            "format": "binary"
+                          }
+                        }
+                      }
+                    ]
                   }
-                }
+                ]
               },
               "encoding": {
                 "file": {
                   "contentType": "application/octet-stream"
                 }
-              }
+              },
+              "example": null
             }
           },
           "required": true
@@ -333,43 +358,25 @@
           "400": {
             "description": "Malformed request.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "401": {
             "description": "Wrong or missing function key.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "409": {
             "description": "Conflict: duplicate file found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "429": {
@@ -381,11 +388,7 @@
           "500": {
             "description": "Service unavailable.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           }
         },
@@ -442,53 +445,31 @@
           "200": {
             "description": "Upload report found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UploadReport"
-                }
-              }
+              "application/json": {}
             }
           },
           "400": {
             "description": "Malformed request.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "401": {
             "description": "Wrong or missing function key.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "404": {
             "description": "Upload report not found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "429": {
@@ -500,11 +481,7 @@
           "500": {
             "description": "Service unavailable.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           }
         },
@@ -561,53 +538,31 @@
           "200": {
             "description": "Upload found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UploadStatus"
-                }
-              }
+              "application/json": {}
             }
           },
           "400": {
             "description": "Malformed request.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "401": {
             "description": "Wrong or missing function key.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "404": {
             "description": "Upload not found.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "429": {
@@ -619,11 +574,7 @@
           "500": {
             "description": "Service unavailable.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           }
         },
@@ -649,45 +600,25 @@
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppInfo"
-                }
-              }
+              "application/json": {}
             }
           },
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           },
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
+              "application/json": {}
             }
           },
           "429": {
@@ -699,11 +630,7 @@
           "500": {
             "description": "Service unavailable",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
+              "application/json": {}
             }
           }
         }
@@ -711,116 +638,6 @@
     }
   },
   "components": {
-    "schemas": {
-      "AppInfo": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "version": {
-            "type": "string"
-          },
-          "environment": {
-            "type": "string"
-          }
-        }
-      },
-      "ProblemJson": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "A short, summary of the problem type. Written in english and readable for engineers (usually not suited for non technical stakeholders and not localized); example: Service Unavailable"
-          },
-          "status": {
-            "type": "integer",
-            "description": "The HTTP status code generated by the origin server for this occurrence of the problem.",
-            "format": "int32",
-            "example": 200
-          },
-          "detail": {
-            "type": "string",
-            "description": "A human readable explanation specific to this occurrence of the problem.",
-            "example": "There was an error processing the request"
-          }
-        },
-        "description": "Object returned as response in case of an error."
-      },
-      "ResponseEntry": {
-        "type": "object",
-        "properties": {
-          "statusCode": {
-            "type": "integer",
-            "format": "int32",
-            "example": 400
-          },
-          "statusMessage": {
-            "type": "string",
-            "example": "Bad request caused by invalid email address"
-          },
-          "requestIDs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "UploadReport": {
-        "type": "object",
-        "properties": {
-          "uploadID": {
-            "type": "string"
-          },
-          "processedItem": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "submittedItem": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "responses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ResponseEntry"
-            }
-          },
-          "startTime": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2024-10-08T14:55:16.302Z"
-          },
-          "endTime": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2024-10-08T14:55:16.302Z"
-          }
-        }
-      },
-      "UploadStatus": {
-        "type": "object",
-        "properties": {
-          "uploadID": {
-            "type": "string"
-          },
-          "processedItem": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "submittedItem": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "startTime": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2024-10-08T14:55:16.302Z"
-          }
-        }
-      }
-    },
     "securitySchemes": {
       "Ocp-Apim-Subscription-Key": {
         "type": "apiKey",
@@ -828,5 +645,8 @@
         "in": "header"
       }
     }
+  },
+  "info": {
+    "version": "0.1.43-1-PAGOPA-3220-aca-massive-upload"
   }
 }

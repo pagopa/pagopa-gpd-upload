@@ -3,7 +3,10 @@ package it.gov.pagopa.gpd.upload.controller.external;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.*;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
@@ -32,7 +36,7 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
-@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY,  in = SecuritySchemeIn.HEADER)
+@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class UploadStatusController {
     @Inject
     BlobService blobService;
@@ -57,9 +61,10 @@ public class UploadStatusController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "file-id") String fileID) {
-
-        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(fileID, organizationFiscalCode);
+            @NotBlank @PathVariable(name = "file-id") String fileID,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
+        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(fileID, organizationFiscalCode, serviceType);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -83,15 +88,16 @@ public class UploadStatusController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "file-id") String fileID) {
-
+            @NotBlank @PathVariable(name = "file-id") String fileID,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
         UploadReport uploadReport = null;
         try {
-            uploadReport = statusService.getReport(organizationFiscalCode, fileID);
+            uploadReport = statusService.getReport(organizationFiscalCode, fileID, serviceType);
         } catch (AppException e) {
-            if(e.getHttpStatus() == NOT_FOUND) {
+            if (e.getHttpStatus() == NOT_FOUND) {
                 uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID);
-                if(uploadReport == null)
+                if (uploadReport == null)
                     throw e;
             }
         }
