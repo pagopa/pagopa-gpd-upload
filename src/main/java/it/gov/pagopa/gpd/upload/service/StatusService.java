@@ -38,7 +38,8 @@ public class StatusService {
 
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
         Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
-        if(status.getServiceType().equals(serviceType)){
+
+        if(Objects.equals(serviceType, status.getServiceType())){
             return mapReport(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
