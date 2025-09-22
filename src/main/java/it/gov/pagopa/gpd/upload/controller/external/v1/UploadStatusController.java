@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller.external;
+package it.gov.pagopa.gpd.upload.controller.external.v1;
 
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
