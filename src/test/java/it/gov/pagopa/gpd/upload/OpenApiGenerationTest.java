@@ -20,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MicronautTest
@@ -38,8 +37,11 @@ class OpenApiGenerationTest {
 
     @Test
     void swaggerSpringPlugin() throws Exception {
-        boolean result = saveOpenAPI("/swagger/pagopa-gpd-upload-" + version + ".json", "openapi.json", "GPD-Upload-API");
-        assertTrue(result);
+        boolean resultV1 = saveOpenAPI("/swagger/pagopa-gpd-upload-v1-" + version + ".json", "openapi-v1.json", "GPD-Upload-API-v1");
+        assertTrue(resultV1);
+
+        boolean resultV2 = saveOpenAPI("/swagger/pagopa-gpd-upload-v2-" + version + ".json", "openapi-v2.json", "GPD-Upload-API-v2");
+        assertTrue(resultV2);
 
         boolean resultSupportAPI = saveOpenAPI("/swagger/pagopa-gpd-upload-support.json", "openapi-support-internal.json", "GPD-Upload-Support-API");
         assertTrue(resultSupportAPI);
