@@ -5,7 +5,8 @@ import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
-import it.gov.pagopa.gpd.upload.model.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.v2.UploadStatusV2;
+import it.gov.pagopa.gpd.upload.model.v2.enumeration.OperationStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
@@ -26,7 +27,7 @@ public class StatusService {
         this.statusRepository = statusRepository;
     }
 
-    public UploadStatus getUploadStatus(String fileId, String organizationFiscalCode, ServiceType serviceType) {
+    public UploadStatusV2 getUploadStatus(String fileId, String organizationFiscalCode, ServiceType serviceType) {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
 
@@ -71,13 +72,31 @@ public class StatusService {
         return statusRepository.upsert(status);
     }
 
-    private UploadStatus map(Status status) {
-        return UploadStatus.builder()
+    private UploadStatusV2 map(Status status) {
+        return UploadStatusV2.builder()
                 .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
                 .startTime(status.upload.getStart())
+                .operationStatus(getOperationStatus(status))
                 .build();
+    }
+
+    public OperationStatus getOperationStatus(Status status){
+        if(status.getUpload().getCurrent() == status.getUpload().getTotal()){
+            if(status.getUpload().getResponses() != null){
+                if(status.getUpload().getResponses().stream().noneMatch(el -> el.getStatusCode().equals(HttpStatus.OK.getCode()) || el.getStatusCode().equals(HttpStatus.CREATED.getCode()))){
+                    return OperationStatus.FAILED;
+                }
+                if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() != HttpStatus.OK.getCode() || el.getStatusCode() != HttpStatus.CREATED.getCode())){
+                    return OperationStatus.COMPLETED_PARTIALLY;
+                }
+            }
+
+            return OperationStatus.COMPLETED;
+        }
+
+        return OperationStatus.IN_PROGRESS;
     }
 
     public UploadReport mapReport(Status status) {
