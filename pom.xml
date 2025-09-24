@@ -28,6 +28,7 @@
         <micronaut.aot.packageName>it.gov.pagopa.gpd.upload.aot.generated</micronaut.aot.packageName>
         <micronaut.runtime>netty</micronaut.runtime>
         <exec.mainClass>it.gov.pagopa.gpd.upload.Application</exec.mainClass>
+        <micronaut.serde.version>2.15.1</micronaut.serde.version>
     </properties>
 
     <repositories>
@@ -63,6 +64,11 @@
             <groupId>io.micronaut.serde</groupId>
             <artifactId>micronaut-serde-jackson</artifactId>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.serde</groupId>
+            <artifactId>micronaut-serde-processor</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
@@ -163,53 +169,42 @@
                 <configuration>
                     <!-- Uncomment to enable incremental compilation -->
                     <!-- <useIncrementalCompilation>false</useIncrementalCompilation> -->
-
-                    <annotationProcessorPaths combine.children="append">
-                        <path>
-                            <groupId>io.micronaut</groupId>
-                            <artifactId>micronaut-http-validation</artifactId>
-                            <version>${micronaut.core.version}</version>
-                        </path>
-                        <path>
-                            <!-- must precede micronaut-inject-java -->
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                        <path>
-                            <groupId>io.micronaut.openapi</groupId>
-                            <artifactId>micronaut-openapi</artifactId>
-                            <version>${micronaut.openapi.version}</version>
-                            <exclusions>
-                                <exclusion>
-                                    <groupId>io.micronaut</groupId>
-                                    <artifactId>micronaut-inject</artifactId>
-                                </exclusion>
-                            </exclusions>
-                        </path>
-                        <path>
-                            <groupId>io.micronaut.validation</groupId>
-                            <artifactId>micronaut-validation-processor</artifactId>
-                            <version>${micronaut.validation.version}</version>
-                            <exclusions>
-                                <exclusion>
-                                    <groupId>io.micronaut</groupId>
-                                    <artifactId>micronaut-inject</artifactId>
-                                </exclusion>
-                            </exclusions>
-                        </path>
-                        <path>
-                            <groupId>io.micronaut.serde</groupId>
-                            <artifactId>micronaut-serde-processor</artifactId>
-                            <version>${micronaut.serialization.version}</version>
-                            <exclusions>
-                                <exclusion>
-                                    <groupId>io.micronaut</groupId>
-                                    <artifactId>micronaut-inject</artifactId>
-                                </exclusion>
-                            </exclusions>
-                        </path>
-                    </annotationProcessorPaths>
+					<annotationProcessorPaths>
+					      <!-- Lombok -->
+					      <path>
+					        <groupId>org.projectlombok</groupId>
+					        <artifactId>lombok</artifactId>
+					        <version>${lombok.version}</version>
+					      </path>
+					
+					      <!-- Micronaut DI: necessario per generare le classi a compile-time -->
+					      <path>
+					        <groupId>io.micronaut</groupId>
+					        <artifactId>micronaut-inject-java</artifactId>
+					        <version>${micronaut.version}</version>
+					      </path>
+					
+					      <!-- Micronaut Serde processor -->
+					      <path>
+					        <groupId>io.micronaut.serde</groupId>
+					        <artifactId>micronaut-serde-processor</artifactId>
+					        <version>${micronaut.serde.version}</version>
+					      </path>
+					
+					      <!-- OpenAPI processor -->
+					      <path>
+					        <groupId>io.micronaut.openapi</groupId>
+					        <artifactId>micronaut-openapi</artifactId>
+					        <version>${micronaut.openapi.version}</version>
+					      </path>
+					
+					      <!-- Bean Validation processor -->
+					      <path>
+					        <groupId>io.micronaut.validation</groupId>
+					        <artifactId>micronaut-validation-processor</artifactId>
+					        <version>${micronaut.validation.version}</version>
+					      </path>
+					    </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Amicronaut.processing.group=${project.groupId}</arg>
                         <arg>-Amicronaut.processing.module=${project.artifactId}</arg>
