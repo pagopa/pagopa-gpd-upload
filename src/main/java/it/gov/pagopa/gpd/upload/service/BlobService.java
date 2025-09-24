@@ -30,6 +30,8 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
+
 @Singleton
 @Context
 @Slf4j
@@ -131,8 +133,12 @@ public class BlobService {
         }
     }
 
-    public UploadReport getReport(String broker, String fiscalCode, String uploadKey) {
+    public UploadReport getReport(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
         BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
+        ServiceType serviceTypeMetadata = blobStorageRepository.getBlobServiceTypeMetadata(broker, fiscalCode, uploadKey);
+        if (serviceType != serviceTypeMetadata) {
+            throw new AppException(NOT_FOUND, "REPORT NOT FOUND", "The Report for the given upload " + uploadKey + " does not exist in " + serviceType);
+        }
         try {
             return objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
         } catch (JsonProcessingException e) {
