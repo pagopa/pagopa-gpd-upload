@@ -85,10 +85,10 @@ public class StatusService {
     public OperationStatus getOperationStatus(Status status){
         if(status.getUpload().getCurrent() == status.getUpload().getTotal()){
             if(status.getUpload().getResponses() != null){
-                if(status.getUpload().getResponses().stream().noneMatch(el -> el.getStatusCode().equals(HttpStatus.OK.getCode()) || el.getStatusCode().equals(HttpStatus.CREATED.getCode()))){
+                if(status.getUpload().getResponses().stream().allMatch(el -> el.getStatusCode() >= 400)){
                     return OperationStatus.FAILED;
                 }
-                if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() != HttpStatus.OK.getCode() || el.getStatusCode() != HttpStatus.CREATED.getCode())){
+                if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() >= 400)){
                     return OperationStatus.COMPLETED_PARTIALLY;
                 }
             }
