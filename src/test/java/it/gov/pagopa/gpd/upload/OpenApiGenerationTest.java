@@ -8,6 +8,9 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.OpenAPIV3Parser;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
@@ -54,6 +57,9 @@ class OpenApiGenerationTest {
         responseBody = responseBody.replace(title, newTitle);
         Object openAPI = objectMapper.readValue(responseBody, Object.class);
         String formatted = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(openAPI);
+        if(toFile.contains("v2")) {
+            formatted = parseOpenAPIString(formatted);
+        }
         Path basePath = Paths.get("openapi/");
         Files.createDirectories(basePath);
         Files.write(basePath.resolve(toFile), formatted.getBytes());
@@ -76,5 +82,23 @@ class OpenApiGenerationTest {
     @Primary
     public StatusRepository statusRepository() {
         return Mockito.mock(StatusRepository.class);
+    }
+
+    private String parseOpenAPIString(String openApiContent) {
+        OpenAPIV3Parser parser = new OpenAPIV3Parser();
+        io.swagger.v3.oas.models.Paths updated = new io.swagger.v3.oas.models.Paths();
+
+        OpenAPI result = parser.readContents(openApiContent).getOpenAPI();
+        io.swagger.v3.oas.models.Paths paths = result.getPaths();
+        paths.forEach(
+                (k, v) -> {
+                    if (k.contains("/v2")) {
+                        updated.addPathItem(k.replace("/v2", ""), v);
+                    } else {
+                        updated.addPathItem(k, v);
+                    }
+                });
+        result.setPaths(updated);
+        return Json.pretty(result);
     }
 }

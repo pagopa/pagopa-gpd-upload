@@ -12,17 +12,17 @@
     "url" : "https://{host}{basePath}",
     "variables" : {
       "basePath" : {
-        "enum" : [ "/upload/gpd/debt-positions-service/v1", "/upload/aca/debt-positions-service/v1" ],
-        "default" : "/upload/gpd/debt-positions-service/v1"
+        "default" : "/upload/gpd/debt-positions-service/v1",
+        "enum" : [ "/upload/gpd/debt-positions-service/v1", "/upload/aca/debt-positions-service/v1" ]
       },
       "host" : {
-        "enum" : [ "api.dev.platform.pagopa.it", "api.uat.platform.pagopa.it", "api.platform.pagopa.it" ],
-        "default" : "api.dev.platform.pagopa.it"
+        "default" : "api.dev.platform.pagopa.it",
+        "enum" : [ "api.dev.platform.pagopa.it", "api.uat.platform.pagopa.it", "api.platform.pagopa.it" ]
       }
     }
   } ],
   "paths" : {
-    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/v2" : {
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file" : {
       "put" : {
         "tags" : [ "Debt Positions CRUD via file upload API" ],
         "summary" : "The Organization updates the debt positions listed in the file.",
@@ -32,6 +32,8 @@
           "in" : "path",
           "description" : "The broker code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -41,6 +43,8 @@
           "in" : "path",
           "description" : "The organization fiscal code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -61,7 +65,8 @@
               },
               "encoding" : {
                 "file" : {
-                  "contentType" : "application/octet-stream"
+                  "contentType" : "application/octet-stream",
+                  "style" : "form"
                 }
               }
             }
@@ -96,11 +101,7 @@
             "description" : "Forbidden",
             "content" : {
               "application/json" : {
-                "schema" : {
-                  "allOf" : [ ],
-                  "anyOf" : [ ],
-                  "oneOf" : [ ]
-                }
+                "schema" : { }
               }
             }
           },
@@ -146,6 +147,8 @@
           "in" : "path",
           "description" : "The broker code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -155,6 +158,8 @@
           "in" : "path",
           "description" : "The organization fiscal code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -175,7 +180,8 @@
               },
               "encoding" : {
                 "file" : {
-                  "contentType" : "application/octet-stream"
+                  "contentType" : "application/octet-stream",
+                  "style" : "form"
                 }
               }
             }
@@ -210,11 +216,7 @@
             "description" : "Forbidden",
             "content" : {
               "application/json" : {
-                "schema" : {
-                  "allOf" : [ ],
-                  "anyOf" : [ ],
-                  "oneOf" : [ ]
-                }
+                "schema" : { }
               }
             }
           },
@@ -260,6 +262,8 @@
           "in" : "path",
           "description" : "The broker code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -269,6 +273,8 @@
           "in" : "path",
           "description" : "The organization fiscal code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -289,7 +295,8 @@
               },
               "encoding" : {
                 "file" : {
-                  "contentType" : "application/octet-stream"
+                  "contentType" : "application/octet-stream",
+                  "style" : "form"
                 }
               }
             }
@@ -324,11 +331,7 @@
             "description" : "Forbidden",
             "content" : {
               "application/json" : {
-                "schema" : {
-                  "allOf" : [ ],
-                  "anyOf" : [ ],
-                  "oneOf" : [ ]
-                }
+                "schema" : { }
               }
             }
           },
@@ -366,7 +369,7 @@
         } ]
       }
     },
-    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/v2/{file-id}/report" : {
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/report" : {
       "get" : {
         "tags" : [ "Upload Status API" ],
         "summary" : "Returns the debt positions upload report.",
@@ -376,6 +379,8 @@
           "in" : "path",
           "description" : "The broker code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -385,6 +390,8 @@
           "in" : "path",
           "description" : "The organization fiscal code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -394,6 +401,8 @@
           "in" : "path",
           "description" : "The unique identifier for file upload",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -434,11 +443,7 @@
             "description" : "Forbidden",
             "content" : {
               "application/json" : {
-                "schema" : {
-                  "allOf" : [ ],
-                  "anyOf" : [ ],
-                  "oneOf" : [ ]
-                }
+                "schema" : { }
               }
             }
           },
@@ -476,7 +481,7 @@
         } ]
       }
     },
-    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/v2/{file-id}/status" : {
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/status" : {
       "get" : {
         "tags" : [ "Upload Status API" ],
         "summary" : "Returns the debt positions upload status.",
@@ -486,6 +491,8 @@
           "in" : "path",
           "description" : "The broker code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -495,6 +502,8 @@
           "in" : "path",
           "description" : "The organization fiscal code",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -504,6 +513,8 @@
           "in" : "path",
           "description" : "The unique identifier for file upload",
           "required" : true,
+          "style" : "simple",
+          "explode" : false,
           "schema" : {
             "minLength" : 1,
             "type" : "string"
@@ -544,11 +555,7 @@
             "description" : "Forbidden",
             "content" : {
               "application/json" : {
-                "schema" : {
-                  "allOf" : [ ],
-                  "anyOf" : [ ],
-                  "oneOf" : [ ]
-                }
+                "schema" : { }
               }
             }
           },
