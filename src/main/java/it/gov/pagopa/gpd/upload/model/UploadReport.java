@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.gov.pagopa.gpd.upload.entity.ResponseEntry;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -32,4 +33,5 @@ public class UploadReport {
     @Schema(example = "2024-10-08T14:55:16.302Z")
     @JsonSerialize(as = LocalDateTimeSerializer.class)
     public LocalDateTime endTime;
+    private ServiceType serviceType;
 }

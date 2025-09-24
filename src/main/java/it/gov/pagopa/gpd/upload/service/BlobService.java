@@ -26,9 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
 @Singleton
 @Context
@@ -131,13 +134,18 @@ public class BlobService {
         }
     }
 
-    public UploadReport getReport(String broker, String fiscalCode, String uploadKey) {
+    public UploadReport getReport(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
         BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
+        UploadReport uploadReport;
         try {
-            return objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
+            uploadReport = objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
         } catch (JsonProcessingException e) {
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during report deserialization", e.getCause());
         }
+        if(uploadReport.getServiceType() == null || Objects.equals(serviceType, uploadReport.getServiceType())){
+            return uploadReport;
+        }
+        throw new AppException(NOT_FOUND, "REPORT NOT FOUND", String.format("The Report for given fileId %s does not exist for %s", uploadKey, serviceType.name()));
     }
 
     public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem, ServiceType serviceType) {
