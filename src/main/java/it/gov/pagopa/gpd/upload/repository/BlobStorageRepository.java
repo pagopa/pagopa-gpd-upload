@@ -135,18 +135,17 @@ public class BlobStorageRepository implements FileRepository {
 
     public BinaryData downloadContent(String broker, String uploadKey, String blobPath, ServiceType serviceType, String methodName) {
         BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
-        String errorMessage = String.format("The blob for the given upload id %s does not exist for %s", uploadKey, serviceType);
 
         if (!blobContainerClient.exists()) {
             log.error(String.format("[Error][BlobStorageRepository@%s] Container %s doesn't exist for upload %s", methodName, broker, uploadKey));
-            throw new AppException(AppError.BLOB_NOT_FOUND, errorMessage);
+            throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
         BlobClient blobClient = blobContainerClient.getBlobClient(blobPath);
 
         if (Boolean.FALSE.equals(blobClient.exists())) {
             log.error(String.format("[Error][BlobStorageRepository@%s] Blob %s doesn't exist", methodName, uploadKey));
-            throw new AppException(AppError.BLOB_NOT_FOUND, errorMessage);
+            throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
         BlobProperties properties = blobClient.getProperties();
@@ -154,7 +153,7 @@ public class BlobStorageRepository implements FileRepository {
 
         if (serviceTypeMetadata != serviceType) {
             log.error(String.format("[Error][BlobStorageRepository@%s] Blob %s doesn't exist for %s, it was uploaded for %s", methodName, uploadKey, serviceType, serviceTypeMetadata));
-            throw new AppException(AppError.BLOB_NOT_FOUND, errorMessage);
+            throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
         return blobClient.downloadContent();
