@@ -96,7 +96,7 @@ public class UploadStatusController {
             uploadReport = statusService.getReport(organizationFiscalCode, fileID, serviceType);
         } catch (AppException e) {
             if (e.getHttpStatus() == NOT_FOUND) {
-                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID);
+                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID, serviceType);
                 if (uploadReport == null)
                     throw e;
             }

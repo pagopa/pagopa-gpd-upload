@@ -606,108 +606,10 @@
           }
         ]
       }
-    },
-    "/support/uploads/{upload}/status/refresh": {
-      "get": {
-        "tags": [
-          "Support API"
-        ],
-        "summary": "Support API to recover status on CREATE and DELETE operation",
-        "description": "Returns the debt positions upload report recovered.",
-        "operationId": "recoverStatus",
-        "parameters": [
-          {
-            "name": "upload",
-            "in": "path",
-            "description": "The unique identifier for file upload",
-            "required": true,
-            "schema": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [],
-                  "anyOf": [],
-                  "oneOf": []
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests.",
-            "content": {
-              "text/json": {}
-            }
-          },
-          "500": {
-            "description": "Service unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "AppInfo": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "version": {
-            "type": "string"
-          },
-          "environment": {
-            "type": "string"
-          }
-        }
-      },
       "ProblemJson": {
         "type": "object",
         "properties": {
