@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
-@Tag(name = "Upload Status API")
+@Tag(name = "Massive operation observability APIs - v2")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
@@ -44,7 +44,7 @@ public class UploadStatusController {
     BlobService blobService;
     @Inject
     StatusService statusService;
-    private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
+    private static final String BASE_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
@@ -55,7 +55,7 @@ public class UploadStatusController {
             @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "/{file-id}/status/v2",
+    @Get(value = BASE_PATH + "/{file-id}/status",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<it.gov.pagopa.gpd.upload.model.UploadStatus> getUploadStatus(
             @Parameter(description = "The broker code", required = true)
@@ -82,7 +82,7 @@ public class UploadStatusController {
             @ApiResponse(responseCode = "404", description = "Upload report not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "/{file-id}/report/v2",
+    @Get(value = BASE_PATH + "/{file-id}/report",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<UploadReport> getUploadOutput(
             @Parameter(description = "The broker code", required = true)

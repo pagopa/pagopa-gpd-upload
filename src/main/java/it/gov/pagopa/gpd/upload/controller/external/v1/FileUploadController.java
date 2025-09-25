@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-@Tag(name = "Debt Positions CRUD via file upload API")
+@Tag(name = "Massive operation APIs for Debt Positions - v1")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j

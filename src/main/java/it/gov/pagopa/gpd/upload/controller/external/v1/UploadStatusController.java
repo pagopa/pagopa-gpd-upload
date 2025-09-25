@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
-@Tag(name = "Upload Status API")
+@Tag(name = "Massive operation observability APIs - v1")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
