@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 import java.util.List;
 
 @Mapper(componentModel = "jsr330")
-@Singleton
 public interface ResponseEntryDTOMapper {
 
     @Mapping(source = "requestIDs", target = "iupds")
