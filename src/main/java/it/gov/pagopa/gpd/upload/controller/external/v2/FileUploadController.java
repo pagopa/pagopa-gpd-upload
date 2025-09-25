@@ -7,6 +7,7 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.multipart.CompletedFileUpload;
+import io.micronaut.openapi.annotation.OpenAPIGroup;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,15 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-@Tag(name = "Debt Positions CRUD via file upload API")
+@Tag(name = "Massive operation APIs for Debt Positions - v2")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
+@OpenAPIGroup(exclude = "external-v1")
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class FileUploadController {
     @Inject
     BlobService blobService;
-    private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/v2";
+    private static final String BASE_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 
