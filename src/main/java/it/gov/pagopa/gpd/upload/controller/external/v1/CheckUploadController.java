@@ -1,0 +1,228 @@
+package it.gov.pagopa.gpd.upload.controller.external.v1;
+
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.MutableHttpResponse;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Header;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.openapi.annotation.OpenAPIGroup;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
+import it.gov.pagopa.gpd.upload.model.ProblemJson;
+import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
+import it.gov.pagopa.gpd.upload.service.BlobService;
+import it.gov.pagopa.gpd.upload.service.StatusService;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.NotBlank;
+import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
+
+@Tag(name = "Massive operation observability APIs - v1")
+@ExecuteOn(TaskExecutors.IO)
+@Controller()
+@Slf4j
+@OpenAPIGroup(exclude = "external-v2")
+@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
+public class CheckUploadController {
+    @Inject
+    BlobService blobService;
+    @Inject
+    StatusService statusService;
+    private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
+    private static final String FILES_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
+    private static final ZoneId TZ_EUROPE_ROME = ZoneId.of("Europe/Rome");
+
+    @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-status")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = it.gov.pagopa.gpd.upload.model.UploadStatus.class))),
+            @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+            @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+    @Get(value = BASE_PATH + "/{file-id}/status",
+            produces = MediaType.APPLICATION_JSON)
+    HttpResponse<it.gov.pagopa.gpd.upload.model.UploadStatus> getUploadStatus(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+            @Parameter(description = "The unique identifier for file upload", required = true)
+            @NotBlank @PathVariable(name = "file-id") String fileID,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
+        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(fileID, organizationFiscalCode, serviceType);
+
+        return HttpResponse.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(uploadStatus);
+    }
+
+    @Operation(summary = "Returns the debt positions upload report.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-report")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReport.class))),
+            @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "Upload report not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+            @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+    @Get(value = BASE_PATH + "/{file-id}/report",
+            produces = MediaType.APPLICATION_JSON)
+    HttpResponse<UploadReport> getUploadOutput(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+            @Parameter(description = "The unique identifier for file upload", required = true)
+            @NotBlank @PathVariable(name = "file-id") String fileID,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
+        UploadReport uploadReport = null;
+        try {
+            uploadReport = statusService.getReport(organizationFiscalCode, fileID, serviceType);
+        } catch (AppException e) {
+            if (e.getHttpStatus() == NOT_FOUND) {
+                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID, serviceType);
+                if (uploadReport == null)
+                    throw e;
+            }
+        }
+
+        return HttpResponse.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(uploadReport);
+    }
+
+    // =========================
+    // PAGOPA-3282: Get File-Id list
+    // =========================
+    @Operation(
+            summary = "Returns the list of fileIds for a broker/organization in the given date range (max 7 days).",
+            security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")},
+            operationId = "get-debt-positions-fileids"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "FileIds retrieved.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileIdListResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "500", description = "Service unavailable.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))
+    })
+    @Get(value = FILES_PATH, produces = MediaType.APPLICATION_JSON)
+    public HttpResponse<FileIdListResponse> getFileIdList(
+            @Parameter(description = "The broker code", required = true)
+            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
+            @Parameter(description = "The organization fiscal code", required = true)
+            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+            @Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-01")
+            @QueryValue(value = "from", defaultValue = "") String fromDateStr,
+            @Parameter(description = "End date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-06")
+            @QueryValue(value = "to", defaultValue = "") String toDateStr,
+            @Parameter(description = "Max items per page (default 100, min 100, max 500)", required = false)
+            @QueryValue(value = "size", defaultValue = "100") Integer size,
+            @Parameter(description = "Continuation token (opaque). Pass it back to get the next page.", required = false)
+            @Header("x-continuation-token") @Nullable String continuationToken,
+            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+    ) {
+
+        // Parse & defaults for dates (calendar date, Europe/Rome), inclusive range [from, to]
+        final LocalDate toDate = parseOrDefaultToDate(toDateStr);
+        final LocalDate fromDate = parseOrDefaultFromDate(fromDateStr, toDate);
+
+        // Validate range: from <= to and (to - from + 1) <= 7
+        final long days = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+        if (fromDate.isAfter(toDate) || days > 7) {
+            throw new AppException(
+                    HttpStatus.BAD_REQUEST,
+                    "BAD_REQUEST",
+                    "Invalid range: ensure 1 ≤ (to - from + 1) ≤ 7 and from ≤ to"
+            );
+        }
+
+        // Validate size: default 100, min 100, max 500
+        if (size == null || size < 100 || size > 500) {
+            throw new AppException(
+                    HttpStatus.BAD_REQUEST,
+                    "BAD_REQUEST",
+                    "Invalid size: must be between 100 and 500 (default 100)"
+            );
+        }
+
+        // Service call
+        FileIdListResponse res = statusService.getFileIdList(
+                brokerCode, organizationFiscalCode, fromDate, toDate, size, continuationToken, serviceType
+        );
+
+        // Prepare response
+        MutableHttpResponse<FileIdListResponse> response = HttpResponse.ok(res)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        // Set next continuation token only if present (hasMore)
+        if (res != null && res.getContinuationToken() != null && !res.getContinuationToken().isEmpty()) {
+            response = response.header("x-continuation-token", res.getContinuationToken());
+        }
+
+        return response;
+    }
+
+    private static LocalDate parseOrDefaultToDate(String toDateStr) {
+        if (toDateStr == null || toDateStr.isBlank()) {
+            return LocalDate.now(TZ_EUROPE_ROME);
+        }
+        try {
+            return LocalDate.parse(toDateStr); // expects YYYY-MM-DD
+        } catch (DateTimeParseException ex) {
+            throw new AppException(
+                    HttpStatus.BAD_REQUEST,
+                    "BAD_REQUEST",
+                    "Invalid 'to' date. Expected format: YYYY-MM-DD"
+            );
+        }
+    }
+
+    private static LocalDate parseOrDefaultFromDate(String fromDateStr, LocalDate toDate) {
+        if (fromDateStr == null || fromDateStr.isBlank()) {
+            // default: 7-day window ending at 'to' (inclusive) => from = to - 6
+            return toDate.minusDays(6);
+        }
+        try {
+            return LocalDate.parse(fromDateStr);
+        } catch (DateTimeParseException ex) {
+            throw new AppException(
+                    HttpStatus.BAD_REQUEST,
+                    "BAD_REQUEST",
+                    "Invalid 'from' date. Expected format: YYYY-MM-DD"
+            );
+        }
+    }
+}

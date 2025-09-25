@@ -30,6 +30,9 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static it.gov.pagopa.gpd.upload.utils.Constants.INPUT_DIRECTORY;
+import static it.gov.pagopa.gpd.upload.utils.Constants.OUTPUT_DIRECTORY;
+
 @Singleton
 @Context
 @Slf4j
@@ -122,8 +125,9 @@ public class BlobService {
         }
     }
 
-    public UploadInput getUploadInput(String broker, String fiscalCode, String uploadId) {
-        BinaryData binaryDataReport = blobStorageRepository.downloadInput(broker, fiscalCode, uploadId);
+    public UploadInput getUploadInput(String broker, String fiscalCode, String uploadId, ServiceType serviceType) {
+        String blobPath = String.format("/%s/%s/%s.json", fiscalCode, INPUT_DIRECTORY, uploadId);
+        BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadId, blobPath, serviceType);
         try {
             return objectMapper.readValue(binaryDataReport.toString(), UploadInput.class);
         } catch (JsonProcessingException e) {
@@ -131,8 +135,10 @@ public class BlobService {
         }
     }
 
-    public UploadReport getReport(String broker, String fiscalCode, String uploadKey) {
-        BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
+    public UploadReport getReport(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
+        String blobPath = String.format("/%s/%s/report%s.json", fiscalCode, OUTPUT_DIRECTORY, uploadKey);
+        BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadKey, blobPath, serviceType);
+
         try {
             return objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
         } catch (JsonProcessingException e) {
