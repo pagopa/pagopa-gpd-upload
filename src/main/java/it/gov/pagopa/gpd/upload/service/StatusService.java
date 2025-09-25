@@ -11,6 +11,7 @@ import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -30,7 +31,7 @@ public class StatusService {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
 
-        if(status.getServiceType() == null || Objects.equals(serviceType, status.getServiceType())){
+        if (status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())) {
             return map(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
@@ -39,7 +40,7 @@ public class StatusService {
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
         Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
 
-        if(status.getServiceType() == null || Objects.equals(serviceType, status.getServiceType())){
+        if (status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())) {
             return mapReport(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
