@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "GPD-Upload-Support-API",
+    "title" : "GPD-Upload-API-v2",
     "description" : "Microservice to manage PagoPA GPD Upload",
     "termsOfService" : "https://www.pagopa.gov.it/",
     "version" : "0.1.22"
@@ -26,7 +26,7 @@
       "put" : {
         "tags" : [ "Debt Positions CRUD via file upload API" ],
         "summary" : "The Organization updates the debt positions listed in the file.",
-        "operationId" : "update-debt-positions-by-file-upload_1",
+        "operationId" : "update-debt-positions-by-file-upload",
         "parameters" : [ {
           "name" : "broker-code",
           "in" : "path",
@@ -141,7 +141,7 @@
       "post" : {
         "tags" : [ "Debt Positions CRUD via file upload API" ],
         "summary" : "The Organization creates the debt positions listed in the file.",
-        "operationId" : "create-debt-positions-by-file-upload_1",
+        "operationId" : "create-debt-positions-by-file-upload",
         "parameters" : [ {
           "name" : "broker-code",
           "in" : "path",
@@ -256,7 +256,7 @@
       "delete" : {
         "tags" : [ "Debt Positions CRUD via file upload API" ],
         "summary" : "The Organization deletes the debt positions based on IUPD listed in the file.",
-        "operationId" : "delete-debt-positions-by-file-upload_1",
+        "operationId" : "delete-debt-positions-by-file-upload",
         "parameters" : [ {
           "name" : "broker-code",
           "in" : "path",
@@ -373,7 +373,7 @@
       "get" : {
         "tags" : [ "Upload Status API" ],
         "summary" : "Returns the debt positions upload report.",
-        "operationId" : "get-debt-positions-upload-report_1",
+        "operationId" : "get-debt-positions-upload-report",
         "parameters" : [ {
           "name" : "broker-code",
           "in" : "path",
@@ -485,7 +485,7 @@
       "get" : {
         "tags" : [ "Upload Status API" ],
         "summary" : "Returns the debt positions upload status.",
-        "operationId" : "get-debt-positions-upload-status_1",
+        "operationId" : "get-debt-positions-upload-status",
         "parameters" : [ {
           "name" : "broker-code",
           "in" : "path",
@@ -599,80 +599,6 @@
         "summary" : "health check",
         "description" : "Return OK if application is started",
         "operationId" : "healthCheck",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AppInfo"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : { }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too many requests.",
-            "content" : {
-              "text/json" : { }
-            }
-          },
-          "500" : {
-            "description" : "Service unavailable",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/support/uploads/{upload}/status/refresh" : {
-      "get" : {
-        "tags" : [ "Support API" ],
-        "summary" : "Support API to recover status on CREATE and DELETE operation",
-        "description" : "Returns the debt positions upload report recovered.",
-        "operationId" : "recoverStatus",
-        "parameters" : [ {
-          "name" : "upload",
-          "in" : "path",
-          "description" : "The unique identifier for file upload",
-          "required" : true,
-          "style" : "simple",
-          "explode" : false,
-          "schema" : {
-            "minLength" : 1,
-            "type" : "string"
-          }
-        } ],
         "responses" : {
           "200" : {
             "description" : "OK",

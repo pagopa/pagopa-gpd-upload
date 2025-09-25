@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller;
+package it.gov.pagopa.gpd.upload.controller.v1;
 
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Primary;
