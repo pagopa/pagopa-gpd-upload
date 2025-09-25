@@ -8,6 +8,7 @@ import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -31,8 +32,8 @@ public class RecoveryService {
         this.gpdClient = gpdClient;
     }
 
-    public boolean recover(String brokerId, String organizationFiscalCode, String uploadId) {
-        UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId);
+    public boolean recover(String brokerId, String organizationFiscalCode, String uploadId, ServiceType serviceType) {
+        UploadInput uploadInput = blobService.getUploadInput(brokerId, organizationFiscalCode, uploadId, serviceType);
         List<String> inputIUPD;
 
         if(uploadInput.getUploadOperation().equals(UploadOperation.CREATE)) {

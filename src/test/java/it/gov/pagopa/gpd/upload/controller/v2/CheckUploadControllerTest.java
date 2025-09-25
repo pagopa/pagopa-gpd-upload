@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller.external;
+package it.gov.pagopa.gpd.upload.controller.v2;
 
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.http.HttpRequest;
@@ -30,7 +30,7 @@ import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 
 @MicronautTest(environments = "test")
-class UploadStatusControllerTest {
+class CheckUploadControllerTest {
 
     @Inject
     @Client("/")
@@ -66,7 +66,7 @@ class UploadStatusControllerTest {
     // ========================================================================
 
     private static final String BASE =
-            "/brokers/brokertest/organizations/77777777777/debtpositions/files";
+            "v2/brokers/brokertest/organizations/77777777777/debtpositions/files";
 
     @Test
     void shouldReturn200WithBodyAndContinuationHeader() {

@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.controller.external;
 
+import io.micronaut.context.annotation.AliasFor;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -45,7 +46,7 @@ public class BaseController {
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = "/info")
+    @Get(uris = {"/info","/v1/info","/v2/info"})
     public HttpResponse<AppInfo> healthCheck() {
         // Used just for health checking
         AppInfo info = AppInfo.builder()

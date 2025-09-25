@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller.external;
+package it.gov.pagopa.gpd.upload.controller.external.v2;
 
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -9,6 +9,7 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.openapi.annotation.OpenAPIGroup;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,25 +37,24 @@ import lombok.extern.slf4j.Slf4j;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
-import java.time.ZoneId;
-import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 
-@Tag(name = "Upload Status API")
+@Tag(name = "Massive operation observability APIs - v2")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
+@OpenAPIGroup(exclude = "external-v1")
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
-public class UploadStatusController {
+public class CheckUploadController {
     @Inject
     BlobService blobService;
     @Inject
-    StatusService statusService;    
-    private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
-    
-    private static final String FILES_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
+    StatusService statusService;
+    private static final String BASE_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
+    private static final String FILES_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
     private static final ZoneId TZ_EUROPE_ROME = ZoneId.of("Europe/Rome");
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-status")
@@ -109,7 +109,7 @@ public class UploadStatusController {
             uploadReport = statusService.getReport(organizationFiscalCode, fileID, serviceType);
         } catch (AppException e) {
             if (e.getHttpStatus() == NOT_FOUND) {
-                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID);
+                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID, serviceType);
                 if (uploadReport == null)
                     throw e;
             }
@@ -120,7 +120,7 @@ public class UploadStatusController {
                 .body(uploadReport);
     }
     
-    // =========================
+ // =========================
     // PAGOPA-3282: Get File-Id list
     // =========================
     @Operation(
@@ -162,7 +162,7 @@ public class UploadStatusController {
         // Validate range: from <= to and (to - from + 1) <= 7
         final long days = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
         if (fromDate.isAfter(toDate) || days > 7) {
-        	throw new AppException(
+            throw new AppException(
                     HttpStatus.BAD_REQUEST,
                     "BAD_REQUEST",
                     "Invalid range: ensure 1 ≤ (to - from + 1) ≤ 7 and from ≤ to"
@@ -171,7 +171,7 @@ public class UploadStatusController {
 
         // Validate size: default 100, min 100, max 500
         if (size == null || size < 100 || size > 500) {
-        	throw new AppException(
+            throw new AppException(
                     HttpStatus.BAD_REQUEST,
                     "BAD_REQUEST",
                     "Invalid size: must be between 100 and 500 (default 100)"
@@ -182,7 +182,7 @@ public class UploadStatusController {
         FileIdListResponse res = statusService.getFileIdList(
                 brokerCode, organizationFiscalCode, fromDate, toDate, size, continuationToken, serviceType
         );
-        
+
         // Prepare response
         MutableHttpResponse<FileIdListResponse> response = HttpResponse.ok(res)
                 .contentType(MediaType.APPLICATION_JSON);
@@ -202,7 +202,7 @@ public class UploadStatusController {
         try {
             return LocalDate.parse(toDateStr); // expects YYYY-MM-DD
         } catch (DateTimeParseException ex) {
-        	throw new AppException(
+            throw new AppException(
                     HttpStatus.BAD_REQUEST,
                     "BAD_REQUEST",
                     "Invalid 'to' date. Expected format: YYYY-MM-DD"

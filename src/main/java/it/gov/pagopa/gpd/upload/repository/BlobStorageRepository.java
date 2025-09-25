@@ -5,36 +5,38 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
+import it.gov.pagopa.gpd.upload.exception.AppError;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static io.micronaut.http.HttpStatus.NOT_FOUND;
+import static it.gov.pagopa.gpd.upload.utils.Constants.INPUT_DIRECTORY;
+import static it.gov.pagopa.gpd.upload.utils.Constants.SERVICE_TYPE_METADATA;
 
 @Context
 @Singleton
 @Slf4j
 public class BlobStorageRepository implements FileRepository {
 
-    private static final String SERVICE_TYPE_METADATA = "serviceType";
     @Value("${blob.sas.connection}")
     private String connectionString;
-
-    private static final String INPUT_DIRECTORY = "input";
-    private static final String OUTPUT_DIRECTORY = "output";
 
     private BlobServiceClient blobServiceClient;
 
@@ -131,35 +133,27 @@ public class BlobStorageRepository implements FileRepository {
         return blockBlob.getBlobName();
     }
 
-    public BinaryData downloadOutput(String broker, String fiscalCode, String uploadKey) {
+    public BinaryData downloadContent(String broker, String uploadKey, String blobPath, ServiceType serviceType) {
         BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
-        String blobName = uploadKey.concat(".json");
 
-        if(!blobContainerClient.exists())
-            log.error(String.format("[Error][BlobStorageRepository@getReport] Container doesn't exist: %s, for upload: %s", broker, uploadKey));
-
-        BlobClient blobClient = blobContainerClient.getBlobClient("/" + fiscalCode + "/" + OUTPUT_DIRECTORY + "/report" + blobName);
-
-        if(Boolean.FALSE.equals(blobClient.exists())) {
-            log.error(String.format("[Error][BlobStorageRepository@getReport] Blob doesn't exist: %s", uploadKey));
-            throw new AppException(NOT_FOUND, "REPORT NOT FOUND", "The Report for the given upload " + uploadKey + " does not exist");
+        if (!blobContainerClient.exists()) {
+            log.error(String.format("[Error][BlobStorageRepository@downloadContent] Container %s doesn't exist for upload %s in path %s", broker, uploadKey, blobPath));
+            throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
-        return blobClient.downloadContent();
-    }
+        BlobClient blobClient = blobContainerClient.getBlobClient(blobPath);
 
-    public BinaryData downloadInput(String broker, String fiscalCode, String uploadKey) {
-        BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
-        String blobName = uploadKey.concat(".json");
+        if (Boolean.FALSE.equals(blobClient.exists())) {
+            log.error(String.format("[Error][BlobStorageRepository@downloadContent] Blob %s doesn't exist in path %s", uploadKey, blobPath));
+            throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
+        }
 
-        if(!blobContainerClient.exists())
-            log.error(String.format("[Error][BlobStorageRepository@getUploadBlob] Container doesn't exist: %s, for upload: %s", broker, uploadKey));
+        BlobProperties properties = blobClient.getProperties();
+        ServiceType serviceTypeMetadata = ServiceType.valueOf(properties.getMetadata().getOrDefault(SERVICE_TYPE_METADATA, ServiceType.GPD.name()));
 
-        BlobClient blobClient = blobContainerClient.getBlobClient("/" + fiscalCode + "/" + INPUT_DIRECTORY + "/" + blobName);
-
-        if(Boolean.FALSE.equals(blobClient.exists())) {
-            log.error(String.format("[Error][BlobStorageRepository@getUploadBlob] Blob doesn't exist: %s", uploadKey));
-            throw new AppException(NOT_FOUND, "UPLOAD NOT FOUND", "The Blob-Upload for the given upload " + uploadKey + " does not exist");
+        if (serviceTypeMetadata != serviceType) {
+            log.error(String.format("[Error][BlobStorageRepository@downloadContent] Blob %s doesn't exist for %s in path %s, it was uploaded for %s", uploadKey, serviceType, serviceTypeMetadata, blobPath));
+            throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
         return blobClient.downloadContent();

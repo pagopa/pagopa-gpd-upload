@@ -10,6 +10,7 @@ import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.RecoveryService;
@@ -66,7 +67,7 @@ public class SupportControllerTest {
     @Primary
     public RecoveryService recoveryService() {
         RecoveryService recoveryService = Mockito.mock(RecoveryService.class);
-        Mockito.when(recoveryService.recover(anyString(), anyString(), anyString())).thenReturn(true);
+        Mockito.when(recoveryService.recover(anyString(), anyString(), anyString(), any(ServiceType.class))).thenReturn(true);
         return recoveryService;
     }
 
