@@ -137,14 +137,14 @@ public class BlobStorageRepository implements FileRepository {
         BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(broker);
 
         if (!blobContainerClient.exists()) {
-            log.error(String.format("[Error][BlobStorageRepository] Container %s doesn't exist for upload %s in path %s", broker, uploadKey, blobPath));
+            log.error(String.format("[Error][BlobStorageRepository@downloadContent] Container %s doesn't exist for upload %s in path %s", broker, uploadKey, blobPath));
             throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
         BlobClient blobClient = blobContainerClient.getBlobClient(blobPath);
 
         if (Boolean.FALSE.equals(blobClient.exists())) {
-            log.error(String.format("[Error][BlobStorageRepository] Blob %s doesn't exist in path %s", uploadKey, blobPath));
+            log.error(String.format("[Error][BlobStorageRepository@downloadContent] Blob %s doesn't exist in path %s", uploadKey, blobPath));
             throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
@@ -152,7 +152,7 @@ public class BlobStorageRepository implements FileRepository {
         ServiceType serviceTypeMetadata = ServiceType.valueOf(properties.getMetadata().getOrDefault(SERVICE_TYPE_METADATA, ServiceType.GPD.name()));
 
         if (serviceTypeMetadata != serviceType) {
-            log.error(String.format("[Error][BlobStorageRepository] Blob %s doesn't exist for %s in path %s, it was uploaded for %s", uploadKey, serviceType, serviceTypeMetadata, blobPath));
+            log.error(String.format("[Error][BlobStorageRepository@downloadContent] Blob %s doesn't exist for %s in path %s, it was uploaded for %s", uploadKey, serviceType, serviceTypeMetadata, blobPath));
             throw new AppException(AppError.BLOB_NOT_FOUND, uploadKey, serviceType);
         }
 
