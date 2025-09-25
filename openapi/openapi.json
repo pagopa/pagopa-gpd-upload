@@ -1,0 +1,652 @@
+{
+  "openapi": "3.0.1",
+  "paths": {
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file": {
+      "put": {
+        "tags": [
+          "Debt Positions CRUD via file upload API"
+        ],
+        "summary": "The Organization updates the debt positions listed in the file.",
+        "operationId": "update-debt-positions-by-file-upload",
+        "parameters": [
+          {
+            "name": "organization-fiscal-code",
+            "in": "path",
+            "description": "The organization fiscal code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "broker-code",
+            "in": "path",
+            "description": "The broker code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "description": "File to be uploaded",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "allOf": [
+                              {
+                                "type": "string",
+                                "description": "File to be uploaded",
+                                "format": "binary"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "description": "File to be uploaded",
+                            "format": "binary"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "example": null
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Malformed request.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Wrong or missing function key.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "409": {
+            "description": "Conflict: duplicate file found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "text/json": {}
+            }
+          },
+          "500": {
+            "description": "Service unavailable.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "Authorization": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Debt Positions CRUD via file upload API"
+        ],
+        "summary": "The Organization creates the debt positions listed in the file.",
+        "operationId": "create-debt-positions-by-file-upload",
+        "parameters": [
+          {
+            "name": "organization-fiscal-code",
+            "in": "path",
+            "description": "The organization fiscal code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "broker-code",
+            "in": "path",
+            "description": "The broker code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "description": "File to be uploaded",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "allOf": [
+                              {
+                                "type": "string",
+                                "description": "File to be uploaded",
+                                "format": "binary"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "description": "File to be uploaded",
+                            "format": "binary"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "example": null
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Malformed request.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Wrong or missing function key.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "409": {
+            "description": "Conflict: duplicate file found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "text/json": {}
+            }
+          },
+          "500": {
+            "description": "Service unavailable.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "Authorization": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Debt Positions CRUD via file upload API"
+        ],
+        "summary": "The Organization deletes the debt positions based on IUPD listed in the file.",
+        "operationId": "delete-debt-positions-by-file-upload",
+        "parameters": [
+          {
+            "name": "organization-fiscal-code",
+            "in": "path",
+            "description": "The organization fiscal code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "broker-code",
+            "in": "path",
+            "description": "The broker code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "description": "File to be uploaded",
+                        "format": "binary"
+                      }
+                    }
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "allOf": [
+                              {
+                                "type": "string",
+                                "description": "File to be uploaded",
+                                "format": "binary"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "description": "File to be uploaded",
+                            "format": "binary"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "example": null
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Request accepted."
+          },
+          "400": {
+            "description": "Malformed request.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Wrong or missing function key.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "409": {
+            "description": "Conflict: duplicate file found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "text/json": {}
+            }
+          },
+          "500": {
+            "description": "Service unavailable.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "Authorization": []
+          }
+        ]
+      }
+    },
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/report": {
+      "get": {
+        "tags": [
+          "Upload Status API"
+        ],
+        "summary": "Returns the debt positions upload report.",
+        "operationId": "get-debt-positions-upload-report",
+        "parameters": [
+          {
+            "name": "broker-code",
+            "in": "path",
+            "description": "The broker code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "organization-fiscal-code",
+            "in": "path",
+            "description": "The organization fiscal code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "file-id",
+            "in": "path",
+            "description": "The unique identifier for file upload",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upload report found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "400": {
+            "description": "Malformed request.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Wrong or missing function key.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "404": {
+            "description": "Upload report not found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "text/json": {}
+            }
+          },
+          "500": {
+            "description": "Service unavailable.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "Authorization": []
+          }
+        ]
+      }
+    },
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/status": {
+      "get": {
+        "tags": [
+          "Upload Status API"
+        ],
+        "summary": "Returns the debt positions upload status.",
+        "operationId": "get-debt-positions-upload-status",
+        "parameters": [
+          {
+            "name": "broker-code",
+            "in": "path",
+            "description": "The broker code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "organization-fiscal-code",
+            "in": "path",
+            "description": "The organization fiscal code",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "file-id",
+            "in": "path",
+            "description": "The unique identifier for file upload",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upload found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "400": {
+            "description": "Malformed request.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Wrong or missing function key.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "404": {
+            "description": "Upload not found.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "text/json": {}
+            }
+          },
+          "500": {
+            "description": "Service unavailable.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "Authorization": []
+          }
+        ]
+      }
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "Health check"
+        ],
+        "summary": "health check",
+        "description": "Return OK if application is started",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "text/json": {}
+            }
+          },
+          "500": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Ocp-Apim-Subscription-Key": {
+        "type": "apiKey",
+        "name": "Ocp-Apim-Subscription-Key",
+        "in": "header"
+      }
+    }
+  },
+  "info": {
+    "version": "0.1.46"
+  }
+}
