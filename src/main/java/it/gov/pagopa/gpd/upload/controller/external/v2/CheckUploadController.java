@@ -25,7 +25,6 @@ import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
-import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
@@ -34,13 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
-@Tag(name = "Upload Status API - v2")
+@Tag(name = "Massive operation observability APIs - v2")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
 @OpenAPIGroup(exclude = "external-v1")
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
-public class UploadStatusController {
+public class CheckUploadController {
     @Inject
     BlobService blobService;
     @Inject
@@ -56,7 +55,7 @@ public class UploadStatusController {
             @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "/{file-id}/status/v2",
+    @Get(value = BASE_PATH + "/{file-id}/status",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<it.gov.pagopa.gpd.upload.model.UploadStatus> getUploadStatus(
             @Parameter(description = "The broker code", required = true)
@@ -76,7 +75,7 @@ public class UploadStatusController {
 
     @Operation(summary = "Returns the debt positions upload report.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-report")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReportDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReport.class))),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
@@ -85,7 +84,7 @@ public class UploadStatusController {
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = BASE_PATH + "/{file-id}/report",
             produces = MediaType.APPLICATION_JSON)
-    HttpResponse<UploadReportDTO> getUploadReport(
+    HttpResponse<UploadReport> getUploadOutput(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker-code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
@@ -94,12 +93,12 @@ public class UploadStatusController {
             @NotBlank @PathVariable(name = "file-id") String fileID,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
     ) {
-        UploadReportDTO uploadReport = null;
+        UploadReport uploadReport = null;
         try {
-            uploadReport = statusService.getReport(brokerCode, organizationFiscalCode, fileID, serviceType);
+            uploadReport = statusService.getReport(organizationFiscalCode, fileID, serviceType);
         } catch (AppException e) {
             if (e.getHttpStatus() == NOT_FOUND) {
-                uploadReport = blobService.getReportV2(brokerCode, organizationFiscalCode, fileID);
+                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID, serviceType);
                 if (uploadReport == null)
                     throw e;
             }

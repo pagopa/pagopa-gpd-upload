@@ -40,11 +40,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 @MicronautTest
 class FileUploadControllerTest {
 
-    private static final String URI = "brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
+    private static final String URI = "v2/brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
     private static final String UPLOAD_KEY = "key";
     private static final String QUERY_PARAM_SERVICE_TYPE = String.format("?serviceType=%s",ServiceType.GPD.name());
-    private static final String V2_URI_ADDITION = "/v2";
-
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 
@@ -56,7 +54,7 @@ class FileUploadControllerTest {
     void createDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI + V2_URI_ADDITION + QUERY_PARAM_SERVICE_TYPE)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI + QUERY_PARAM_SERVICE_TYPE)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -72,7 +70,7 @@ class FileUploadControllerTest {
     void updateDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI + V2_URI_ADDITION + QUERY_PARAM_SERVICE_TYPE)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI + QUERY_PARAM_SERVICE_TYPE)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -88,7 +86,7 @@ class FileUploadControllerTest {
     void deleteDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI + V2_URI_ADDITION + QUERY_PARAM_SERVICE_TYPE)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI + QUERY_PARAM_SERVICE_TYPE)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -112,7 +110,7 @@ class FileUploadControllerTest {
     void getUploadStatus_KO() throws IOException {
         this.createDebtPositionsByFile_OK();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report" + V2_URI_ADDITION + QUERY_PARAM_SERVICE_TYPE);
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report" + QUERY_PARAM_SERVICE_TYPE);
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
 
         assertNotNull(response);
