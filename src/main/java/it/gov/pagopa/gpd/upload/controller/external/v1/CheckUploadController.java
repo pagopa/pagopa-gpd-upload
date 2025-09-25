@@ -39,7 +39,7 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @OpenAPIGroup(exclude = "external-v2")
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
-public class UploadStatusController {
+public class CheckUploadController {
     @Inject
     BlobService blobService;
     @Inject
