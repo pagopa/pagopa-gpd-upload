@@ -9,6 +9,7 @@ import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -35,14 +36,14 @@ public class RecoveryServiceTest {
     @Test
     void recover_CREATE_UPLOAD_OK() {
         Assertions.assertTrue(
-                recoveryService.recover("broker", "organizaition", CREATE_UPLOAD_ID)
+                recoveryService.recover("broker", "organizaition", CREATE_UPLOAD_ID, ServiceType.GPD)
         );
     }
 
     @Test
     void recover_DELETE_UPLOAD_OK() {
         Assertions.assertTrue(
-                recoveryService.recover("broker", "organizaition", DELETE_UPLOAD_ID)
+                recoveryService.recover("broker", "organizaition", DELETE_UPLOAD_ID, ServiceType.GPD)
         );
     }
 
@@ -74,8 +75,8 @@ public class RecoveryServiceTest {
                 .paymentPositions(List.of(PaymentPositionModel.builder()
                         .iupd("IUPD-1").build()))
                 .build();
-        Mockito.when(blobService.getUploadInput(anyString(), anyString(), eq(CREATE_UPLOAD_ID))).thenReturn(uploadInputCreate);
-        Mockito.when(blobService.getUploadInput(anyString(), anyString(), eq(DELETE_UPLOAD_ID))).thenReturn(uploadInputDelete);
+        Mockito.when(blobService.getUploadInput(anyString(), anyString(), eq(CREATE_UPLOAD_ID), any(ServiceType.class))).thenReturn(uploadInputCreate);
+        Mockito.when(blobService.getUploadInput(anyString(), anyString(), eq(DELETE_UPLOAD_ID), any(ServiceType.class))).thenReturn(uploadInputDelete);
         return blobService;
     }
     @Bean
