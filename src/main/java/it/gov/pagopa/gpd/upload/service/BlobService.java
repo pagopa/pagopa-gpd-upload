@@ -17,8 +17,10 @@ import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
+import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.utils.GPDValidator;
+import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -38,6 +40,7 @@ public class BlobService {
     private int zipMaxSize; // Max size of zip file content
     @Value("${zip.entries}")
     private int zipMaxEntries; // Maximum number of entries allowed in the zip file
+
     private static final List<String> ALLOWABLE_EXTENSIONS = List.of("json");
     private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip");
     private static final String DESTINATION_DIRECTORY = "upload-directory";
@@ -46,14 +49,19 @@ public class BlobService {
     private final StatusService statusService;
     private final GPDValidator<PaymentPositionsModel> paymentPositionsValidator;
     private final GPDValidator<MultipleIUPDModel> multipleIUPDValidator;
+    private final ResponseEntryDTOMapper responseEntryDTOMapper;
 
     @Inject
-    public BlobService(BlobStorageRepository blobStorageRepository, StatusService statusService,
-                       GPDValidator<PaymentPositionsModel> paymentPositionsValidator, GPDValidator<MultipleIUPDModel> multipleIUPDValidator) {
+    public BlobService(BlobStorageRepository blobStorageRepository,
+                       StatusService statusService,
+                       GPDValidator<PaymentPositionsModel> paymentPositionsValidator,
+                       GPDValidator<MultipleIUPDModel> multipleIUPDValidator,
+                       ResponseEntryDTOMapper responseEntryDTOMapper) {
         this.blobStorageRepository = blobStorageRepository;
         this.statusService = statusService;
         this.paymentPositionsValidator = paymentPositionsValidator;
         this.multipleIUPDValidator = multipleIUPDValidator;
+        this.responseEntryDTOMapper = responseEntryDTOMapper;
     }
 
     @PostConstruct
@@ -135,6 +143,24 @@ public class BlobService {
         BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
         try {
             return objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
+        } catch (JsonProcessingException e) {
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during report deserialization", e.getCause());
+        }
+    }
+
+    public UploadReportDTO getReportV2(String broker, String fiscalCode, String uploadKey) {
+        BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
+        try {
+            UploadReport uploadReport = objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
+            return UploadReportDTO.builder()
+                    .fileId(uploadReport.uploadID)
+                    .startTime(uploadReport.startTime)
+                    .endTime(uploadReport.endTime)
+                    .responses(responseEntryDTOMapper.toDTOs(uploadReport.responses))
+                    .submittedItem(uploadReport.submittedItem)
+                    .processedItem(uploadReport.processedItem)
+                    .build();
+
         } catch (JsonProcessingException e) {
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during report deserialization", e.getCause());
         }

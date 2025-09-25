@@ -1,5 +1,9 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import com.azure.cosmos.models.CosmosQueryRequestOptions;
+import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.SqlParameter;
+import com.azure.cosmos.models.SqlQuerySpec;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
@@ -7,11 +11,15 @@ import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
+import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
+import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
@@ -21,9 +29,13 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 public class StatusService {
     private StatusRepository statusRepository;
 
+    private ResponseEntryDTOMapper responseEntryDTOMapper;
+
     @Inject
-    public StatusService(StatusRepository statusRepository) {
+    public StatusService(StatusRepository statusRepository,
+                         ResponseEntryDTOMapper responseEntryDTOMapper) {
         this.statusRepository = statusRepository;
+        this.responseEntryDTOMapper = responseEntryDTOMapper;
     }
 
     public UploadStatus getUploadStatus(String fileId, String organizationFiscalCode, ServiceType serviceType) {
@@ -42,6 +54,35 @@ public class StatusService {
         if(status.getServiceType() == null || Objects.equals(serviceType, status.getServiceType())){
             return mapReport(status);
         }
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+    public UploadReportDTO getReport(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        String sqlQuery = "SELECT * FROM c WHERE c.id = @fileId AND c.fiscalCode = @orgFiscalCode AND c.brokerID = @brokerCode";
+        SqlQuerySpec querySpec = new SqlQuerySpec(
+                sqlQuery,
+                Arrays.asList(
+                        new SqlParameter("@fileId", fileId),
+                        new SqlParameter("@orgFiscalCode", orgFiscalCode),
+                        new SqlParameter("@brokerCode", brokerCode)
+                )
+        );
+        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+        options.setPartitionKey(new PartitionKey(orgFiscalCode));
+
+        List<Status> statusList = statusRepository.find(querySpec, options);
+        if (!statusList.isEmpty()) {
+
+            if (statusList.size() > 1) {
+                log.warn("[getReport] More than one status found for fileId: {}, orgFiscalCode: {} and brokerCode: {}", fileId, orgFiscalCode, brokerCode);
+            }
+            Status status = statusList.get(0);
+
+            if(status.getServiceType() == null || Objects.equals(serviceType, status.getServiceType())){
+                return mapReportV2(status);
+            }
+        }
+
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
     }
 
@@ -86,6 +127,17 @@ public class StatusService {
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
                 .responses(status.upload.getResponses())
+                .startTime(status.upload.getStart())
+                .endTime(status.upload.getEnd())
+                .build();
+    }
+
+    public UploadReportDTO mapReportV2(Status status) {
+        return UploadReportDTO.builder()
+                .fileId(status.getId())
+                .processedItem(status.upload.getCurrent())
+                .submittedItem(status.upload.getTotal())
+                .responses(responseEntryDTOMapper.toDTOs(status.upload.getResponses()))
                 .startTime(status.upload.getStart())
                 .endTime(status.upload.getEnd())
                 .build();

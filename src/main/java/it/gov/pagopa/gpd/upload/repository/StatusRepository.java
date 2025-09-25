@@ -8,6 +8,7 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.SqlQuerySpec;
+import com.azure.cosmos.util.CosmosPagedFlux;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -17,6 +18,7 @@ import it.gov.pagopa.gpd.upload.exception.AppException;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -98,6 +100,24 @@ public class StatusRepository {
     public List<Status> find(String query) {
         try {
             CosmosPagedIterable<Status> response = container.queryItems(new SqlQuerySpec(query), new CosmosQueryRequestOptions(), Status.class);
+            return response.stream().toList();
+        } catch (CosmosException ex) {
+            log.error("[Error][StatusRepository@findPending] The Status retrieval was not successful: {}", ex.getStatusCode());
+            if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "The Status retrieval was not successful");
+            else if(ex.getStatusCode() == NOT_FOUND.getCode())
+                throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given query doesn't exist");
+            else throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
+        }
+    }
+
+    public List<Status> find(SqlQuerySpec query, CosmosQueryRequestOptions queryRequestOptions) {
+        try {
+            CosmosPagedIterable<Status> response = container.queryItems(
+                    query,
+                    queryRequestOptions,
+                    Status.class
+            );
             return response.stream().toList();
         } catch (CosmosException ex) {
             log.error("[Error][StatusRepository@findPending] The Status retrieval was not successful: {}", ex.getStatusCode());
