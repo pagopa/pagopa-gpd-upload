@@ -154,22 +154,16 @@ public class BlobService {
         }
     }
 
-    public UploadReportDTO getReportV2(String broker, String fiscalCode, String uploadKey) {
-        BinaryData binaryDataReport = blobStorageRepository.downloadOutput(broker, fiscalCode, uploadKey);
-        try {
-            UploadReport uploadReport = objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
-            return UploadReportDTO.builder()
-                    .fileId(uploadReport.uploadID)
-                    .startTime(uploadReport.startTime)
-                    .endTime(uploadReport.endTime)
-                    .responses(responseEntryDTOMapper.toDTOs(uploadReport.responses))
-                    .submittedItem(uploadReport.submittedItem)
-                    .processedItem(uploadReport.processedItem)
-                    .build();
-
-        } catch (JsonProcessingException e) {
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during report deserialization", e.getCause());
-        }
+    public UploadReportDTO getReportV2(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
+        UploadReport uploadReport = getReport(broker, fiscalCode, uploadKey, serviceType);
+        return UploadReportDTO.builder()
+                .fileId(uploadReport.uploadID)
+                .startTime(uploadReport.startTime)
+                .endTime(uploadReport.endTime)
+                .responses(responseEntryDTOMapper.toDTOs(uploadReport.responses))
+                .submittedItem(uploadReport.submittedItem)
+                .processedItem(uploadReport.processedItem)
+                .build();
     }
 
     public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem, ServiceType serviceType) {
