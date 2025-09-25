@@ -79,8 +79,14 @@
         <!-- Micronaut Serde / Jackson -->
         <dependency>
             <groupId>io.micronaut.serde</groupId>
+            <artifactId>micronaut-serde-bom</artifactId>
+            <version>2.15.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.serde</groupId>
             <artifactId>micronaut-serde-jackson</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -248,6 +254,11 @@
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.micronaut.serde</groupId>
+                            <artifactId>micronaut-serde-processor</artifactId>
+                            <version>2.15.1</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>

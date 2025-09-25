@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.upload.model.v2;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.micronaut.serde.annotation.Serdeable;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -12,11 +12,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@JsonSerialize
+@Serdeable
 public class ResponseEntryDTO {
     @Schema(example = "400")
-    public Integer statusCode;
+    private Integer statusCode;
     @Schema(example = "Bad request caused by invalid email address")
-    public String statusMessage;
-    public List<String> iupds; // IUPDs
+    private String statusMessage;
+    private List<String> iupds; // IUPDs
 }

@@ -158,9 +158,9 @@ public class BlobService {
         UploadReport uploadReport = getReport(broker, fiscalCode, uploadKey, serviceType);
         return UploadReportDTO.builder()
                 .fileId(uploadReport.uploadID)
-                .startTime(uploadReport.startTime)
-                .endTime(uploadReport.endTime)
-                .responses(responseEntryDTOMapper.toDTOs(uploadReport.responses))
+//                .startTime(uploadReport.startTime)
+//                .endTime(uploadReport.endTime)
+//                .responses(responseEntryDTOMapper.toDTOs(uploadReport.responses))
                 .submittedItem(uploadReport.submittedItem)
                 .processedItem(uploadReport.processedItem)
                 .build();
