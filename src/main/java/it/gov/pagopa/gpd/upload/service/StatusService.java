@@ -138,9 +138,9 @@ public class StatusService {
                 .fileId(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
-//                .responses(responseEntryDTOMapper.toDTOs(status.upload.getResponses()))
-//                .startTime(status.upload.getStart())
-//                .endTime(status.upload.getEnd())
+                .responses(responseEntryDTOMapper.toDTOs(status.upload.getResponses()))
+                .startTime(status.upload.getStart())
+                .endTime(status.upload.getEnd())
                 .build();
     }
 

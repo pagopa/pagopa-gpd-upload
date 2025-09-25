@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.upload.model.v2;
 
-import io.micronaut.serde.annotation.Serdeable;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Serdeable
+@JsonSerialize
 public class ResponseEntryDTO {
     @Schema(example = "400")
     private Integer statusCode;

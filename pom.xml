@@ -24,7 +24,7 @@
         <swagger.parser.version>2.1.34</swagger.parser.version>
         <azure.cosmos.version>4.58.0</azure.cosmos.version>
         <azure.storage.version>12.25.4</azure.storage.version>
-        <jackson.datatype.version>2.17.0</jackson.datatype.version>
+        <jackson.version>2.15.3</jackson.version>
         <mockito-junit.version>4.1.0</mockito-junit.version>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
         <logback.ecs.version>1.6.0</logback.ecs.version>
@@ -76,26 +76,26 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Micronaut Serde / Jackson -->
+        <!-- Micronaut Jackson -->
         <dependency>
-            <groupId>io.micronaut.serde</groupId>
-            <artifactId>micronaut-serde-bom</artifactId>
-            <version>2.15.1</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.micronaut.serde</groupId>
-            <artifactId>micronaut-serde-jackson</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.datatype.version}</version>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-jackson-databind</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <!-- OpenAPI (Swagger-UI integrated using views) -->
@@ -166,6 +166,20 @@
             <groupId>com.azure</groupId>
             <artifactId>azure-cosmos</artifactId>
             <version>${azure.cosmos.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Logging -->
@@ -254,11 +268,6 @@
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
-                        </path>
-                        <path>
-                            <groupId>io.micronaut.serde</groupId>
-                            <artifactId>micronaut-serde-processor</artifactId>
-                            <version>2.15.1</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
