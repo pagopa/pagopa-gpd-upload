@@ -57,8 +57,8 @@ class OpenApiGenerationTest {
         responseBody = responseBody.replace(title, newTitle);
         Object openAPI = objectMapper.readValue(responseBody, Object.class);
         String formatted = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(openAPI);
-        if(toFile.contains("v2")) {
-            formatted = parseOpenAPIString(formatted);
+        if(newTitle.equals("GPD-Upload-API-v2") || newTitle.equals("GPD-Upload-Support-API")) {
+            formatted = removeV2FromPath(formatted);
         }
         Path basePath = Paths.get("openapi/");
         Files.createDirectories(basePath);
@@ -84,7 +84,7 @@ class OpenApiGenerationTest {
         return Mockito.mock(StatusRepository.class);
     }
 
-    private String parseOpenAPIString(String openApiContent) {
+    private String removeV2FromPath(String openApiContent) {
         OpenAPIV3Parser parser = new OpenAPIV3Parser();
         io.swagger.v3.oas.models.Paths updated = new io.swagger.v3.oas.models.Paths();
 
