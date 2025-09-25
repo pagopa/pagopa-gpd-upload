@@ -90,10 +90,10 @@ public class StatusService {
         if(status.getUpload().getCurrent() == status.getUpload().getTotal()){
             if(status.getUpload().getResponses() != null){
                 if(status.getUpload().getResponses().stream().allMatch(el -> el.getStatusCode() >= 400)){
-                    return OperationStatus.FAILED;
+                    return OperationStatus.COMPLETED_UNSUCCESSFULLY;
                 }
                 if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() >= 400)){
-                    return OperationStatus.COMPLETED_PARTIALLY;
+                    return OperationStatus.COMPLETED_WITH_WARNINGS;
                 }
             }
 
