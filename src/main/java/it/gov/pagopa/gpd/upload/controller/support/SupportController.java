@@ -60,7 +60,7 @@ public class SupportController {
 
         String broker = strings[0];
         String organization = strings[1];
-        recoveryService.recover(broker, organization, upload);
+        recoveryService.recover(broker, organization, upload, serviceType);
         log.info("[Support-API] Status {} recovered", upload);
         UploadReport report = statusService.getReport(organization, upload, serviceType);
 
