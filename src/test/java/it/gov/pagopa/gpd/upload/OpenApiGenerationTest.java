@@ -46,7 +46,7 @@ class OpenApiGenerationTest {
         boolean resultV2 = saveOpenAPI("/swagger/pagopa-gpd-upload-v2-" + version + ".json", "openapi-v2.json", "GPD-Upload-API-v2");
         assertTrue(resultV2);
 
-        boolean resultSupportAPI = saveOpenAPI("/swagger/pagopa-gpd-upload-support.json", "openapi-support-internal.json", "GPD-Upload-Support-API");
+        boolean resultSupportAPI = saveOpenAPI("/swagger/pagopa-gpd-upload-support.json", "openapi-internal-support.json", "GPD-Upload-Support-API");
         assertTrue(resultSupportAPI);
     }
 
