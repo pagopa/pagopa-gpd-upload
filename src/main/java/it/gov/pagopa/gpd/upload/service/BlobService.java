@@ -127,7 +127,7 @@ public class BlobService {
 
     public UploadInput getUploadInput(String broker, String fiscalCode, String uploadId, ServiceType serviceType) {
         String blobPath = String.format("/%s/%s/%s.json", fiscalCode, INPUT_DIRECTORY, uploadId);
-        BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadId, blobPath, serviceType, "getUploadInput");
+        BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadId, blobPath, serviceType);
         try {
             return objectMapper.readValue(binaryDataReport.toString(), UploadInput.class);
         } catch (JsonProcessingException e) {
@@ -137,7 +137,7 @@ public class BlobService {
 
     public UploadReport getReport(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
         String blobPath = String.format("/%s/%s/report%s.json", fiscalCode, OUTPUT_DIRECTORY, uploadKey);
-        BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadKey, blobPath, serviceType, "getReport");
+        BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadKey, blobPath, serviceType);
 
         try {
             return objectMapper.readValue(binaryDataReport.toString(), UploadReport.class);
