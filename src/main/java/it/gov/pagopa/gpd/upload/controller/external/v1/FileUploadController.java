@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller.external;
+package it.gov.pagopa.gpd.upload.controller.external.v1;
 
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpHeaders;
@@ -7,6 +7,7 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.multipart.CompletedFileUpload;
+import io.micronaut.openapi.annotation.OpenAPIGroup;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,10 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-@Tag(name = "Debt Positions CRUD via file upload API")
+@Tag(name = "Massive operation APIs for Debt Positions - v1")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
+@OpenAPIGroup(exclude = "external-v2")
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class FileUploadController {
     @Inject

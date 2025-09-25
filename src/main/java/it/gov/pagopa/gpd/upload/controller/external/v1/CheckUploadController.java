@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.controller.external;
+package it.gov.pagopa.gpd.upload.controller.external.v1;
 
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -7,6 +7,7 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.openapi.annotation.OpenAPIGroup;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,12 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
-@Tag(name = "Upload Status API")
+@Tag(name = "Massive operation observability APIs - v1")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
 @Slf4j
+@OpenAPIGroup(exclude = "external-v2")
 @SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
-public class UploadStatusController {
+public class CheckUploadController {
     @Inject
     BlobService blobService;
     @Inject
