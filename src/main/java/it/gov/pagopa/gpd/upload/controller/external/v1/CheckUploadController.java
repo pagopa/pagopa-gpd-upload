@@ -30,14 +30,13 @@ import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
+import it.gov.pagopa.gpd.upload.utils.CommonCheck;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
@@ -55,7 +54,6 @@ public class CheckUploadController {
     StatusService statusService;
     private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
     private static final String FILES_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
-    private static final ZoneId TZ_EUROPE_ROME = ZoneId.of("Europe/Rome");
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
@@ -156,8 +154,8 @@ public class CheckUploadController {
     ) {
 
         // Parse & defaults for dates (calendar date, Europe/Rome), inclusive range [from, to]
-        final LocalDate toDate = parseOrDefaultToDate(toDateStr);
-        final LocalDate fromDate = parseOrDefaultFromDate(fromDateStr, toDate);
+        final LocalDate toDate = CommonCheck.parseOrDefaultToDate(toDateStr);
+        final LocalDate fromDate = CommonCheck.parseOrDefaultFromDate(fromDateStr, toDate);
 
         // Validate range: from <= to and (to - from + 1) <= 7
         final long days = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
@@ -195,34 +193,4 @@ public class CheckUploadController {
         return response;
     }
 
-    private static LocalDate parseOrDefaultToDate(String toDateStr) {
-        if (toDateStr == null || toDateStr.isBlank()) {
-            return LocalDate.now(TZ_EUROPE_ROME);
-        }
-        try {
-            return LocalDate.parse(toDateStr); // expects YYYY-MM-DD
-        } catch (DateTimeParseException ex) {
-            throw new AppException(
-                    HttpStatus.BAD_REQUEST,
-                    "BAD_REQUEST",
-                    "Invalid 'to' date. Expected format: YYYY-MM-DD"
-            );
-        }
-    }
-
-    private static LocalDate parseOrDefaultFromDate(String fromDateStr, LocalDate toDate) {
-        if (fromDateStr == null || fromDateStr.isBlank()) {
-            // default: 7-day window ending at 'to' (inclusive) => from = to - 6
-            return toDate.minusDays(6);
-        }
-        try {
-            return LocalDate.parse(fromDateStr);
-        } catch (DateTimeParseException ex) {
-            throw new AppException(
-                    HttpStatus.BAD_REQUEST,
-                    "BAD_REQUEST",
-                    "Invalid 'from' date. Expected format: YYYY-MM-DD"
-            );
-        }
-    }
 }
