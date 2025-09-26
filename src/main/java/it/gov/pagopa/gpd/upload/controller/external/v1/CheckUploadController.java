@@ -46,7 +46,7 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Controller()
 @Slf4j
 @OpenAPIGroup(exclude = "external-v2")
-@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
+@SecurityScheme(name = "ApiKey", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class CheckUploadController {
     @Inject
     BlobService blobService;
@@ -55,7 +55,7 @@ public class CheckUploadController {
     private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
     private static final String FILES_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
 
-    @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-status")
+    @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = it.gov.pagopa.gpd.upload.model.UploadStatus.class))),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -82,7 +82,7 @@ public class CheckUploadController {
                 .body(uploadStatus);
     }
 
-    @Operation(summary = "Returns the debt positions upload report.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "get-debt-positions-upload-report")
+    @Operation(summary = "Returns the debt positions upload report.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-report")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReport.class))),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -123,7 +123,7 @@ public class CheckUploadController {
     // =========================
     @Operation(
             summary = "Returns the list of fileIds for a broker/organization in the given date range (max 7 days).",
-            security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")},
+            security = {@SecurityRequirement(name = "ApiKey")},
             operationId = "get-debt-positions-fileids"
     )
     @ApiResponses(value = {
