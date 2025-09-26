@@ -6,7 +6,8 @@ import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
-import it.gov.pagopa.gpd.upload.model.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.v2.UploadStatusV2;
+import it.gov.pagopa.gpd.upload.model.v2.enumeration.OperationStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
@@ -31,14 +32,14 @@ public class StatusService {
         this.statusRepository = statusRepository;
     }
 
-    public UploadStatus getUploadStatus(String fileId, String organizationFiscalCode, ServiceType serviceType) {
-        Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
+    public UploadStatusV2 getUploadStatus(String uploadId, String organizationFiscalCode, ServiceType serviceType) {
+        Status status = statusRepository.findStatusById(uploadId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
 
         if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
             return map(status);
         }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given uploadId %s does not exist for %s", uploadId, serviceType.name()));
     }
 
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
@@ -76,13 +77,30 @@ public class StatusService {
         return statusRepository.upsert(status);
     }
 
-    private UploadStatus map(Status status) {
-        return UploadStatus.builder()
+    private UploadStatusV2 map(Status status) {
+        return UploadStatusV2.builder()
                 .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
                 .startTime(status.upload.getStart())
+                .operationStatus(getOperationStatus(status))
                 .build();
+    }
+
+    public OperationStatus getOperationStatus(Status status){
+        if(status.getUpload().getCurrent() == status.getUpload().getTotal()){
+            if(status.getUpload().getResponses() != null){
+                if(status.getUpload().getResponses().stream().allMatch(el -> el.getStatusCode() >= 400)){
+                    return OperationStatus.COMPLETED_UNSUCCESSFULLY;
+                } else if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() >= 400)){
+                    return OperationStatus.COMPLETED_WITH_WARNINGS;
+                }
+            }
+
+            return OperationStatus.COMPLETED;
+        }
+
+        return OperationStatus.IN_PROGRESS;
     }
 
     public UploadReport mapReport(Status status) {

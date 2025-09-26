@@ -64,7 +64,7 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "/{file-id}/status",
+    @Get(value = BASE_PATH + "/{upload-id}/status",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<it.gov.pagopa.gpd.upload.model.UploadStatus> getUploadStatus(
             @Parameter(description = "The broker code", required = true)
@@ -72,10 +72,10 @@ public class CheckUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "file-id") String fileID,
+            @NotBlank @PathVariable(name = "upload-id") String uploadId,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
     ) {
-        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(fileID, organizationFiscalCode, serviceType);
+        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(uploadId, organizationFiscalCode, serviceType);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -93,7 +93,7 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = BASE_PATH + "/{file-id}/report",
             produces = MediaType.APPLICATION_JSON)
-    HttpResponse<UploadReport> getUploadOutput(
+    HttpResponse<UploadReport> getUploadReport(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker-code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
