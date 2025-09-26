@@ -680,8 +680,6 @@
         },
         "security" : [ {
           "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
         } ]
       }
     },

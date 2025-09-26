@@ -762,8 +762,6 @@
         },
         "security" : [ {
           "ApiKey" : [ ]
-        }, {
-          "Authorization" : [ ]
         } ]
       }
     }
