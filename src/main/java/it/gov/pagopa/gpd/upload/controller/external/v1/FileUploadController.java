@@ -39,7 +39,7 @@ import java.net.URISyntaxException;
 @Controller()
 @Slf4j
 @OpenAPIGroup(exclude = "external-v2")
-@SecurityScheme(name = "Ocp-Apim-Subscription-Key", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
+@SecurityScheme(name = "ApiKey", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class FileUploadController {
     @Inject
     BlobService blobService;
@@ -47,7 +47,7 @@ public class FileUploadController {
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 
-    @Operation(summary = "The Organization creates the debt positions listed in the file.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "create-debt-positions-by-file-upload")
+    @Operation(summary = "The Organization creates the debt positions listed in the file.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "create-debt-positions-by-file-upload")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Request accepted."),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -84,7 +84,7 @@ public class FileUploadController {
         }
     }
 
-    @Operation(summary = "The Organization updates the debt positions listed in the file.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "update-debt-positions-by-file-upload")
+    @Operation(summary = "The Organization updates the debt positions listed in the file.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "update-debt-positions-by-file-upload")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Request accepted."),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
@@ -121,7 +121,7 @@ public class FileUploadController {
         }
     }
 
-    @Operation(summary = "The Organization deletes the debt positions based on IUPD listed in the file.", security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")}, operationId = "delete-debt-positions-by-file-upload")
+    @Operation(summary = "The Organization deletes the debt positions based on IUPD listed in the file.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "delete-debt-positions-by-file-upload")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Request accepted."),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
