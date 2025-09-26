@@ -51,7 +51,7 @@ public class StatusService {
         if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
             return map(status);
         }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given uploadId %s does not exist for %s", uploadId, serviceType.name()));
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", uploadId, serviceType.name()));
     }
 
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
