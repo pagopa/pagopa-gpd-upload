@@ -32,14 +32,14 @@ public class StatusService {
         this.statusRepository = statusRepository;
     }
 
-    public UploadStatusV2 getUploadStatus(String fileId, String organizationFiscalCode, ServiceType serviceType) {
-        Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
+    public UploadStatusV2 getUploadStatus(String uploadId, String organizationFiscalCode, ServiceType serviceType) {
+        Status status = statusRepository.findStatusById(uploadId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
 
         if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
             return map(status);
         }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given uploadId %s does not exist for %s", uploadId, serviceType.name()));
     }
 
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
