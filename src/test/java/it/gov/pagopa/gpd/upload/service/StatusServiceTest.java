@@ -137,6 +137,7 @@ public class StatusServiceTest {
                         .build())
                 .build();
         Mockito.when(statusRepository.findStatusById(anyString(), anyString())).thenReturn(status);
+        Mockito.when(statusRepository.find(any(), any())).thenReturn(List.of(status));
         return statusRepository;
     }
     

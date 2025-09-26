@@ -484,7 +484,7 @@
         } ]
       }
     },
-    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/status" : {
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{upload-id}/status" : {
       "get" : {
         "tags" : [ "Massive operation observability APIs - v1" ],
         "summary" : "Returns the debt positions upload status.",
@@ -512,7 +512,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "file-id",
+          "name" : "upload-id",
           "in" : "path",
           "description" : "The unique identifier for file upload",
           "required" : true,
@@ -860,7 +860,7 @@
         }
       }
     },
-    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{upload-id}/status" : {
+    "/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/status" : {
       "get" : {
         "tags" : [ "Massive operation observability APIs - v2" ],
         "summary" : "Returns the debt positions upload status.",
@@ -888,7 +888,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "upload-id",
+          "name" : "file-id",
           "in" : "path",
           "description" : "The unique identifier for file upload",
           "required" : true,
@@ -990,25 +990,7 @@
         }
       },
       "FileIdListResponse" : {
-        "type" : "object",
-        "properties" : {
-          "fileIds" : {
-            "type" : "array",
-            "description" : "List of file identifiers",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "size" : {
-            "type" : "integer",
-            "description" : "Number of items in this page",
-            "format" : "int32"
-          },
-          "hasMore" : {
-            "type" : "boolean",
-            "description" : "True if another page is available (x-continuation-token present)"
-          }
-        }
+        "type" : "object"
       },
       "ProblemJson" : {
         "type" : "object",
@@ -1051,26 +1033,6 @@
           }
         }
       },
-      "ResponseEntryDTO" : {
-        "type" : "object",
-        "properties" : {
-          "statusCode" : {
-            "type" : "integer",
-            "format" : "int32",
-            "example" : 400
-          },
-          "statusMessage" : {
-            "type" : "string",
-            "example" : "Bad request caused by invalid email address"
-          },
-          "iupds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }
-      },
       "UploadReport" : {
         "type" : "object",
         "properties" : {
@@ -1104,56 +1066,10 @@
         }
       },
       "UploadReportDTO" : {
-        "type" : "object",
-        "properties" : {
-          "fileId" : {
-            "type" : "string"
-          },
-          "processedItem" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "submittedItem" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "responses" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ResponseEntryDTO"
-            }
-          },
-          "startTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "example" : "2024-10-08T14:55:16.302Z"
-          },
-          "endTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
+        "type" : "object"
       },
       "UploadStatus" : {
-        "type" : "object",
-        "properties" : {
-          "uploadID" : {
-            "type" : "string"
-          },
-          "processedItem" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "submittedItem" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "startTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "example" : "2024-10-08T14:55:16.302Z"
-          }
-        }
+        "type" : "object"
       }
     },
     "securitySchemes" : {

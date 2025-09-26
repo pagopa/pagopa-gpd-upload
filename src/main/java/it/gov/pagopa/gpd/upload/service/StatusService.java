@@ -98,7 +98,7 @@ public class StatusService {
             return mapper.apply(status);
         }
 
-        throw new AppException(NOT_FOUND, "REPORT NOT FOUND", String.format("The report for given fileId %s does not exist for %s", fileId, serviceType.name()));
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The data for given fileId %s does not exist for %s", fileId, serviceType.name()));
     }
 
 
