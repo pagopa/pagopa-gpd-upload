@@ -123,7 +123,7 @@ public class CheckUploadController {
     // =========================
     @Operation(
             summary = "Returns the list of fileIds for a broker/organization in the given date range (max 7 days).",
-            security = {@SecurityRequirement(name = "ApiKey"), @SecurityRequirement(name = "Authorization")},
+            security = {@SecurityRequirement(name = "ApiKey")},
             operationId = "get-debt-positions-fileids"
     )
     @ApiResponses(value = {
