@@ -4,6 +4,7 @@ import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
+import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
 import it.gov.pagopa.gpd.upload.model.UploadReport;
 import it.gov.pagopa.gpd.upload.model.UploadStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
@@ -12,7 +13,10 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Objects;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
@@ -31,10 +35,7 @@ public class StatusService {
         Status status = statusRepository.findStatusById(fileId, organizationFiscalCode);
         log.debug("[getStatus] status: " + status.getId());
 
-        if (
-                (status.getServiceType() == null && serviceType.equals(ServiceType.GPD)) ||
-                        Objects.equals(serviceType, status.getServiceType())
-        ) {
+        if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
             return map(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
@@ -43,7 +44,7 @@ public class StatusService {
     public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
         Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
 
-        if (status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())) {
+        if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
             return mapReport(status);
         }
         throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
@@ -107,5 +108,40 @@ public class StatusService {
             case BAD_REQUEST -> "Bad request";
             default -> status.toString();
         };
+    }
+    
+    public FileIdListResponse getFileIdList(
+            String brokerCode,
+            String organizationFiscalCode,
+            LocalDate from,
+            LocalDate to,
+            int size,
+            String continuationToken,
+            ServiceType serviceType
+    ) {
+        // Convert to LocalDateTime inclusive of day (00:00:00.000 -> 23:59:59.999)
+        final var fromDateTime = from.atStartOfDay();
+        final var toDateTime   = to.atTime(LocalTime.MAX); // 23:59:59.999999999
+
+        StatusRepository.FileIdsPage page = statusRepository.findFileIdsPage(
+                brokerCode,
+                organizationFiscalCode,
+                fromDateTime,
+                toDateTime,
+                size,
+                continuationToken,
+                serviceType
+        );
+
+        List<String> ids = page.getFileIds();
+        String nextToken = page.getContinuationToken();
+
+        return FileIdListResponse.builder()
+                .fileIds(ids)
+                .size(ids != null ? ids.size() : 0)
+                .hasMore(nextToken != null && !nextToken.isBlank())
+                // It is placed in the body for the controller, which will then move it to the x-continuation-token header
+                .continuationToken(nextToken)
+                .build();
     }
 }
