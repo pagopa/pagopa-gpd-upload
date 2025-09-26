@@ -6,7 +6,9 @@ import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosException;
 import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
+import com.azure.cosmos.models.FeedResponse;
 import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.SqlParameter;
 import com.azure.cosmos.models.SqlQuerySpec;
 import com.azure.cosmos.util.CosmosPagedFlux;
 import com.azure.cosmos.util.CosmosPagedIterable;
@@ -20,6 +22,10 @@ import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
@@ -50,6 +56,18 @@ public class StatusRepository {
                 .key(cosmosKey)
                 .buildClient();
         container = cosmosClient.getDatabase(databaseName).getContainer(containerName);
+    }
+
+    public static final class FileIdsPage {
+        private final List<String> fileIds;
+        private final String continuationToken;
+
+        public FileIdsPage(List<String> fileIds, String continuationToken) {
+            this.fileIds = fileIds;
+            this.continuationToken = continuationToken;
+        }
+        public List<String> getFileIds() { return fileIds; }
+        public String getContinuationToken() { return continuationToken; }
     }
 
     public Status saveStatus(Status status) {
@@ -128,4 +146,81 @@ public class StatusRepository {
             else throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
         }
     }
+
+    public FileIdsPage findFileIdsPage(
+            String brokerCode,
+            String organizationFiscalCode,
+            LocalDateTime from,
+            LocalDateTime to,
+            int size,
+            String continuationToken,
+            it.gov.pagopa.gpd.upload.model.enumeration.ServiceType serviceType
+    ) {
+        try {
+            // Serialize dates to ISO-8601
+            final DateTimeFormatter iso = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+            final String fromIso = from.format(iso);
+            final String toIso   = to.format(iso);
+
+            final List<SqlParameter> params = new ArrayList<>();
+            params.add(new SqlParameter("@broker", brokerCode));
+            params.add(new SqlParameter("@org", organizationFiscalCode));
+            params.add(new SqlParameter("@from", fromIso));
+            params.add(new SqlParameter("@to", toIso));
+            params.add(new SqlParameter("@serviceType", serviceType.name())); // "GPD" or "ACA"
+
+
+            // Query: Return ONLY the id, sort by start DESC (newest)
+            final String sql =
+            		"SELECT VALUE c.id " +
+            				"FROM c " +
+            				"WHERE c.brokerID = @broker " +
+            				"  AND c.fiscalCode = @org " +
+            				"  AND (c.serviceType = @serviceType " +
+            				"       OR (@serviceType = 'GPD' AND NOT IS_DEFINED(c.serviceType))) " + // includes docs without serviceType only if @serviceType = 'GPD'
+            				"  AND c.upload.start >= @from " +
+            				"  AND c.upload.start <= @to " +
+            				"ORDER BY c.upload.start DESC";
+
+
+            final SqlQuerySpec spec = new SqlQuerySpec(sql, params);
+            final CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+            // Optional: Enable query metrics for tuning
+            // options.setQueryMetricsEnabled(true);
+
+            log.debug("[findFileIdsPage] SQL:\n{}", sql);
+            log.debug("[findFileIdsPage] params: @broker={}, @org={}, @serviceType={}, @from={}, @to={}, size={}, cont.len={}",
+                    brokerCode, organizationFiscalCode, serviceType.name(), fromIso, toIso, size,
+                    continuationToken == null ? 0 : continuationToken.length());
+
+            // Take ONLY the first page of the batch to comply with 'size'
+            String nextToken = null;
+            List<String> ids = Collections.emptyList();
+
+            Iterable<FeedResponse<String>> pages =
+                    container.queryItems(spec, options, String.class)
+                             .iterableByPage(continuationToken, size);
+
+            var it = pages.iterator();
+            if (it.hasNext()) {
+                FeedResponse<String> page = it.next();
+                ids = page.getResults();
+                nextToken = page.getContinuationToken();
+            }
+
+            return new FileIdsPage(ids, nextToken);
+        } catch (CosmosException ex) {
+            log.error("[Error][StatusRepository@findFileIdsPage] Retrieval failed: {}", ex.getStatusCode(), ex);
+            if (ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode()) {
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR.name(),
+                        "FileId retrieval unavailable");
+            } else {
+                throw new AppException(HttpStatus.valueOf(ex.getStatusCode()),
+                        String.valueOf(ex.getStatusCode()),
+                        "FileId retrieval failed");
+            }
+        }
+    }
+
 }

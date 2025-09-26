@@ -7,7 +7,7 @@
 
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.1.48</version>
+    <version>0.3.0</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -238,6 +238,9 @@
             <plugin>
                 <groupId>io.micronaut.maven</groupId>
                 <artifactId>micronaut-maven-plugin</artifactId>
+                <configuration>
+                    <configFile>aot-${packaging}.properties</configFile>
+                </configuration>
             </plugin>
 
             <!-- Compiler plugin -->
@@ -246,30 +249,45 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
+                    <!-- Uncomment to enable incremental compilation -->
+                    <!-- <useIncrementalCompilation>false</useIncrementalCompilation> -->
+					<annotationProcessorPaths>
+					      <!-- Lombok -->
+					      <path>
+					        <groupId>org.projectlombok</groupId>
+					        <artifactId>lombok</artifactId>
+					        <version>${lombok.version}</version>
+					      </path>
+
+					      <!-- Micronaut DI: necessario per generare le classi a compile-time -->
+					      <path>
+					        <groupId>io.micronaut</groupId>
+					        <artifactId>micronaut-inject-java</artifactId>
+					        <version>${micronaut.version}</version>
+					      </path>
+
+					      <!-- OpenAPI processor -->
+					      <path>
+					        <groupId>io.micronaut.openapi</groupId>
+					        <artifactId>micronaut-openapi</artifactId>
+					        <version>${micronaut.openapi.version}</version>
+					      </path>
+
+					      <!-- Bean Validation processor -->
+					      <path>
+					        <groupId>io.micronaut.validation</groupId>
+					        <artifactId>micronaut-validation-processor</artifactId>
+					        <version>${micronaut.validation.version}</version>
+					      </path>
+
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                                <version>${mapstruct.version}</version>
+                            </path>
+					    </annotationProcessorPaths>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>io.micronaut.openapi</groupId>
-                            <artifactId>micronaut-openapi</artifactId>
-                            <version>${micronaut.openapi.version}</version>
-                        </path>
-                        <path>
-                            <groupId>io.micronaut</groupId>
-                            <artifactId>micronaut-inject-java</artifactId>
-                            <version>${micronaut.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>${mapstruct.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Amicronaut.processing.group=${project.groupId}</arg>
                         <arg>-Amicronaut.processing.module=${project.artifactId}</arg>
@@ -328,4 +346,5 @@
             </resource>
         </resources>
     </build>
+
 </project>
