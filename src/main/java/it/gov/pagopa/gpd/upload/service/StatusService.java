@@ -92,8 +92,7 @@ public class StatusService {
             if(status.getUpload().getResponses() != null){
                 if(status.getUpload().getResponses().stream().allMatch(el -> el.getStatusCode() >= 400)){
                     return OperationStatus.COMPLETED_UNSUCCESSFULLY;
-                }
-                if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() >= 400)){
+                } else if(status.getUpload().getResponses().stream().anyMatch(el -> el.getStatusCode() >= 400)){
                     return OperationStatus.COMPLETED_WITH_WARNINGS;
                 }
             }
