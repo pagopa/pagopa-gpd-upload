@@ -9,8 +9,9 @@ import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
-import it.gov.pagopa.gpd.upload.model.v2.UploadStatusV2;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.v2.UploadStatusDTO;
 import it.gov.pagopa.gpd.upload.model.v2.enumeration.OperationStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
@@ -25,8 +26,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
@@ -44,49 +45,20 @@ public class StatusService {
         this.responseEntryDTOMapper = responseEntryDTOMapper;
     }
 
-    public UploadStatusV2 getUploadStatus(String uploadId, String organizationFiscalCode, ServiceType serviceType) {
-        Status status = statusRepository.findStatusById(uploadId, organizationFiscalCode);
-        log.debug("[getStatus] status: " + status.getId());
-
-        if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
-            return map(status);
-        }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", uploadId, serviceType.name()));
+    public UploadStatus getUploadStatus(String brokerId, String fileId, String organizationFiscalCode, ServiceType serviceType) {
+        return getData(brokerId, organizationFiscalCode, fileId, serviceType, this::mapStatusV1);
     }
 
-    public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
-        Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
-
-        if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
-            return mapReport(status);
-        }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    public UploadStatusDTO getUploadStatusV2(String brokerId, String fileId, String organizationFiscalCode, ServiceType serviceType) {
+        return getData(brokerId, organizationFiscalCode, fileId, serviceType, this::mapStatusV2);
     }
 
-    public UploadReportDTO getReport(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
-        String sqlQuery = "SELECT * FROM c WHERE c.id = @fileId AND c.fiscalCode = @orgFiscalCode AND c.brokerID = @brokerCode";
-        SqlQuerySpec querySpec = new SqlQuerySpec(
-                sqlQuery,
-                Arrays.asList(
-                        new SqlParameter("@fileId", fileId),
-                        new SqlParameter("@orgFiscalCode", orgFiscalCode),
-                        new SqlParameter("@brokerCode", brokerCode)
-                )
-        );
-        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
-        options.setPartitionKey(new PartitionKey(orgFiscalCode));
+    public UploadReport getReportV1(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        return getData(brokerCode, orgFiscalCode, fileId, serviceType, this::mapReport);
+    }
 
-        List<Status> statusList = statusRepository.find(querySpec, options);
-        if (!statusList.isEmpty()) {
-
-            Status status = statusList.get(0);
-
-            if(status.getServiceType() == null || Objects.equals(serviceType, status.getServiceType())){
-                return mapReportV2(status);
-            }
-        }
-
-        throw new AppException(NOT_FOUND, "REPORT NOT FOUND", String.format("The report for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    public UploadReportDTO getReportV2(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        return getData(brokerCode, orgFiscalCode, fileId, serviceType, this::mapReportV2);
     }
 
     public Status getStatus(String orgFiscalCode, String fileId) {
@@ -114,8 +86,54 @@ public class StatusService {
         return statusRepository.upsert(status);
     }
 
-    private UploadStatusV2 map(Status status) {
-        return UploadStatusV2.builder()
+    private <R> R getData(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType, Function<Status, R> mapper) {
+
+        Status status = getStatus(brokerCode, orgFiscalCode, fileId, serviceType);
+
+        boolean isValid = status.getServiceType() == null && serviceType.equals(ServiceType.GPD) ||
+                Objects.equals(serviceType, status.getServiceType());
+
+        if (isValid) {
+            // apply the specific mapping function (mapReport or mapReportV2)
+            return mapper.apply(status);
+        }
+
+        throw new AppException(NOT_FOUND, "REPORT NOT FOUND", String.format("The report for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+
+    private Status getStatus(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        String sqlQuery = "SELECT * FROM c WHERE c.id = @fileId AND c.fiscalCode = @orgFiscalCode AND c.brokerID = @brokerCode";
+        SqlQuerySpec querySpec = new SqlQuerySpec(
+            sqlQuery,
+            Arrays.asList(
+                new SqlParameter("@fileId", fileId),
+                new SqlParameter("@orgFiscalCode", orgFiscalCode),
+                new SqlParameter("@brokerCode", brokerCode)
+            )
+        );
+        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+        options.setPartitionKey(new PartitionKey(orgFiscalCode));
+
+        List<Status> statusList = statusRepository.find(querySpec, options);
+
+        if (!statusList.isEmpty()) {
+            return statusList.get(0);
+        }
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+    private UploadStatus mapStatusV1(Status status) {
+        return UploadStatus.builder()
+                .uploadID(status.getId())
+                .processedItem(status.upload.getCurrent())
+                .submittedItem(status.upload.getTotal())
+                .startTime(status.upload.getStart())
+                .build();
+    }
+
+    private UploadStatusDTO mapStatusV2(Status status) {
+        return UploadStatusDTO.builder()
                 .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())

@@ -6,8 +6,8 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
-import it.gov.pagopa.gpd.upload.model.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -37,14 +37,14 @@ public class StatusServiceTest {
 
     @Test
     void getUploadStatus_OK() {
-        UploadStatus uploadStatus = statusService.getUploadStatus("fileId", "organizationFiscalCode", ServiceType.GPD);
+        UploadStatus uploadStatus = statusService.getUploadStatus("brokerCode", "fileId", "organizationFiscalCode", ServiceType.GPD);
 
         Assertions.assertEquals(UPLOAD_KEY, uploadStatus.getUploadID());
     }
 
     @Test
     void getReport_OK() {
-        UploadReport uploadReport = statusService.getReport("fileId", "organizationFiscalCode", ServiceType.GPD);
+        UploadReport uploadReport = statusService.getReportV1("brokerCode", "organizationFiscalCode", "fileId", ServiceType.GPD);
 
         Assertions.assertEquals(UPLOAD_KEY, uploadReport.getUploadID());
     }

@@ -9,7 +9,7 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
@@ -59,7 +59,7 @@ public class SupportControllerTest {
     @Primary
     public StatusService statusService() throws IOException {
         StatusService statusService = Mockito.mock(StatusService.class);
-        Mockito.when(statusService.getReport(anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
+        Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
         return statusService;
     }
 

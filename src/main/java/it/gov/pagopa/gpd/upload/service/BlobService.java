@@ -13,7 +13,7 @@ import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
@@ -143,7 +143,7 @@ public class BlobService {
         }
     }
 
-    public UploadReport getReport(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
+    public UploadReport getReportV1(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
         String blobPath = String.format("/%s/%s/report%s.json", fiscalCode, OUTPUT_DIRECTORY, uploadKey);
         BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadKey, blobPath, serviceType);
 
@@ -155,7 +155,7 @@ public class BlobService {
     }
 
     public UploadReportDTO getReportV2(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
-        UploadReport uploadReport = getReport(broker, fiscalCode, uploadKey, serviceType);
+        UploadReport uploadReport = getReportV1(broker, fiscalCode, uploadKey, serviceType);
         return UploadReportDTO.builder()
                 .fileId(uploadReport.uploadID)
                 .startTime(uploadReport.startTime)
