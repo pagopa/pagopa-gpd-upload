@@ -91,7 +91,6 @@ public class StatusService {
         return statusRepository.findStatusById(fileId, orgFiscalCode);
     }
 
-
     public void createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem, ServiceType serviceType) {
         Upload upload = Upload.builder()
                 .current(0)
