@@ -85,7 +85,7 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = BASE_PATH + "/{upload-id}/report",
             produces = MediaType.APPLICATION_JSON)
-    HttpResponse<UploadReport> getUploadOutput(
+    HttpResponse<UploadReport> getUploadReport(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker-code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
