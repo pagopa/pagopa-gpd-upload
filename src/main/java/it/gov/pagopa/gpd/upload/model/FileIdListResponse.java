@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.upload.model;
 
-import io.micronaut.serde.annotation.Serdeable;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Serdeable
+@JsonSerialize
 public class FileIdListResponse {
     @Schema(description = "List of file identifiers")
     private List<String> fileIds;

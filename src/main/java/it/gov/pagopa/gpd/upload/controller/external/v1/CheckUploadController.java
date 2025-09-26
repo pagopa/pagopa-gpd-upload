@@ -26,8 +26,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
+import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import it.gov.pagopa.gpd.upload.utils.CommonCheck;
@@ -57,7 +58,7 @@ public class CheckUploadController {
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = it.gov.pagopa.gpd.upload.model.UploadStatus.class))),
+            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadStatus.class))),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
@@ -66,7 +67,7 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = BASE_PATH + "/{upload-id}/status",
             produces = MediaType.APPLICATION_JSON)
-    HttpResponse<it.gov.pagopa.gpd.upload.model.UploadStatus> getUploadStatus(
+    HttpResponse<UploadStatus> getUploadStatus(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker-code") String brokerCode,
             @Parameter(description = "The organization fiscal code", required = true)
@@ -75,7 +76,7 @@ public class CheckUploadController {
             @NotBlank @PathVariable(name = "upload-id") String uploadId,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
     ) {
-        it.gov.pagopa.gpd.upload.model.UploadStatus uploadStatus = statusService.getUploadStatus(uploadId, organizationFiscalCode, serviceType);
+        UploadStatus uploadStatus = statusService.getUploadStatus(brokerCode, uploadId, organizationFiscalCode, serviceType);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -104,10 +105,10 @@ public class CheckUploadController {
     ) {
         UploadReport uploadReport = null;
         try {
-            uploadReport = statusService.getReport(organizationFiscalCode, fileID, serviceType);
+            uploadReport = statusService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
         } catch (AppException e) {
             if (e.getHttpStatus() == NOT_FOUND) {
-                uploadReport = blobService.getReport(brokerCode, organizationFiscalCode, fileID, serviceType);
+                uploadReport = blobService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
                 if (uploadReport == null)
                     throw e;
             }

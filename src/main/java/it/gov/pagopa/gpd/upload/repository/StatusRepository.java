@@ -10,6 +10,7 @@ import com.azure.cosmos.models.FeedResponse;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.SqlParameter;
 import com.azure.cosmos.models.SqlQuerySpec;
+import com.azure.cosmos.util.CosmosPagedFlux;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -19,6 +20,7 @@ import it.gov.pagopa.gpd.upload.exception.AppException;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,7 +57,7 @@ public class StatusRepository {
                 .buildClient();
         container = cosmosClient.getDatabase(databaseName).getContainer(containerName);
     }
-    
+
     public static final class FileIdsPage {
         private final List<String> fileIds;
         private final String continuationToken;
@@ -126,7 +128,25 @@ public class StatusRepository {
             else throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
         }
     }
-    
+
+    public List<Status> find(SqlQuerySpec query, CosmosQueryRequestOptions queryRequestOptions) {
+        try {
+            CosmosPagedIterable<Status> response = container.queryItems(
+                    query,
+                    queryRequestOptions,
+                    Status.class
+            );
+            return response.stream().toList();
+        } catch (CosmosException ex) {
+            log.error("[Error][StatusRepository@findPending] The Status retrieval was not successful: {}", ex.getStatusCode());
+            if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "The Status retrieval was not successful");
+            else if(ex.getStatusCode() == NOT_FOUND.getCode())
+                throw new AppException(NOT_FOUND, "STATUS NOT FOUND", "The Status for given query doesn't exist");
+            else throw new AppException(HttpStatus.valueOf(ex.getStatusCode()), String.valueOf(ex.getStatusCode()), "Status retrieval failed");
+        }
+    }
+
     public FileIdsPage findFileIdsPage(
             String brokerCode,
             String organizationFiscalCode,
@@ -141,14 +161,14 @@ public class StatusRepository {
             final DateTimeFormatter iso = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
             final String fromIso = from.format(iso);
             final String toIso   = to.format(iso);
-            
+
             final List<SqlParameter> params = new ArrayList<>();
             params.add(new SqlParameter("@broker", brokerCode));
             params.add(new SqlParameter("@org", organizationFiscalCode));
             params.add(new SqlParameter("@from", fromIso));
             params.add(new SqlParameter("@to", toIso));
             params.add(new SqlParameter("@serviceType", serviceType.name())); // "GPD" or "ACA"
-    
+
 
             // Query: Return ONLY the id, sort by start DESC (newest)
             final String sql =
@@ -162,12 +182,12 @@ public class StatusRepository {
             				"  AND c.upload.start <= @to " +
             				"ORDER BY c.upload.start DESC";
 
-            
+
             final SqlQuerySpec spec = new SqlQuerySpec(sql, params);
             final CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
             // Optional: Enable query metrics for tuning
             // options.setQueryMetricsEnabled(true);
-            
+
             log.debug("[findFileIdsPage] SQL:\n{}", sql);
             log.debug("[findFileIdsPage] params: @broker={}, @org={}, @serviceType={}, @from={}, @to={}, size={}, cont.len={}",
                     brokerCode, organizationFiscalCode, serviceType.name(), fromIso, toIso, size,
@@ -202,5 +222,5 @@ public class StatusRepository {
             }
         }
     }
-    
+
 }
