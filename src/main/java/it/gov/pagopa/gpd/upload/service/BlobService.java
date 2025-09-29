@@ -247,7 +247,7 @@ public class BlobService {
         }
         catch (IOException e) {
             log.error("[Error][BlobService@unzip] " + e.getMessage(), e);
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Could not unzip file", e);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Problem to manage zip file", e);
         }
     }
 
