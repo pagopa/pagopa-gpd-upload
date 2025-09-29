@@ -134,7 +134,7 @@ public class StatusService {
 
     private UploadStatusDTO mapStatusV2(Status status) {
         return UploadStatusDTO.builder()
-                .uploadID(status.getId())
+                .fileId(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
                 .startTime(status.upload.getStart())
