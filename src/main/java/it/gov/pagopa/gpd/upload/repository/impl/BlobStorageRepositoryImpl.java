@@ -33,8 +33,11 @@ import static it.gov.pagopa.gpd.upload.utils.Constants.SERVICE_TYPE_METADATA;
 @Singleton
 @Slf4j
 public class BlobStorageRepositoryImpl implements BlobStorageRepository {
+    private final BlobServiceClient blobServiceClient;
     @Inject
-    private BlobServiceClient blobServiceClient;
+    public BlobStorageRepositoryImpl(BlobServiceClient blobServiceClient) {
+        this.blobServiceClient = blobServiceClient;
+    }
 
     @Override
     public String upload(String broker, String fiscalCode, InputStream inputStream, ServiceType serviceType) throws FileNotFoundException {
