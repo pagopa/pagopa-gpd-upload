@@ -17,9 +17,21 @@ public class FileUtils {
         return f;
     }
 
+    public static CompletedFileUpload getUpsertFileInvalidPaymentPosition() throws IOException {
+        GPDCompletedFileUpload f = new GPDCompletedFileUpload("test.zip", MediaType.of("application/zip"),
+                fromJSONtoZip(PaymentPositionUtils.createInvalidPaymentPositionsJSON("77777777777", 1)));
+        return f;
+    }
+
     public static CompletedFileUpload getDeleteFile() throws IOException {
         GPDCompletedFileUpload f = new GPDCompletedFileUpload("test.zip", MediaType.of("application/zip"),
                 fromJSONtoZip(PaymentPositionUtils.createMultipleIUPDJSON("77777777777", 1)));
+        return f;
+    }
+
+    public static CompletedFileUpload getDeleteFileInvalidMultipleIUPD() throws IOException {
+        GPDCompletedFileUpload f = new GPDCompletedFileUpload("test.zip", MediaType.of("application/zip"),
+                fromJSONtoZip(PaymentPositionUtils.createInvalidMultipleIUPDJSON()));
         return f;
     }
 
