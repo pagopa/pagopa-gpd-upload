@@ -13,12 +13,14 @@ import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
+import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.utils.GPDValidator;
+import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -41,6 +43,7 @@ public class BlobService {
     private int zipMaxSize; // Max size of zip file content
     @Value("${zip.entries}")
     private int zipMaxEntries; // Maximum number of entries allowed in the zip file
+
     private static final List<String> ALLOWABLE_EXTENSIONS = List.of("json");
     private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip");
     private static final String DESTINATION_DIRECTORY = "upload-directory";
@@ -49,14 +52,19 @@ public class BlobService {
     private final StatusService statusService;
     private final GPDValidator<PaymentPositionsModel> paymentPositionsValidator;
     private final GPDValidator<MultipleIUPDModel> multipleIUPDValidator;
+    private final ResponseEntryDTOMapper responseEntryDTOMapper;
 
     @Inject
-    public BlobService(BlobStorageRepository blobStorageRepository, StatusService statusService,
-                       GPDValidator<PaymentPositionsModel> paymentPositionsValidator, GPDValidator<MultipleIUPDModel> multipleIUPDValidator) {
+    public BlobService(BlobStorageRepository blobStorageRepository,
+                       StatusService statusService,
+                       GPDValidator<PaymentPositionsModel> paymentPositionsValidator,
+                       GPDValidator<MultipleIUPDModel> multipleIUPDValidator,
+                       ResponseEntryDTOMapper responseEntryDTOMapper) {
         this.blobStorageRepository = blobStorageRepository;
         this.statusService = statusService;
         this.paymentPositionsValidator = paymentPositionsValidator;
         this.multipleIUPDValidator = multipleIUPDValidator;
+        this.responseEntryDTOMapper = responseEntryDTOMapper;
     }
 
     @PostConstruct
@@ -135,7 +143,7 @@ public class BlobService {
         }
     }
 
-    public UploadReport getReport(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
+    public UploadReport getReportV1(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
         String blobPath = String.format("/%s/%s/report%s.json", fiscalCode, OUTPUT_DIRECTORY, uploadKey);
         BinaryData binaryDataReport = blobStorageRepository.downloadContent(broker, uploadKey, blobPath, serviceType);
 
@@ -144,6 +152,18 @@ public class BlobService {
         } catch (JsonProcessingException e) {
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during report deserialization", e.getCause());
         }
+    }
+
+    public UploadReportDTO getReportV2(String broker, String fiscalCode, String uploadKey, ServiceType serviceType) {
+        UploadReport uploadReport = getReportV1(broker, fiscalCode, uploadKey, serviceType);
+        return UploadReportDTO.builder()
+                .fileId(uploadReport.uploadID)
+                .startTime(uploadReport.startTime)
+                .endTime(uploadReport.endTime)
+                .responses(responseEntryDTOMapper.toDTOs(uploadReport.responses))
+                .submittedItem(uploadReport.submittedItem)
+                .processedItem(uploadReport.processedItem)
+                .build();
     }
 
     public String upload(UploadInput uploadInput, String broker, String organizationFiscalCode, int totalItem, ServiceType serviceType) {
@@ -220,9 +240,14 @@ public class BlobService {
 
             log.error("[Error][BlobService@unzip] No valid file in ZIP");
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "No valid file found in ZIP.");
-        } catch (IOException e) {
+        }
+        catch (EOFException e) {
+            log.error("[Error][BlobService@unzip] Client input error: " + e.getMessage(), e);
+            throw new AppException(HttpStatus.BAD_REQUEST, "UNZIP ERROR", "Could not unzip file");
+        }
+        catch (IOException e) {
             log.error("[Error][BlobService@unzip] " + e.getMessage(), e);
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Could not unzip file", e);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Problem to manage zip file", e);
         }
     }
 

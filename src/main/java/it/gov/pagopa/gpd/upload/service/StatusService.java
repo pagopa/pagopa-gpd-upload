@@ -1,24 +1,33 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import com.azure.cosmos.models.CosmosQueryRequestOptions;
+import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.SqlParameter;
+import com.azure.cosmos.models.SqlQuerySpec;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.entity.Upload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
-import it.gov.pagopa.gpd.upload.model.v2.UploadStatusV2;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
+import it.gov.pagopa.gpd.upload.model.v2.UploadStatusDTO;
 import it.gov.pagopa.gpd.upload.model.v2.enumeration.OperationStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
+import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
+import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
+import java.time.LocalTime;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 
@@ -27,34 +36,34 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 public class StatusService {
     private StatusRepository statusRepository;
 
+    private ResponseEntryDTOMapper responseEntryDTOMapper;
+
     @Inject
-    public StatusService(StatusRepository statusRepository) {
+    public StatusService(StatusRepository statusRepository,
+                         ResponseEntryDTOMapper responseEntryDTOMapper) {
         this.statusRepository = statusRepository;
+        this.responseEntryDTOMapper = responseEntryDTOMapper;
     }
 
-    public UploadStatusV2 getUploadStatus(String uploadId, String organizationFiscalCode, ServiceType serviceType) {
-        Status status = statusRepository.findStatusById(uploadId, organizationFiscalCode);
-        log.debug("[getStatus] status: " + status.getId());
-
-        if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
-            return map(status);
-        }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given uploadId %s does not exist for %s", uploadId, serviceType.name()));
+    public UploadStatus getUploadStatus(String brokerId, String fileId, String organizationFiscalCode, ServiceType serviceType) {
+        return getData(brokerId, organizationFiscalCode, fileId, serviceType, this::mapStatusV1);
     }
 
-    public UploadReport getReport(String orgFiscalCode, String fileId, ServiceType serviceType) {
-        Status status = statusRepository.findStatusById(fileId, orgFiscalCode);
+    public UploadStatusDTO getUploadStatusV2(String brokerId, String fileId, String organizationFiscalCode, ServiceType serviceType) {
+        return getData(brokerId, organizationFiscalCode, fileId, serviceType, this::mapStatusV2);
+    }
 
-        if(status.getServiceType() == null && serviceType.equals(ServiceType.GPD) || Objects.equals(serviceType, status.getServiceType())){
-            return mapReport(status);
-        }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The Status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    public UploadReport getReportV1(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        return getData(brokerCode, orgFiscalCode, fileId, serviceType, this::mapReport);
+    }
+
+    public UploadReportDTO getReportV2(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        return getData(brokerCode, orgFiscalCode, fileId, serviceType, this::mapReportV2);
     }
 
     public Status getStatus(String orgFiscalCode, String fileId) {
         return statusRepository.findStatusById(fileId, orgFiscalCode);
     }
-
 
     public void createUploadStatus(String organizationFiscalCode, String brokerId, String fileId, int totalItem, ServiceType serviceType) {
         Upload upload = Upload.builder()
@@ -77,8 +86,54 @@ public class StatusService {
         return statusRepository.upsert(status);
     }
 
-    private UploadStatusV2 map(Status status) {
-        return UploadStatusV2.builder()
+    private <R> R getData(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType, Function<Status, R> mapper) {
+
+        Status status = getStatus(brokerCode, orgFiscalCode, fileId, serviceType);
+
+        boolean isValid = status.getServiceType() == null && serviceType.equals(ServiceType.GPD) ||
+                Objects.equals(serviceType, status.getServiceType());
+
+        if (isValid) {
+            // apply the specific mapping function (mapReport or mapReportV2)
+            return mapper.apply(status);
+        }
+
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The data for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+
+    private Status getStatus(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        String sqlQuery = "SELECT * FROM c WHERE c.id = @fileId AND c.fiscalCode = @orgFiscalCode AND c.brokerID = @brokerCode";
+        SqlQuerySpec querySpec = new SqlQuerySpec(
+            sqlQuery,
+            Arrays.asList(
+                new SqlParameter("@fileId", fileId),
+                new SqlParameter("@orgFiscalCode", orgFiscalCode),
+                new SqlParameter("@brokerCode", brokerCode)
+            )
+        );
+        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+        options.setPartitionKey(new PartitionKey(orgFiscalCode));
+
+        List<Status> statusList = statusRepository.find(querySpec, options);
+
+        if (!statusList.isEmpty()) {
+            return statusList.get(0);
+        }
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+    private UploadStatus mapStatusV1(Status status) {
+        return UploadStatus.builder()
+                .uploadID(status.getId())
+                .processedItem(status.upload.getCurrent())
+                .submittedItem(status.upload.getTotal())
+                .startTime(status.upload.getStart())
+                .build();
+    }
+
+    private UploadStatusDTO mapStatusV2(Status status) {
+        return UploadStatusDTO.builder()
                 .uploadID(status.getId())
                 .processedItem(status.upload.getCurrent())
                 .submittedItem(status.upload.getTotal())
@@ -114,6 +169,17 @@ public class StatusService {
                 .build();
     }
 
+    public UploadReportDTO mapReportV2(Status status) {
+        return UploadReportDTO.builder()
+                .fileId(status.getId())
+                .processedItem(status.upload.getCurrent())
+                .submittedItem(status.upload.getTotal())
+                .responses(responseEntryDTOMapper.toDTOs(status.upload.getResponses()))
+                .startTime(status.upload.getStart())
+                .endTime(status.upload.getEnd())
+                .build();
+    }
+
     public String getDetail(HttpStatus status) {
         return switch (status) {
             case CREATED -> "Debt position CREATED";
@@ -127,7 +193,7 @@ public class StatusService {
             default -> status.toString();
         };
     }
-    
+
     public FileIdListResponse getFileIdList(
             String brokerCode,
             String organizationFiscalCode,

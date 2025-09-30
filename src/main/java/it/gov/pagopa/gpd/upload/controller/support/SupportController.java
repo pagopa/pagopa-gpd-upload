@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.AppInfo;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
-import it.gov.pagopa.gpd.upload.model.UploadReport;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.service.RecoveryService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
@@ -62,7 +62,7 @@ public class SupportController {
         String organization = strings[1];
         recoveryService.recover(broker, organization, upload, serviceType);
         log.info("[Support-API] Status {} recovered", upload);
-        UploadReport report = statusService.getReport(organization, upload, serviceType);
+        UploadReport report = statusService.getReportV1(broker, organization, upload, serviceType);
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
