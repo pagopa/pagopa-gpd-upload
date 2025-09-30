@@ -15,7 +15,8 @@ import java.io.InputStream;
 import java.util.Map;
 
 import static it.gov.pagopa.gpd.upload.utils.Constants.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -93,12 +94,12 @@ class BlobStorageRepositoryTest {
         verify(blockBlobClient, never()).commitBlockList(any());
         verify(blockBlobClient, never()).getBlobName();
     }
-    
+
     @Test
     void downloadContent_OK() {
         BlobProperties blobProperties = mock(BlobProperties.class);
         when(blobProperties.getMetadata()).thenReturn(Map.of(SERVICE_TYPE_METADATA, ServiceType.GPD.name()));
-        
+
         BlobClient blobClient = mock(BlobClient.class);
         when(blobClient.exists()).thenReturn(true);
         when(blobClient.getProperties()).thenReturn(blobProperties);
@@ -108,7 +109,7 @@ class BlobStorageRepositoryTest {
         when(blobContainerClient.exists()).thenReturn(true);
 
         Mockito.when(blobServiceClientMock.getBlobContainerClient(BROKER_ID)).thenReturn(blobContainerClient);
-        
+
         assertDoesNotThrow(() -> blobStorageRepository.downloadContent(BROKER_ID, BLOB_NAME, DOWNLOAD_CONTAINER_PATH, ServiceType.GPD));
 
         verify(blobServiceClientMock, times(1)).getBlobContainerClient(BROKER_ID);

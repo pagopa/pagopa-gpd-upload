@@ -1,11 +1,11 @@
 package it.gov.pagopa.gpd.upload.controller.v1;
 
-import io.micronaut.context.annotation.Replaces;
+import io.micronaut.context.annotation.Bean;
+import io.micronaut.context.annotation.Primary;
 import io.micronaut.http.*;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
-import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
@@ -13,18 +13,18 @@ import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
-import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static io.micronaut.http.HttpStatus.*;
+import static io.micronaut.http.HttpStatus.NOT_FOUND;
+import static io.micronaut.http.HttpStatus.OK;
 import static it.gov.pagopa.gpd.upload.utils.TestConstants.QUERY_PARAM_SERVICE_TYPE_GPD;
 import static it.gov.pagopa.gpd.upload.utils.TestConstants.URI_V1;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,6 +37,7 @@ class CheckUploadControllerTest {
     public static final String FILE_ID = "fileID";
     public static final String BROKER_ID = "broker-ID";
     public static final String ORG_FISCAL_CODE = "fiscal-code";
+
     @Inject
     @Client("/")
     HttpClient client;
@@ -46,35 +47,15 @@ class CheckUploadControllerTest {
     @Inject
     BlobService blobServiceMock;
 
-    // ===== MOCK BEANS ===========================
-    @MockBean(StatusService.class)
-    @Replaces(StatusService.class)
-    StatusService mockStatusService() {
-        return mock(StatusService.class);
+    @BeforeEach
+    public void beforeEach() {
+        reset(statusServiceMock, blobServiceMock);
     }
-
-    @MockBean(StatusRepository.class)
-    @Replaces(StatusRepository.class)
-    StatusRepository mockStatusRepository() {
-        return mock(StatusRepository.class);
-    }
-
-    @MockBean(BlobStorageRepository.class)
-    @Replaces(BlobStorageRepository.class)
-    BlobStorageRepository mockBlobStorageRepository() {
-        return mock(BlobStorageRepository.class);
-    }
-
-    @MockBean(BlobService.class)
-    @Replaces(BlobService.class)
-    BlobService mockBlobService() {
-        return mock(BlobService.class);
-    }
-    // ========================================================================
 
     @Test
     void getUploadStatus_OK() {
-        when(statusServiceMock.getUploadStatus(BROKER_ID, FILE_ID, ORG_FISCAL_CODE, ServiceType.GPD)).thenReturn(UploadStatus.builder().uploadID(FILE_ID).build());
+        when(statusServiceMock.getUploadStatus(BROKER_ID, FILE_ID, ORG_FISCAL_CODE, ServiceType.GPD))
+                .thenReturn(UploadStatus.builder().uploadID(FILE_ID).build());
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/status" + QUERY_PARAM_SERVICE_TYPE_GPD);
         HttpResponse<UploadStatus> response = client.toBlocking().exchange(httpRequest);
@@ -113,7 +94,8 @@ class CheckUploadControllerTest {
 
     @Test
     void getUploadReport_withStatus_OK() {
-        when(statusServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD)).thenReturn(UploadReport.builder().uploadID(FILE_ID).build());
+        when(statusServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD))
+                .thenReturn(UploadReport.builder().uploadID(FILE_ID).build());
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/report" + QUERY_PARAM_SERVICE_TYPE_GPD);
         HttpResponse<UploadStatus> response = client.toBlocking().exchange(httpRequest);
@@ -134,7 +116,8 @@ class CheckUploadControllerTest {
     void getUploadReport_withoutStatusRetrieveBlobReport_OK() {
         AppException ex = new AppException(NOT_FOUND, "error", "error");
         when(statusServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD)).thenThrow(ex);
-        when(blobServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD)).thenReturn(UploadReport.builder().uploadID(FILE_ID).build());
+        when(blobServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD))
+                .thenReturn(UploadReport.builder().uploadID(FILE_ID).build());
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/report" + QUERY_PARAM_SERVICE_TYPE_GPD);
         HttpResponse<UploadStatus> response = client.toBlocking().exchange(httpRequest);
@@ -149,7 +132,6 @@ class CheckUploadControllerTest {
 
     @Test
     void getUploadReport_byStatus_KO() {
-        AppException ex = new AppException(BAD_REQUEST, "error", "error");
         when(statusServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD)).thenThrow(AppException.class);
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/report" + QUERY_PARAM_SERVICE_TYPE_GPD);
@@ -299,5 +281,12 @@ class CheckUploadControllerTest {
         assertEquals(400, problem.getStatus());
         assertTrue(problem.getDetail().toLowerCase().contains("invalid size"));
         verifyNoInteractions(statusServiceMock);
+    }
+
+
+    @Bean
+    @Primary
+    StatusService statusServiceMock() {
+        return mock(StatusService.class);
     }
 }

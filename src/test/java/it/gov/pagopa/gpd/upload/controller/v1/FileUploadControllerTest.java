@@ -1,20 +1,19 @@
 package it.gov.pagopa.gpd.upload.controller.v1;
 
-import io.micronaut.context.annotation.Bean;
-import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Value;
-import io.micronaut.http.*;
+import io.micronaut.http.HttpMethod;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.MediaType;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
-import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
-
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -25,11 +24,13 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 
-import static io.micronaut.http.HttpStatus.*;
+import static io.micronaut.http.HttpStatus.ACCEPTED;
 import static it.gov.pagopa.gpd.upload.utils.TestConstants.QUERY_PARAM_SERVICE_TYPE_GPD;
 import static it.gov.pagopa.gpd.upload.utils.TestConstants.URI_V1;
-import static java.nio.file.attribute.PosixFilePermission.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -43,6 +44,16 @@ class FileUploadControllerTest {
     @Inject
     @Client("/")
     HttpClient client;
+    @Inject
+    StatusService statusService;
+    @Inject
+    BlobService blobService;
+
+    @BeforeEach
+    public void beforeEach() {
+        Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
+        Mockito.when(blobService.upsert(anyString(), anyString(), any(), any(), any())).thenReturn(UPLOAD_KEY);
+    }
 
     @Test
     void createDebtPositionsByFile_OK() throws IOException {
@@ -98,37 +109,5 @@ class FileUploadControllerTest {
                 Path.of("./"), "test", ".zip",
                 PosixFilePermissions.asFileAttribute(EnumSet.of(OWNER_READ, OWNER_WRITE)) // permissions `-rw-------`
         ).toFile();
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////MOCK//////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    @Bean
-    @Primary
-    public BlobService fileUploadService() throws IOException {
-        BlobService blobService = Mockito.mock(BlobService.class);
-        Mockito.when(blobService.upsert(anyString(), anyString(), any(), any(), any())).thenReturn(UPLOAD_KEY);
-        return blobService;
-    }
-
-    @Bean
-    @Primary
-    public StatusService statusService() throws IOException {
-        StatusService statusService = Mockito.mock(StatusService.class);
-        Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
-        return statusService;
-    }
-
-    // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
-    @Bean
-    @Primary
-    public BlobStorageRepository blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepository.class);
-    }
-    @Bean
-    @Primary
-    public StatusRepository statusRepository() {
-        return Mockito.mock(StatusRepository.class);
     }
 }
