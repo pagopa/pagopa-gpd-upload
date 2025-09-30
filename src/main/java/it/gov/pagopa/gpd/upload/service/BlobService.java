@@ -240,9 +240,14 @@ public class BlobService {
 
             log.error("[Error][BlobService@unzip] No valid file in ZIP");
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "No valid file found in ZIP.");
-        } catch (IOException e) {
+        }
+        catch (EOFException e) {
+            log.error("[Error][BlobService@unzip] Client input error: " + e.getMessage(), e);
+            throw new AppException(HttpStatus.BAD_REQUEST, "UNZIP ERROR", "Could not unzip file");
+        }
+        catch (IOException e) {
             log.error("[Error][BlobService@unzip] " + e.getMessage(), e);
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Could not unzip file", e);
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Problem to manage zip file", e);
         }
     }
 
