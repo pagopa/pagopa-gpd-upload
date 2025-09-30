@@ -54,49 +54,6 @@ public class RecoveryService {
     }
 
     private boolean recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus toGetFromGPD, HttpStatus toWrite) {
-    	/* ORIGINAL COMMENTED CODE
-        Status current = statusService.getStatus(organizationFiscalCode, uploadId);
-
-        // check if upload is pending
-        if(current.upload.getCurrent() >= current.upload.getTotal()) {
-            if(current.upload.getEnd() != null)
-                return false;
-            // update end-upload-time if it is null
-            current.upload.setEnd(LocalDateTime.now());
-            Status updated = statusService.upsert(current);
-            return updated != null;
-        }
-
-        // extract debt position id list
-        List<String> processedIUPD = new ArrayList<>();
-        current.upload.getResponses().forEach(
-                res -> processedIUPD.addAll(res.getRequestIDs())
-        );
-
-        // sync with core to check if debt positions are already processed (DELETED or CREATED -> NOT_EXISTS, EXISTS)
-        MatchResult result = match(organizationFiscalCode, inputIUPD, processedIUPD, toGetFromGPD);
-
-        // update status and save
-        current.upload.addResponse(ResponseEntry.builder()
-                .requestIDs(result.matchingIUPD())
-                .statusCode(toWrite.getCode())
-                .statusMessage(statusService.getDetail(toWrite))
-                .build());
-
-        // for non-matching IUPD the code is 500
-        if(!result.nonMatchingIUPD().isEmpty()) {
-            current.upload.addResponse(ResponseEntry.builder()
-                    .requestIDs(result.nonMatchingIUPD())
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
-                    .statusMessage(statusService.getDetail(toWrite))
-                    .build());
-        }
-        current.upload.setEnd(LocalDateTime.now());
-
-        Status updated = statusService.upsert(current);
-        return updated != null;
-    	 */
-
     	Status current = statusService.getStatus(organizationFiscalCode, uploadId);
 
     	// check if upload is pending
@@ -165,31 +122,6 @@ public class RecoveryService {
     	return updated != null;
 
     }
-    
-    /* ORIGINAL COMMENTED CODE
-    private MatchResult match(String organizationFiscalCode, List<String> inputIUPD, List<String> processedIUPD, HttpStatus target) {
-        List<String> differenceIUPD = inputIUPD.stream()
-                .filter(iupd -> !processedIUPD.contains(iupd))
-                .toList();
-
-        List<String> matchingIUPD = new ArrayList<>();
-        List<String> nonMatchingIUPD = new ArrayList<>();
-
-        // for each check if position is processed
-        differenceIUPD.forEach(id -> {
-            // request to GPD
-            HttpStatus httpStatus = gpdClient.getDebtPosition(organizationFiscalCode, id).getStatus();
-            // if status code match the target
-            if(httpStatus.equals(target)) {
-                matchingIUPD.add(id);
-            } else {
-                nonMatchingIUPD.add(id);
-            }
-        });
-
-        return new MatchResult(matchingIUPD, nonMatchingIUPD);
-    }
-    */
     
     // Makes GPD calls and groups by (HttpStatus, message).
     // Message is "" when unavailable; LinkedHashMap to preserve arrival order.
