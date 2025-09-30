@@ -31,6 +31,7 @@ class StatusRepositoryTest {
     private static final String ORG_FISCAL_CODE = "orgFiscalCode";
     private static final SqlQuerySpec QUERY_SPEC = new SqlQuerySpec();
     private static final CosmosQueryRequestOptions QUERY_REQUEST_OPTIONS = new CosmosQueryRequestOptions();
+    private static final LocalDateTime DATE_NOW = LocalDateTime.now();
 
     CosmosContainer cosmosContainerMock = mock(CosmosContainer.class);
     StatusRepository statusRepository = new StatusRepository(cosmosContainerMock);
@@ -283,7 +284,7 @@ class StatusRepositoryTest {
         when(cosmosPagedResponse.iterableByPage(CONTINUATION_TOKEN, PAGE_SIZE)).thenReturn(page);
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenReturn(cosmosPagedResponse);
 
-        StatusRepository.FileIdsPage response = assertDoesNotThrow(() -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, LocalDateTime.now(), LocalDateTime.now(), PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
+        StatusRepository.FileIdsPage response = assertDoesNotThrow(() -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, DATE_NOW, DATE_NOW, PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
         assertTrue(response.getFileIds().contains(FILE_ID));
         assertEquals(NEXT_TOKEN, response.getContinuationToken());
@@ -296,7 +297,7 @@ class StatusRepositoryTest {
 
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenThrow(exception);
 
-        assertThrows(AppException.class, () -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, LocalDateTime.now(), LocalDateTime.now(), PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
+        assertThrows(AppException.class, () -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, DATE_NOW, DATE_NOW, PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
     }
 
@@ -307,7 +308,7 @@ class StatusRepositoryTest {
 
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenThrow(exception);
 
-        assertThrows(AppException.class, () -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, LocalDateTime.now(), LocalDateTime.now(), PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
+        assertThrows(AppException.class, () -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, DATE_NOW, DATE_NOW, PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
     }
 
