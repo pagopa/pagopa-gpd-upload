@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.upload.repository.impl;
+package it.gov.pagopa.gpd.upload.repository;
 
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosException;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class StatusRepositoryImplTest {
+class StatusRepositoryTest {
 
     public static final String STATUS_ID = "statusID";
     public static final String FISCAL_CODE = "fiscalCode";
@@ -30,7 +30,7 @@ class StatusRepositoryImplTest {
     public static final String BROKER_CODE = "brokerCode";
     public static final String ORG_FISCAL_CODE = "orgFiscalCode";
     CosmosContainer cosmosContainerMock = mock(CosmosContainer.class);
-    StatusRepositoryImpl statusRepository = new StatusRepositoryImpl(cosmosContainerMock);
+    StatusRepository statusRepository = new StatusRepository(cosmosContainerMock);
 
     @Test
     void saveStatus_OK() {
@@ -279,7 +279,7 @@ class StatusRepositoryImplTest {
         when(cosmosPagedResponse.iterableByPage(CONTINUATION_TOKEN, PAGE_SIZE)).thenReturn(page);
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenReturn(cosmosPagedResponse);
 
-        StatusRepositoryImpl.FileIdsPage response = assertDoesNotThrow(() -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, LocalDateTime.now(), LocalDateTime.now(), PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
+        StatusRepository.FileIdsPage response = assertDoesNotThrow(() -> statusRepository.findFileIdsPage(BROKER_CODE, ORG_FISCAL_CODE, LocalDateTime.now(), LocalDateTime.now(), PAGE_SIZE, CONTINUATION_TOKEN, ServiceType.GPD));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
         assertTrue(response.getFileIds().contains(FILE_ID));
         assertEquals(NEXT_TOKEN,response.getContinuationToken());

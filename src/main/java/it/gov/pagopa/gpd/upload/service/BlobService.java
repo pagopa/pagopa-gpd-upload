@@ -18,7 +18,7 @@ import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
-import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.utils.GPDValidator;
 import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
 import jakarta.annotation.PostConstruct;
@@ -48,14 +48,14 @@ public class BlobService {
     private static final List<String> VALID_UPLOAD_EXTENSION = List.of("zip");
     private static final String DESTINATION_DIRECTORY = "upload-directory";
     private ObjectMapper objectMapper;
-    private final BlobStorageRepositoryImpl blobStorageRepository;
+    private final BlobStorageRepository blobStorageRepository;
     private final StatusService statusService;
     private final GPDValidator<PaymentPositionsModel> paymentPositionsValidator;
     private final GPDValidator<MultipleIUPDModel> multipleIUPDValidator;
     private final ResponseEntryDTOMapper responseEntryDTOMapper;
 
     @Inject
-    public BlobService(BlobStorageRepositoryImpl blobStorageRepository,
+    public BlobService(BlobStorageRepository blobStorageRepository,
                        StatusService statusService,
                        GPDValidator<PaymentPositionsModel> paymentPositionsValidator,
                        GPDValidator<MultipleIUPDModel> multipleIUPDValidator,

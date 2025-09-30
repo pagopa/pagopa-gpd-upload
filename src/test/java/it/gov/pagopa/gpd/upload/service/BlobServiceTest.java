@@ -5,8 +5,8 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
-import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
-import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.utils.FileUtils;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
@@ -43,14 +43,14 @@ public class BlobServiceTest {
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean
     @Primary
-    public static BlobStorageRepositoryImpl blobStorageRepository() throws FileNotFoundException {
-        BlobStorageRepositoryImpl blobStorageRepository = Mockito.mock(BlobStorageRepositoryImpl.class);
+    public static BlobStorageRepository blobStorageRepository() throws FileNotFoundException {
+        BlobStorageRepository blobStorageRepository = Mockito.mock(BlobStorageRepository.class);
         Mockito.when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
         return blobStorageRepository;
     }
     @Bean
     @Primary
-    public static StatusRepositoryImpl statusRepository() {
-        return Mockito.mock(StatusRepositoryImpl.class);
+    public static StatusRepository statusRepository() {
+        return Mockito.mock(StatusRepository.class);
     }
 }

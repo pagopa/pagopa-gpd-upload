@@ -11,8 +11,8 @@ import io.micronaut.http.client.exceptions.HttpClientException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
-import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
-import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.RecoveryService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
@@ -74,12 +74,12 @@ class SupportControllerTest {
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean
     @Primary
-    public StatusRepositoryImpl statusRepository() {
-        return Mockito.mock(StatusRepositoryImpl.class);
+    public StatusRepository statusRepository() {
+        return Mockito.mock(StatusRepository.class);
     }
     @Bean
     @Primary
-    public BlobStorageRepositoryImpl blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepositoryImpl.class);
+    public BlobStorageRepository blobStorageRepository() {
+        return Mockito.mock(BlobStorageRepository.class);
     }
 }

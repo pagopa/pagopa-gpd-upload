@@ -11,8 +11,8 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.OpenAPIV3Parser;
-import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
-import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -75,13 +75,13 @@ class OpenApiGenerationTest {
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean
     @Primary
-    public BlobStorageRepositoryImpl blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepositoryImpl.class);
+    public BlobStorageRepository blobStorageRepository() {
+        return Mockito.mock(BlobStorageRepository.class);
     }
     @Bean
     @Primary
-    public StatusRepositoryImpl statusRepository() {
-        return Mockito.mock(StatusRepositoryImpl.class);
+    public StatusRepository statusRepository() {
+        return Mockito.mock(StatusRepository.class);
     }
 
     private String removeV2FromPath(String openApiContent) {

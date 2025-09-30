@@ -11,8 +11,8 @@ import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
-import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
-import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -54,13 +54,13 @@ public class RecoveryServiceTest {
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean
     @Primary
-    public static BlobStorageRepositoryImpl blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepositoryImpl.class);
+    public static BlobStorageRepository blobStorageRepository() {
+        return Mockito.mock(BlobStorageRepository.class);
     }
     @Bean
     @Primary
-    public static StatusRepositoryImpl statusRepository() {
-        return Mockito.mock(StatusRepositoryImpl.class);
+    public static StatusRepository statusRepository() {
+        return Mockito.mock(StatusRepository.class);
     }
     @Bean
     @Primary

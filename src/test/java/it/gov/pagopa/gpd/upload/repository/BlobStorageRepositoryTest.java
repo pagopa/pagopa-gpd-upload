@@ -1,13 +1,10 @@
-package it.gov.pagopa.gpd.upload.repository.impl;
+package it.gov.pagopa.gpd.upload.repository;
 
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.specialized.BlockBlobClient;
-import io.micronaut.context.annotation.Bean;
-import io.micronaut.context.annotation.Primary;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import org.junit.jupiter.api.Test;
@@ -22,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class BlobStorageRepositoryImplTest {
+class BlobStorageRepositoryTest {
 
     private static final String BROKER_ID = "brokerId";
     private static final String FISCAL_CODE = "fiscalCode";
@@ -31,7 +28,7 @@ class BlobStorageRepositoryImplTest {
     private static final String BLOB_NAME = "blobName";
 
     BlobServiceClient blobServiceClientMock = mock(BlobServiceClient.class);
-    BlobStorageRepositoryImpl blobStorageRepository = new BlobStorageRepositoryImpl(blobServiceClientMock);
+    BlobStorageRepository blobStorageRepository = new BlobStorageRepository(blobServiceClientMock);
 
     @Test
     void upload_OK() throws InterruptedException {

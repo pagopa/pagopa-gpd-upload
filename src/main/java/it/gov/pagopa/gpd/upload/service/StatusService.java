@@ -15,7 +15,7 @@ import it.gov.pagopa.gpd.upload.model.v2.UploadStatusDTO;
 import it.gov.pagopa.gpd.upload.model.v2.enumeration.OperationStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
-import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -34,12 +34,12 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Singleton
 @Slf4j
 public class StatusService {
-    private StatusRepositoryImpl statusRepository;
+    private StatusRepository statusRepository;
 
     private ResponseEntryDTOMapper responseEntryDTOMapper;
 
     @Inject
-    public StatusService(StatusRepositoryImpl statusRepository,
+    public StatusService(StatusRepository statusRepository,
                          ResponseEntryDTOMapper responseEntryDTOMapper) {
         this.statusRepository = statusRepository;
         this.responseEntryDTOMapper = responseEntryDTOMapper;
@@ -207,7 +207,7 @@ public class StatusService {
         final var fromDateTime = from.atStartOfDay();
         final var toDateTime   = to.atTime(LocalTime.MAX); // 23:59:59.999999999
 
-        StatusRepositoryImpl.FileIdsPage page = statusRepository.findFileIdsPage(
+        StatusRepository.FileIdsPage page = statusRepository.findFileIdsPage(
                 brokerCode,
                 organizationFiscalCode,
                 fromDateTime,
