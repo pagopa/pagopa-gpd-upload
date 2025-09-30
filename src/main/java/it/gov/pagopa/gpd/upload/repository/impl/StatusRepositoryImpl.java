@@ -31,8 +31,11 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Context
 @Slf4j
 public class StatusRepositoryImpl implements StatusRepository {
+    private final CosmosContainer container;
     @Inject
-    private CosmosContainer container;
+    public StatusRepositoryImpl(CosmosContainer container) {
+        this.container = container;
+    }
 
     public static final class FileIdsPage {
         private final List<String> fileIds;
