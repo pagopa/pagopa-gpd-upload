@@ -82,10 +82,7 @@ public class BlobService {
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(is, PaymentPositionsModel.class);
 
-            if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
-                log.error("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker {} and organization {}", broker, organizationFiscalCode);
-                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
-            }
+            paymentPositionsValidator.isValidOrElseThrow(paymentPositionsModel);
 
             UploadInput uploadInput = UploadInput.builder()
                     .uploadOperation(uploadOperation)
@@ -110,11 +107,7 @@ public class BlobService {
         try {
             MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(is, MultipleIUPDModel.class);
 
-            if (!multipleIUPDValidator.isValid(multipleIUPDModel)) {
-                log.error(String.format("[Error][BlobService@delete] Debt-Positions validation failed for upload from broker %s and organization %s",
-                        broker, organizationFiscalCode));
-                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
-            }
+            multipleIUPDValidator.isValidOrElseThrow(multipleIUPDModel);
 
             UploadInput uploadInput = UploadInput.builder()
                     .uploadOperation(uploadOperation)
