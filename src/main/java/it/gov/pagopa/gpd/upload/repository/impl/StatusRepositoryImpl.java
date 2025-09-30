@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.upload.repository.impl;
 
-import com.azure.cosmos.CosmosClientBuilder;
-import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosException;
 import com.azure.cosmos.models.CosmosItemResponse;
@@ -12,13 +10,12 @@ import com.azure.cosmos.models.SqlParameter;
 import com.azure.cosmos.models.SqlQuerySpec;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import io.micronaut.context.annotation.Context;
-import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
-import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,29 +31,8 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Context
 @Slf4j
 public class StatusRepositoryImpl implements StatusRepository {
-
-    @Value("${cosmos.uri}")
-    private String cosmosURI;
-
-    @Value("${cosmos.key}")
-    private String cosmosKey;
-
-    @Value("${cosmos.database.name}")
-    private String databaseName;
-
-    @Value("${cosmos.container.name}")
-    private String containerName;
-
+    @Inject
     private CosmosContainer container;
-
-    @PostConstruct
-    public void init() {
-        CosmosClient cosmosClient = new CosmosClientBuilder()
-                .endpoint(cosmosURI)
-                .key(cosmosKey)
-                .buildClient();
-        container = cosmosClient.getDatabase(databaseName).getContainer(containerName);
-    }
 
     public static final class FileIdsPage {
         private final List<String> fileIds;

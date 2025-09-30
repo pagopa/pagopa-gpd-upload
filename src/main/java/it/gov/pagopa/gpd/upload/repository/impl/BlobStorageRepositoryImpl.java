@@ -4,17 +4,15 @@ import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import io.micronaut.context.annotation.Context;
-import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.exception.AppError;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,18 +33,8 @@ import static it.gov.pagopa.gpd.upload.utils.Constants.SERVICE_TYPE_METADATA;
 @Singleton
 @Slf4j
 public class BlobStorageRepositoryImpl implements BlobStorageRepository {
-
-    @Value("${blob.sas.connection}")
-    private String connectionString;
-
+    @Inject
     private BlobServiceClient blobServiceClient;
-
-    @PostConstruct
-    public void init() {
-        blobServiceClient = new BlobServiceClientBuilder()
-                .connectionString(connectionString)
-                .buildClient();
-    }
 
     @Override
     public String upload(String broker, String fiscalCode, InputStream inputStream, ServiceType serviceType) throws FileNotFoundException {
