@@ -32,7 +32,7 @@ class BlobStorageRepositoryTest {
     BlobStorageRepository blobStorageRepository = new BlobStorageRepository(blobServiceClientMock);
 
     @Test
-    void upload_OK() throws InterruptedException {
+    void upload_OK() {
         InputStream inputStream = InputStream.nullInputStream();
 
         BlockBlobClient blockBlobClient = mock(BlockBlobClient.class);
@@ -58,10 +58,6 @@ class BlobStorageRepositoryTest {
         verify(blobContainerClient, atLeast(1)).getBlobClient(anyString());
         verify(blobClient, times(1)).exists();
         verify(blobClient, times(1)).getBlockBlobClient();
-        // verify(blobClient, times(1)).setMetadata(Map.of(SERVICE_TYPE_METADATA, ServiceType.GPD.name()));
-        // verify(blockBlobClient).stageBlock(anyString(), any(), anyLong());
-        // verify(blockBlobClient, times(1)).commitBlockList(any());
-        // verify(blockBlobClient, times(1)).getBlobName();
     }
 
     @Test

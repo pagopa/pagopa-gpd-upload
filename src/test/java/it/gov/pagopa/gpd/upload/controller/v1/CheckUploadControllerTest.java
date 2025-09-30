@@ -1,8 +1,7 @@
 package it.gov.pagopa.gpd.upload.controller.v1;
 
-import io.micronaut.context.annotation.Bean;
-import io.micronaut.context.annotation.Primary;
 import io.micronaut.http.*;
+import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
@@ -82,7 +81,8 @@ class CheckUploadControllerTest {
         )).thenThrow(AppException.class);
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/status" + QUERY_PARAM_SERVICE_TYPE_GPD);
-        assertThrows(HttpClientResponseException.class, () -> client.toBlocking().exchange(httpRequest));
+        BlockingHttpClient blockingClient = client.toBlocking();
+        assertThrows(HttpClientResponseException.class, () -> blockingClient.exchange(httpRequest));
 
         verify(statusServiceMock, times(1)).getUploadStatus(
                 BROKER_ID,
@@ -135,7 +135,8 @@ class CheckUploadControllerTest {
         when(statusServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD)).thenThrow(AppException.class);
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/report" + QUERY_PARAM_SERVICE_TYPE_GPD);
-        assertThrows(HttpClientResponseException.class, () -> client.toBlocking().exchange(httpRequest));
+        BlockingHttpClient blockingClient = client.toBlocking();
+        assertThrows(HttpClientResponseException.class, () -> blockingClient.exchange(httpRequest));
 
         verify(statusServiceMock, times(1)).getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD);
         verify(blobServiceMock, never()).getReportV1(
@@ -152,7 +153,8 @@ class CheckUploadControllerTest {
         when(blobServiceMock.getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD)).thenThrow(ex);
 
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI_V1 + "/" + FILE_ID + "/report" + QUERY_PARAM_SERVICE_TYPE_GPD);
-        assertThrows(HttpClientResponseException.class, () -> client.toBlocking().exchange(httpRequest));
+        BlockingHttpClient blockingClient = client.toBlocking();
+        assertThrows(HttpClientResponseException.class, () -> blockingClient.exchange(httpRequest));
 
         verify(statusServiceMock, times(1)).getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD);
         verify(blobServiceMock, times(1)).getReportV1(BROKER_ID, ORG_FISCAL_CODE, FILE_ID, ServiceType.GPD);
@@ -251,9 +253,10 @@ class CheckUploadControllerTest {
         String url = URI_V1 + "/list?from=2025-09-01&to=2025-09-10&size=100";
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, url);
 
+        BlockingHttpClient blockingClient = client.toBlocking();
         HttpClientResponseException ex = assertThrows(
                 HttpClientResponseException.class,
-                () -> client.toBlocking().exchange(httpRequest, FileIdListResponse.class)
+                () -> blockingClient.exchange(httpRequest, FileIdListResponse.class)
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
@@ -270,9 +273,10 @@ class CheckUploadControllerTest {
         String url = URI_V1 + "/list?from=2025-09-01&to=2025-09-06&size=50";
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
 
+        BlockingHttpClient blockingClient = client.toBlocking();
         HttpClientResponseException ex = assertThrows(
                 HttpClientResponseException.class,
-                () -> client.toBlocking().exchange(req, FileIdListResponse.class)
+                () -> blockingClient.exchange(req, FileIdListResponse.class)
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
@@ -281,12 +285,5 @@ class CheckUploadControllerTest {
         assertEquals(400, problem.getStatus());
         assertTrue(problem.getDetail().toLowerCase().contains("invalid size"));
         verifyNoInteractions(statusServiceMock);
-    }
-
-
-    @Bean
-    @Primary
-    StatusService statusServiceMock() {
-        return mock(StatusService.class);
     }
 }

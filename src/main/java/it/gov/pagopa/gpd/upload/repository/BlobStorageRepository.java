@@ -38,7 +38,7 @@ public class BlobStorageRepository {
         this.blobServiceClient = blobServiceClient;
     }
 
-    public String upload(String broker, String fiscalCode, InputStream inputStream, ServiceType serviceType) throws FileNotFoundException {
+    public String upload(String broker, String fiscalCode, InputStream inputStream, ServiceType serviceType) {
         blobServiceClient.createBlobContainerIfNotExists(broker);
         BlobContainerClient container = blobServiceClient.getBlobContainerClient(broker + "/" + fiscalCode + "/" + INPUT_DIRECTORY);
         String key = this.createRandomName(broker + "_" + fiscalCode);

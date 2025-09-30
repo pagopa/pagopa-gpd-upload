@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
@@ -47,46 +47,49 @@ class BlobServiceTest {
     @Test
     void upsert_OK() throws IOException {
         when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
-
-        String uploadKey = blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getUpsertFile(), ServiceType.GPD);
+        CompletedFileUpload file = FileUtils.getUpsertFile();
+        String uploadKey = blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, file, ServiceType.GPD);
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }
 
     @Test
-    void upsert_InvalidPaymentPosition_KO() throws FileNotFoundException {
+    void upsert_InvalidPaymentPosition_KO() throws IOException {
         when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
+        CompletedFileUpload file = FileUtils.getUpsertFileInvalidPaymentPosition();
 
-        assertThrows(AppException.class, () -> blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getUpsertFileInvalidPaymentPosition(), ServiceType.GPD));
+        assertThrows(AppException.class, () -> blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, file, ServiceType.GPD));
     }
 
     @Test
-    void upsert_InvalidFile_KO() throws FileNotFoundException {
+    void upsert_InvalidFile_KO() throws IOException {
         when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
+        CompletedFileUpload file = FileUtils.getDeleteFile();
 
-        assertThrows(AppException.class, () -> blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getDeleteFile(), ServiceType.GPD));
+        assertThrows(AppException.class, () -> blobService.upsert(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, file, ServiceType.GPD));
     }
 
     @Test
     void delete_OK() throws IOException {
         when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
-
-        String uploadKey = blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getDeleteFile(), ServiceType.GPD);
+        CompletedFileUpload file = FileUtils.getDeleteFile();
+        String uploadKey = blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, file, ServiceType.GPD);
 
         Assertions.assertEquals(FISCAL_CODE, uploadKey);
     }
 
     @Test
-    void delete_InvalidMultipleIupd_KO() throws FileNotFoundException {
+    void delete_InvalidMultipleIupd_KO() throws IOException {
         when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
-
-        assertThrows(AppException.class, () -> blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getDeleteFileInvalidMultipleIUPD(), ServiceType.GPD));
+        CompletedFileUpload file = FileUtils.getDeleteFileInvalidMultipleIUPD();
+        assertThrows(AppException.class, () -> blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, file, ServiceType.GPD));
     }
 
     @Test
-    void delete_InvalidFile_KO() throws FileNotFoundException {
+    void delete_InvalidFile_KO() throws IOException {
         when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FISCAL_CODE);
+        CompletedFileUpload file = FileUtils.getUpsertFile();
 
-        assertThrows(AppException.class, () -> blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, FileUtils.getUpsertFile(), ServiceType.GPD));
+        assertThrows(AppException.class, () -> blobService.delete(BROKER_CODE, FISCAL_CODE, UploadOperation.CREATE, file, ServiceType.GPD));
     }
 }
