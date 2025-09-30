@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.upload.utils;
 
-import com.azure.cosmos.CosmosContainer;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Replaces;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;

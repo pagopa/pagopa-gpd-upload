@@ -21,14 +21,17 @@ import static org.mockito.Mockito.*;
 
 class StatusRepositoryTest {
 
-    public static final String STATUS_ID = "statusID";
-    public static final String FISCAL_CODE = "fiscalCode";
-    public static final String CONTINUATION_TOKEN = "continuationToken";
-    public static final String NEXT_TOKEN = "nextToken";
-    public static final int PAGE_SIZE = 10;
-    public static final String FILE_ID = "fileId";
-    public static final String BROKER_CODE = "brokerCode";
-    public static final String ORG_FISCAL_CODE = "orgFiscalCode";
+    private static final String STATUS_ID = "statusID";
+    private static final String FISCAL_CODE = "fiscalCode";
+    private static final String CONTINUATION_TOKEN = "continuationToken";
+    private static final String NEXT_TOKEN = "nextToken";
+    private static final int PAGE_SIZE = 10;
+    private static final String FILE_ID = "fileId";
+    private static final String BROKER_CODE = "brokerCode";
+    private static final String ORG_FISCAL_CODE = "orgFiscalCode";
+    private static final SqlQuerySpec QUERY_SPEC = new SqlQuerySpec();
+    private static final CosmosQueryRequestOptions QUERY_REQUEST_OPTIONS = new CosmosQueryRequestOptions();
+
     CosmosContainer cosmosContainerMock = mock(CosmosContainer.class);
     StatusRepository statusRepository = new StatusRepository(cosmosContainerMock);
 
@@ -241,7 +244,7 @@ class StatusRepositoryTest {
         when(cosmosPagedResponse.stream()).thenReturn(Stream.of(status));
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenReturn(cosmosPagedResponse);
 
-        assertDoesNotThrow(() -> statusRepository.find(new SqlQuerySpec(), new CosmosQueryRequestOptions()));
+        assertDoesNotThrow(() -> statusRepository.find(QUERY_SPEC, QUERY_REQUEST_OPTIONS));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
     }
 
@@ -251,7 +254,7 @@ class StatusRepositoryTest {
         when(exception.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND.getCode());
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenThrow(exception);
 
-        assertThrows(AppException.class, () -> statusRepository.find(new SqlQuerySpec(), new CosmosQueryRequestOptions()));
+        assertThrows(AppException.class, () -> statusRepository.find(QUERY_SPEC, QUERY_REQUEST_OPTIONS));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
     }
 
@@ -261,7 +264,7 @@ class StatusRepositoryTest {
         when(exception.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.getCode());
         when(cosmosContainerMock.queryItems(any(SqlQuerySpec.class), any(), any())).thenThrow(exception);
 
-        assertThrows(AppException.class, () -> statusRepository.find(new SqlQuerySpec(), new CosmosQueryRequestOptions()));
+        assertThrows(AppException.class, () -> statusRepository.find(QUERY_SPEC, QUERY_REQUEST_OPTIONS));
         verify(cosmosContainerMock, times(1)).queryItems(any(SqlQuerySpec.class), any(), any());
     }
 

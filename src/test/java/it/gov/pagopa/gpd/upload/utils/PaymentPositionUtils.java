@@ -85,7 +85,7 @@ public class PaymentPositionUtils {
     public static String createInvalidPaymentPositionsJSON(String fiscalCode, int n) throws JsonProcessingException {
         List<PaymentPositionModel> paymentPositionList = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            String ID = fiscalCode + "_" + UUID.randomUUID().toString().substring(0, 5);
+            String id = fiscalCode + "_" + UUID.randomUUID().toString().substring(0, 5);
             TransferModel tf = TransferModel.builder()
                     .idTransfer("1")
                     .amount(100L)
@@ -98,7 +98,7 @@ public class PaymentPositionUtils {
             transferList.add(tf);
             ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.now().plus(1, ChronoUnit.DAYS), ZoneId.of("UTC"));
             PaymentOptionModel po = PaymentOptionModel.builder()
-                    .iuv("IUV_" + ID)
+                    .iuv("IUV_" + id)
                     .amount(100L)
                     .isPartialPayment(false)
                     .dueDate(zonedDateTime.toLocalDateTime())
