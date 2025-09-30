@@ -45,10 +45,4 @@ class TestMockFactory {
         return mock(BlobStorageRepository.class);
     }
 
-    // Mock del CosmosContainer per evitare che Micronaut inizi il client reale durante il wiring
-    @Singleton
-    @Replaces(CosmosContainer.class)
-    CosmosContainer cosmosContainerMock() {
-        return mock(CosmosContainer.class);
-    }
 }
