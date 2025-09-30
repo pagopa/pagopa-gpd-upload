@@ -13,8 +13,8 @@ import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
-import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import it.gov.pagopa.gpd.upload.repository.StatusRepository;
+import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
@@ -53,16 +53,16 @@ class CheckUploadControllerTest {
         return mock(StatusService.class);
     }
 
-    @MockBean(StatusRepository.class)
-    @Replaces(StatusRepository.class)
-    StatusRepository mockStatusRepository() {
-        return mock(StatusRepository.class);
+    @MockBean(StatusRepositoryImpl.class)
+    @Replaces(StatusRepositoryImpl.class)
+    StatusRepositoryImpl mockStatusRepository() {
+        return mock(StatusRepositoryImpl.class);
     }
 
-    @MockBean(BlobStorageRepository.class)
-    @Replaces(BlobStorageRepository.class)
-    BlobStorageRepository mockBlobStorageRepository() {
-        return mock(BlobStorageRepository.class);
+    @MockBean(BlobStorageRepositoryImpl.class)
+    @Replaces(BlobStorageRepositoryImpl.class)
+    BlobStorageRepositoryImpl mockBlobStorageRepository() {
+        return mock(BlobStorageRepositoryImpl.class);
     }
 
     @MockBean(BlobService.class)

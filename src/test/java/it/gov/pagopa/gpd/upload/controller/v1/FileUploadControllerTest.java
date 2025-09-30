@@ -9,8 +9,8 @@ import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
-import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import it.gov.pagopa.gpd.upload.repository.StatusRepository;
+import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 
 import it.gov.pagopa.gpd.upload.service.StatusService;
@@ -123,12 +123,12 @@ class FileUploadControllerTest {
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean
     @Primary
-    public BlobStorageRepository blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepository.class);
+    public BlobStorageRepositoryImpl blobStorageRepository() {
+        return Mockito.mock(BlobStorageRepositoryImpl.class);
     }
     @Bean
     @Primary
-    public StatusRepository statusRepository() {
-        return Mockito.mock(StatusRepository.class);
+    public StatusRepositoryImpl statusRepository() {
+        return Mockito.mock(StatusRepositoryImpl.class);
     }
 }

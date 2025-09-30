@@ -9,8 +9,8 @@ import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
-import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import it.gov.pagopa.gpd.upload.repository.StatusRepository;
+import it.gov.pagopa.gpd.upload.repository.impl.BlobStorageRepositoryImpl;
+import it.gov.pagopa.gpd.upload.repository.impl.StatusRepositoryImpl;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ public class StatusServiceTest {
     StatusService statusService;
     
     @Inject
-    StatusRepository statusRepository;
+    StatusRepositoryImpl statusRepository;
 
     @Test
     void getUploadStatus_OK() {
@@ -54,7 +54,7 @@ public class StatusServiceTest {
         
         List<String> ids = List.of("id1", "id2", "id3");
         String nextToken = "ct-123";
-        StatusRepository.FileIdsPage page = new StatusRepository.FileIdsPage(ids, nextToken);
+        StatusRepositoryImpl.FileIdsPage page = new StatusRepositoryImpl.FileIdsPage(ids, nextToken);
         Mockito.when(statusRepository.findFileIdsPage(
                 anyString(), anyString(),
                 any(LocalDateTime.class), any(LocalDateTime.class),
@@ -96,7 +96,7 @@ public class StatusServiceTest {
     void getFileIdList_noMore_no_token() {
        
         List<String> ids = List.of("only-one");
-        StatusRepository.FileIdsPage page = new StatusRepository.FileIdsPage(ids, null);
+        StatusRepositoryImpl.FileIdsPage page = new StatusRepositoryImpl.FileIdsPage(ids, null);
         Mockito.when(statusRepository.findFileIdsPage(
                 anyString(), anyString(),
                 any(LocalDateTime.class), any(LocalDateTime.class),
@@ -120,13 +120,13 @@ public class StatusServiceTest {
     // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
     @Bean
     @Primary
-    public static BlobStorageRepository blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepository.class);
+    public static BlobStorageRepositoryImpl blobStorageRepository() {
+        return Mockito.mock(BlobStorageRepositoryImpl.class);
     }
     @Bean
     @Primary
-    public static StatusRepository statusRepository() {
-        StatusRepository statusRepository = Mockito.mock(StatusRepository.class);
+    public static StatusRepositoryImpl statusRepository() {
+        StatusRepositoryImpl statusRepository = Mockito.mock(StatusRepositoryImpl.class);
         Status status = Status.builder()
                 .id(UPLOAD_KEY)
                 .serviceType(ServiceType.GPD)
