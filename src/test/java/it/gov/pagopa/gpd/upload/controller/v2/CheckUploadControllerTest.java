@@ -48,7 +48,7 @@ class CheckUploadControllerTest {
     BlobService blobServiceMock;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         reset(statusServiceMock, blobServiceMock);
     }
 

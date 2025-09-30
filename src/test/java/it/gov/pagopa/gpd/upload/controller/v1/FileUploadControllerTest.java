@@ -50,7 +50,7 @@ class FileUploadControllerTest {
     BlobService blobService;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
         Mockito.when(blobService.upsert(anyString(), anyString(), any(), any(), any())).thenReturn(UPLOAD_KEY);
     }

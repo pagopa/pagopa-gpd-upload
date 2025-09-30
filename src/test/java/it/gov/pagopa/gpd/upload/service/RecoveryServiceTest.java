@@ -31,7 +31,7 @@ class RecoveryServiceTest {
     RecoveryService recoveryService = new RecoveryService(statusService, blobService, gpdClient);
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         // Mock BlobService
         UploadInput uploadInputDelete = UploadInput.builder()
                 .uploadOperation(UploadOperation.DELETE)

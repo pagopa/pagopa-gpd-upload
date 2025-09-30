@@ -36,7 +36,7 @@ class SupportControllerTest {
     RecoveryService recoveryService;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
         Mockito.when(recoveryService.recover(anyString(), anyString(), anyString(), any(ServiceType.class))).thenReturn(true);
     }

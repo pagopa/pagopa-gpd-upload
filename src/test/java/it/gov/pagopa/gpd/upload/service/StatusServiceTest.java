@@ -30,7 +30,7 @@ class StatusServiceTest {
     StatusService statusService = new StatusService(statusRepository, responseEntryDTOMapper);
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         Status status = Status.builder()
                 .id(UPLOAD_KEY)
                 .serviceType(ServiceType.GPD)
