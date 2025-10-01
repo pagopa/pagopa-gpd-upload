@@ -115,6 +115,10 @@ public class CheckUploadController {
                 throw e;
         }
 
+        if(uploadReport != null && uploadReport.getEndTime() == null){
+            throw new AppException(HttpStatus.TOO_EARLY, "Too Early", "The report has not been generated yet, wait the upload to end.");
+        }
+
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(uploadReport);
