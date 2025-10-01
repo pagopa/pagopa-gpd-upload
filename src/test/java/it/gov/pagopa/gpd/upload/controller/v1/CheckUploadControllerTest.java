@@ -179,7 +179,8 @@ class CheckUploadControllerTest {
                 eq(ServiceType.GPD)
         )).thenReturn(stub);
 
-        String url = URI_V1 + "/list?from=2025-09-01&to=2025-09-06&size=100";
+
+        String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
 
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
 
@@ -223,7 +224,9 @@ class CheckUploadControllerTest {
                 .thenReturn(stub);
 
         String inToken = "opaque-token-xyz";
-        String url = URI_V1 + "/list?from=2025-09-01&to=2025-09-06&size=100";
+
+        String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
+
         HttpRequest<?> req = HttpRequest.GET(url)
                 .header("x-continuation-token", inToken)
                 .contentType(MediaType.APPLICATION_JSON);
@@ -250,7 +253,9 @@ class CheckUploadControllerTest {
     @Test
     void getFileIdList_shouldReturn400WhenRangeTooLarge() {
         // 10 days > 7
-        String url = URI_V1 + "/list?from=2025-09-01&to=2025-09-10&size=100";
+
+        String url = URI_V1 + "s?from=2025-09-01&to=2025-09-10&size=100";
+
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, url);
 
         BlockingHttpClient blockingClient = client.toBlocking();
@@ -270,7 +275,9 @@ class CheckUploadControllerTest {
     @Test
     void getFileIdList_shouldReturn400WhenSizeOutOfBounds() {
         // size < 100
-        String url = URI_V1 + "/list?from=2025-09-01&to=2025-09-06&size=50";
+
+        String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=50";
+
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
 
         BlockingHttpClient blockingClient = client.toBlocking();
