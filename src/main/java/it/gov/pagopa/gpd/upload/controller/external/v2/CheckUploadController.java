@@ -116,7 +116,7 @@ public class CheckUploadController {
         }
 
         if(uploadReport != null && uploadReport.getEndTime() == null){
-            throw new AppException(HttpStatus.TOO_EARLY, "Too Early", "The report has not been generated yet, wait the upload to end.");
+            throw new AppException(HttpStatus.TOO_EARLY, "Too Early", "The report has not been generated yet, wait for the operations to complete.");
         }
 
         return HttpResponse.status(HttpStatus.OK)
