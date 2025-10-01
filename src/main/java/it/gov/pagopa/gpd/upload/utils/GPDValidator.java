@@ -18,7 +18,7 @@ import java.util.Set;
 @Slf4j
 public class GPDValidator<T> {
 
-    public boolean isValid(T model) throws IOException {
+    public boolean isValidOrElseThrow(T model) throws IOException {
         ValidatorFactory factory = jakarta.validation.Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
         Set<ConstraintViolation<T>> constraintViolations;

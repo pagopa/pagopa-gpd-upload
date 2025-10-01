@@ -54,7 +54,6 @@ public class CheckUploadController {
     @Inject
     StatusService statusService;
     private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
-    private static final String FILES_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
@@ -109,9 +108,9 @@ public class CheckUploadController {
         } catch (AppException e) {
             if (e.getHttpStatus() == NOT_FOUND) {
                 uploadReport = blobService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
-                if (uploadReport == null)
-                    throw e;
             }
+            if (uploadReport == null)
+                throw e;
         }
 
         return HttpResponse.status(HttpStatus.OK)
@@ -137,7 +136,7 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "500", description = "Service unavailable.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))
     })
-    @Get(value = FILES_PATH, produces = MediaType.APPLICATION_JSON)
+    @Get(value = BASE_PATH + "/list", produces = MediaType.APPLICATION_JSON)
     public HttpResponse<FileIdListResponse> getFileIdList(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker-code") String brokerCode,
