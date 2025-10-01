@@ -42,6 +42,7 @@
                             "iban": "IT0000000000000000000000000",
                             "postalIban": null,
                             "stamp": null,
+                            "companyName": "company_name_webinar",
                             "transferMetadata": []
                         }
                     ],
