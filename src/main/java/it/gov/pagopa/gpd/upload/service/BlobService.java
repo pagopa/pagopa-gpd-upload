@@ -13,10 +13,10 @@ import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
-import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.utils.GPDValidator;
@@ -233,12 +233,10 @@ public class BlobService {
 
             log.error("[Error][BlobService@unzip] No valid file in ZIP");
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "No valid file found in ZIP.");
-        }
-        catch (EOFException e) {
+        } catch (EOFException e) {
             log.error("[Error][BlobService@unzip] Client input error: " + e.getMessage(), e);
             throw new AppException(HttpStatus.BAD_REQUEST, "UNZIP ERROR", "Could not unzip file");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.error("[Error][BlobService@unzip] " + e.getMessage(), e);
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Problem to manage zip file", e);
         }
