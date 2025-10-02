@@ -133,9 +133,11 @@ public class CheckUploadController {
 			content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
 			@ApiResponse(responseCode = "401", description = "Wrong or missing function key.",
 			content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
 			@ApiResponse(responseCode = "410", description = "Gone",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
-			@ApiResponse(responseCode = "500", description = "Service unavailable.",
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+            @ApiResponse(responseCode = "500", description = "Service unavailable.",
 			content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))
 	})
 	@Get(value = BASE_PATH + "files", produces = MediaType.APPLICATION_JSON)
