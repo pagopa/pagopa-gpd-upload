@@ -33,12 +33,26 @@ jobs:
         with:
           persist-credentials: false
 
-      # from https://github.com/pagopa/opex-dashboard-azure-action/
+          # from https://github.com/pagopa/opex-dashboard-azure-action/
       - uses: pagopa/opex-dashboard-azure-action@3ad80a5e4a2d5a8f342615637072f21b687320ce # v1.2.1
+        name: Opex V1 Dashboard
         with:
           environment: ${{ inputs.environment }}
-          api-name: gpd-upload
-          config: .opex/gpd-upload/env/${{ inputs.environment }}/config.yaml
+          api-name: gpd-upload-v1
+          config: .opex/gpd-upload/v1/env/${{ inputs.environment }}/config.yaml
+          client-id: ${{ secrets.CLIENT_ID }}
+          tenant-id: ${{ secrets.TENANT_ID }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+          # from https://github.com/pagopa/opex-dashboard-azure-action/pkgs/container/opex-dashboard-azure-action
+          docker-version: sha256:e4245954566cd3470e1b5527d33bb58ca132ce7493eac01be9e808fd25a11c8d
+
+      # from https://github.com/pagopa/opex-dashboard-azure-action/
+      - uses: pagopa/opex-dashboard-azure-action@3ad80a5e4a2d5a8f342615637072f21b687320ce # v1.2.1
+        name: Opex V2 Dashboard
+        with:
+          environment: ${{ inputs.environment }}
+          api-name: gpd-upload-v2
+          config: .opex/gpd-upload/v2/env/${{ inputs.environment }}/config.yaml
           client-id: ${{ secrets.CLIENT_ID }}
           tenant-id: ${{ secrets.TENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
