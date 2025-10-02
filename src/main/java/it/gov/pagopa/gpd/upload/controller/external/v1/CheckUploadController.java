@@ -49,148 +49,155 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @OpenAPIGroup(exclude = "external-v2")
 @SecurityScheme(name = "ApiKey", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER)
 public class CheckUploadController {
-    @Inject
-    BlobService blobService;
-    @Inject
-    StatusService statusService;
-    private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/";
+	@Inject
+	BlobService blobService;
+	@Inject
+	StatusService statusService;
+	private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/";
 
-    @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadStatus.class))),
-            @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
-            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+	@Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadStatus.class))),
+			@ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+			@ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+			@ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+	@Get(value = BASE_PATH + "file/{upload-id}/status",
+	produces = MediaType.APPLICATION_JSON)
+	HttpResponse<UploadStatus> getUploadStatus(
+			@Parameter(description = "The broker code", required = true)
+			@NotBlank @PathVariable(name = "broker-code") String brokerCode,
+			@Parameter(description = "The organization fiscal code", required = true)
+			@NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+			@Parameter(description = "The unique identifier for file upload", required = true)
+			@NotBlank @PathVariable(name = "upload-id") String uploadId,
+			@Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+			) {
+		UploadStatus uploadStatus = statusService.getUploadStatus(brokerCode, uploadId, organizationFiscalCode, serviceType);
+
+		return HttpResponse.status(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(uploadStatus);
+	}
+
+	@Operation(summary = "Returns the debt positions upload report.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-report")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReport.class))),
+			@ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+			@ApiResponse(responseCode = "404", description = "Upload report not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
+			@ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
+	@Get(value = BASE_PATH + "file/{file-id}/report",
+	produces = MediaType.APPLICATION_JSON)
+	HttpResponse<UploadReport> getUploadReport(
+			@Parameter(description = "The broker code", required = true)
+			@NotBlank @PathVariable(name = "broker-code") String brokerCode,
+			@Parameter(description = "The organization fiscal code", required = true)
+			@NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+			@Parameter(description = "The unique identifier for file upload", required = true)
+			@NotBlank @PathVariable(name = "file-id") String fileID,
+			@Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+			) {
+		UploadReport uploadReport = null;
+		try {
+			uploadReport = statusService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
+		} catch (AppException e) {
+			if (e.getHttpStatus() == NOT_FOUND) {
+				uploadReport = blobService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
+			}
+			if (uploadReport == null)
+				throw e;
+		}
+
+		return HttpResponse.status(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(uploadReport);
+	}
+
+	// =========================
+	// PAGOPA-3282: Get File-Id list
+	// =========================
+	@Operation(
+			summary = "Returns the list of fileIds for a broker/organization in the given date range (max 7 days).",
+			security = {@SecurityRequirement(name = "ApiKey")},
+			operationId = "get-debt-positions-fileids"
+			)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "FileIds retrieved.",
+					content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileIdListResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Bad request.",
+			content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "401", description = "Wrong or missing function key.",
+			content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
-            @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+			@ApiResponse(responseCode = "410", description = "Gone",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
-            @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "file/{upload-id}/status",
-            produces = MediaType.APPLICATION_JSON)
-    HttpResponse<UploadStatus> getUploadStatus(
-            @Parameter(description = "The broker code", required = true)
-            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
-            @Parameter(description = "The organization fiscal code", required = true)
-            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
-            @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "upload-id") String uploadId,
-            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
-    ) {
-        UploadStatus uploadStatus = statusService.getUploadStatus(brokerCode, uploadId, organizationFiscalCode, serviceType);
-
-        return HttpResponse.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(uploadStatus);
-    }
-
-    @Operation(summary = "Returns the debt positions upload report.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-report")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload report found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadReport.class))),
-            @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
-            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
-            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
-            @ApiResponse(responseCode = "404", description = "Upload report not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
-            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
-            @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "file/{file-id}/report",
-            produces = MediaType.APPLICATION_JSON)
-    HttpResponse<UploadReport> getUploadReport(
-            @Parameter(description = "The broker code", required = true)
-            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
-            @Parameter(description = "The organization fiscal code", required = true)
-            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
-            @Parameter(description = "The unique identifier for file upload", required = true)
-            @NotBlank @PathVariable(name = "file-id") String fileID,
-            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
-    ) {
-        UploadReport uploadReport = null;
-        try {
-            uploadReport = statusService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
-        } catch (AppException e) {
-            if (e.getHttpStatus() == NOT_FOUND) {
-                uploadReport = blobService.getReportV1(brokerCode, organizationFiscalCode, fileID, serviceType);
-            }
-            if (uploadReport == null)
-                throw e;
-        }
-
-        return HttpResponse.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(uploadReport);
-    }
-
-    // =========================
-    // PAGOPA-3282: Get File-Id list
-    // =========================
-    @Operation(
-            summary = "Returns the list of fileIds for a broker/organization in the given date range (max 7 days).",
-            security = {@SecurityRequirement(name = "ApiKey")},
-            operationId = "get-debt-positions-fileids"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "FileIds retrieved.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = FileIdListResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
-            @ApiResponse(responseCode = "401", description = "Wrong or missing function key.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "500", description = "Service unavailable.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))
-    })
-    @Get(value = BASE_PATH + "files", produces = MediaType.APPLICATION_JSON)
-    public HttpResponse<FileIdListResponse> getFileIdList(
-            @Parameter(description = "The broker code", required = true)
-            @NotBlank @PathVariable(name = "broker-code") String brokerCode,
-            @Parameter(description = "The organization fiscal code", required = true)
-            @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
-            @Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-01")
-            @QueryValue(value = "from", defaultValue = "") String fromDateStr,
-            @Parameter(description = "End date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-06")
-            @QueryValue(value = "to", defaultValue = "") String toDateStr,
-            @Parameter(description = "Max items per page (default 100, min 100, max 500)", required = false)
-            @QueryValue(value = "size", defaultValue = "100") Integer size,
-            @Parameter(description = "Continuation token (opaque). Pass it back to get the next page.", required = false)
-            @Header("x-continuation-token") @Nullable String continuationToken,
-            @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
-    ) {
+			content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))
+	})
+	@Get(value = BASE_PATH + "files", produces = MediaType.APPLICATION_JSON)
+	public HttpResponse<FileIdListResponse> getFileIdList(
+			@Parameter(description = "The broker code", required = true)
+			@NotBlank @PathVariable(name = "broker-code") String brokerCode,
+			@Parameter(description = "The organization fiscal code", required = true)
+			@NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
+			@Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-01")
+			@QueryValue(value = "from", defaultValue = "") String fromDateStr,
+			@Parameter(description = "End date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-06")
+			@QueryValue(value = "to", defaultValue = "") String toDateStr,
+			@Parameter(description = "Max items per page (default 100, min 100, max 500)", required = false)
+			@QueryValue(value = "size", defaultValue = "100") Integer size,
+			@Parameter(description = "Continuation token (opaque). Pass it back to get the next page.", required = false)
+			@Header("x-continuation-token") @Nullable String continuationToken,
+			@Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
+			) {
 
-        // Parse & defaults for dates (calendar date, Europe/Rome), inclusive range [from, to]
-        final LocalDate toDate = CommonCheck.parseOrDefaultToDate(toDateStr);
-        final LocalDate fromDate = CommonCheck.parseOrDefaultFromDate(fromDateStr, toDate);
+		// Parse & defaults for dates (calendar date, Europe/Rome), inclusive range [from, to]
+		final LocalDate toDate = CommonCheck.parseOrDefaultToDate(toDateStr);
+		final LocalDate fromDate = CommonCheck.parseOrDefaultFromDate(fromDateStr, toDate);
 
-        // Validate range: from <= to and (to - from + 1) <= 7
-        final long days = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
-        if (fromDate.isAfter(toDate) || days > 7) {
-            throw new AppException(
-                    HttpStatus.BAD_REQUEST,
-                    "BAD_REQUEST",
-                    "Invalid range: ensure 1 ≤ (to - from + 1) ≤ 7 and from ≤ to"
-            );
-        }
+		// Validate range: from <= to and (to - from + 1) <= 7
+		final long days = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+		if (fromDate.isAfter(toDate) || days > 7) {
+			throw new AppException(
+					HttpStatus.BAD_REQUEST,
+					"BAD_REQUEST",
+					"Invalid range: ensure 1 ≤ (to - from + 1) ≤ 7 and from ≤ to"
+					);
+		}
 
-        // Validate size: default 100, min 100, max 500
-        if (size == null || size < 100 || size > 500) {
-            throw new AppException(
-                    HttpStatus.BAD_REQUEST,
-                    "BAD_REQUEST",
-                    "Invalid size: must be between 100 and 500 (default 100)"
-            );
-        }
+		// Validate size: default 100, min 100, max 500
+		if (size == null || size < 100 || size > 500) {
+			throw new AppException(
+					HttpStatus.BAD_REQUEST,
+					"BAD_REQUEST",
+					"Invalid size: must be between 100 and 500 (default 100)"
+					);
+		}
 
-        // Service call
-        FileIdListResponse res = statusService.getFileIdList(
-                brokerCode, organizationFiscalCode, fromDate, toDate, size, continuationToken, serviceType
-        );
+		// Retention check: reject ranges older than (now - 60-days)
+		CommonCheck.enforceRetention(fromDate, toDate);
 
-        // Prepare response
-        MutableHttpResponse<FileIdListResponse> response = HttpResponse.ok(res)
-                .contentType(MediaType.APPLICATION_JSON);
+		// Service call
+		FileIdListResponse res = statusService.getFileIdList(
+				brokerCode, organizationFiscalCode, fromDate, toDate, size, continuationToken, serviceType
+				);
 
-        // Set next continuation token only if present (hasMore)
-        if (res != null && res.getContinuationToken() != null && !res.getContinuationToken().isEmpty()) {
-            response = response.header("x-continuation-token", res.getContinuationToken());
-        }
+		// Prepare response
+		MutableHttpResponse<FileIdListResponse> response = HttpResponse.ok(res)
+				.contentType(MediaType.APPLICATION_JSON);
 
-        return response;
-    }
+		// Set next continuation token only if present (hasMore)
+		if (res != null && res.getContinuationToken() != null && !res.getContinuationToken().isEmpty()) {
+			response = response.header("x-continuation-token", res.getContinuationToken());
+		}
+
+		return response;
+	}
 
 }

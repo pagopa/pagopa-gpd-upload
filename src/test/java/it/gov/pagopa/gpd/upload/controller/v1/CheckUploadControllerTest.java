@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
@@ -179,6 +180,7 @@ class CheckUploadControllerTest {
                 eq(ServiceType.GPD)
         )).thenReturn(stub);
 
+
         String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
 
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
@@ -223,7 +225,9 @@ class CheckUploadControllerTest {
                 .thenReturn(stub);
 
         String inToken = "opaque-token-xyz";
+
         String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
+
         HttpRequest<?> req = HttpRequest.GET(url)
                 .header("x-continuation-token", inToken)
                 .contentType(MediaType.APPLICATION_JSON);
@@ -250,7 +254,9 @@ class CheckUploadControllerTest {
     @Test
     void getFileIdList_shouldReturn400WhenRangeTooLarge() {
         // 10 days > 7
+
         String url = URI_V1 + "s?from=2025-09-01&to=2025-09-10&size=100";
+
         HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, url);
 
         BlockingHttpClient blockingClient = client.toBlocking();
@@ -270,7 +276,9 @@ class CheckUploadControllerTest {
     @Test
     void getFileIdList_shouldReturn400WhenSizeOutOfBounds() {
         // size < 100
+
         String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=50";
+
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
 
         BlockingHttpClient blockingClient = client.toBlocking();
@@ -284,6 +292,65 @@ class CheckUploadControllerTest {
         assertNotNull(problem);
         assertEquals(400, problem.getStatus());
         assertTrue(problem.getDetail().toLowerCase().contains("invalid size"));
+        verifyNoInteractions(statusServiceMock);
+    }
+    
+    @Test
+    void getFileIdList_shouldReturn410WhenRangeEntirelyOlderThanRetention() {
+        // Compute retention cutoff (inclusive): today - 60 days
+        ZoneId today = ZoneId.of("Europe/Rome");
+        LocalDate cutoff = LocalDate.now(today).minusDays(60);
+
+        // Entire range older than (or equal to) cutoff -> expect 410
+        LocalDate to = cutoff;                // equal to cutoff => considered out of retention (inclusive)
+        LocalDate from = cutoff.minusDays(3); // <= 7 days window
+
+        String url = URI_V1 + "s?from=" + from + "&to=" + to + "&size=100";
+        HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
+
+        BlockingHttpClient blocking = client.toBlocking();
+        HttpClientResponseException ex = assertThrows(
+                HttpClientResponseException.class,
+                () -> blocking.exchange(req, FileIdListResponse.class)
+        );
+
+        assertEquals(HttpStatus.GONE, ex.getStatus());
+        ProblemJson problem = ex.getResponse().getBody(ProblemJson.class).orElse(null);
+        assertNotNull(problem);
+        assertEquals(410, problem.getStatus());
+        // The detail should mention the retention concept
+        assertTrue(problem.getDetail().toLowerCase().contains("retention"));
+        // Controller should reject before calling the service
+        verifyNoInteractions(statusServiceMock);
+    }
+
+    @Test
+    void getFileIdList_shouldReturn400WhenRangePartiallyOlderThanRetention() {
+    	// Compute retention cutoff (inclusive): today - 60 days
+        ZoneId today = ZoneId.of("Europe/Rome");
+        LocalDate cutoff = LocalDate.now(today).minusDays(60);
+
+        // Partial overlap: from < cutoff < to  (and keep window <= 7 days)
+        LocalDate from = cutoff.minusDays(1);
+        LocalDate to = cutoff.plusDays(1);
+
+        String url = URI_V1 + "s?from=" + from + "&to=" + to + "&size=100";
+        HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
+
+        BlockingHttpClient blocking = client.toBlocking();
+        HttpClientResponseException ex = assertThrows(
+                HttpClientResponseException.class,
+                () -> blocking.exchange(req, FileIdListResponse.class)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+        ProblemJson problem = ex.getResponse().getBody(ProblemJson.class).orElse(null);
+        assertNotNull(problem);
+        assertEquals(400, problem.getStatus());
+        // The detail should guide the client to shift 'from' to the cutoff
+        String detail = problem.getDetail().toLowerCase();
+        assertTrue(detail.contains("retention") || detail.contains("use from"));
+        // Controller should reject before calling the service
         verifyNoInteractions(statusServiceMock);
     }
 }
