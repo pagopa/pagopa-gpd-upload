@@ -4,7 +4,7 @@
     "title": "GPD-Upload-API-v1",
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.5.0"
+    "version": "0.5.0-1-PAGOPA-3283-monitoring"
   },
   "servers": [
     {
@@ -819,7 +819,25 @@
         }
       },
       "FileIdListResponse": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "fileIds": {
+            "type": "array",
+            "description": "List of file identifiers",
+            "items": {
+              "type": "string"
+            }
+          },
+          "size": {
+            "type": "integer",
+            "description": "Number of items in this page",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "True if another page is available (x-continuation-token present)"
+          }
+        }
       },
       "ProblemJson": {
         "type": "object",
@@ -895,7 +913,25 @@
         }
       },
       "UploadStatus": {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "uploadID": {
+            "type": "string"
+          },
+          "processedItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "submittedItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-10-08T14:55:16.302Z"
+          }
+        }
       }
     },
     "securitySchemes": {

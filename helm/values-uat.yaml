@@ -9,7 +9,7 @@ microservice-chart:
       maxSurge: 1
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.5.0"
+    tag: "0.5.0-1-PAGOPA-3283-monitoring"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -71,7 +71,7 @@ microservice-chart:
           value: "75"
   envConfig:
     WEBSITE_SITE_NAME: 'pagopa-u-gpd-upload-service' # required to show cloud role name in application insights
-    ENV: 'azure-kubernetes-uat'
+    ENV: 'uat'
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     COSMOS_URI: "https://pagopa-u-weu-gps-cosmos-account.documents.azure.com:443/"

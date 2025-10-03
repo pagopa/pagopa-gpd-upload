@@ -86,62 +86,6 @@ public class StatusService {
         return statusRepository.upsert(status);
     }
 
-    private <R> R getData(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType, Function<Status, R> mapper) {
-
-        Status status = getStatus(brokerCode, orgFiscalCode, fileId, serviceType);
-
-        boolean isValid = status.getServiceType() == null && serviceType.equals(ServiceType.GPD) ||
-                Objects.equals(serviceType, status.getServiceType());
-
-        if (isValid) {
-            // apply the specific mapping function (mapReport or mapReportV2)
-            return mapper.apply(status);
-        }
-
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The data for given fileId %s does not exist for %s", fileId, serviceType.name()));
-    }
-
-
-    private Status getStatus(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
-        String sqlQuery = "SELECT * FROM c WHERE c.id = @fileId AND c.fiscalCode = @orgFiscalCode AND c.brokerID = @brokerCode";
-        SqlQuerySpec querySpec = new SqlQuerySpec(
-            sqlQuery,
-            Arrays.asList(
-                new SqlParameter("@fileId", fileId),
-                new SqlParameter("@orgFiscalCode", orgFiscalCode),
-                new SqlParameter("@brokerCode", brokerCode)
-            )
-        );
-        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
-        options.setPartitionKey(new PartitionKey(orgFiscalCode));
-
-        List<Status> statusList = statusRepository.find(querySpec, options);
-
-        if (!statusList.isEmpty()) {
-            return statusList.get(0);
-        }
-        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The status for given fileId %s does not exist for %s", fileId, serviceType.name()));
-    }
-
-    private UploadStatus mapStatusV1(Status status) {
-        return UploadStatus.builder()
-                .uploadID(status.getId())
-                .processedItem(status.upload.getCurrent())
-                .submittedItem(status.upload.getTotal())
-                .startTime(status.upload.getStart())
-                .build();
-    }
-
-    private UploadStatusDTO mapStatusV2(Status status) {
-        return UploadStatusDTO.builder()
-                .fileId(status.getId())
-                .processedItem(status.upload.getCurrent())
-                .submittedItem(status.upload.getTotal())
-                .startTime(status.upload.getStart())
-                .operationStatus(getOperationStatus(status))
-                .build();
-    }
-
     public OperationStatus getOperationStatus(Status status){
         if(status.getUpload().getCurrent() == status.getUpload().getTotal()){
             if(status.getUpload().getResponses() != null){
@@ -226,6 +170,62 @@ public class StatusService {
                 .hasMore(nextToken != null && !nextToken.isBlank())
                 // It is placed in the body for the controller, which will then move it to the x-continuation-token header
                 .continuationToken(nextToken)
+                .build();
+    }
+
+    private <R> R getData(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType, Function<Status, R> mapper) {
+
+        Status status = getStatus(brokerCode, orgFiscalCode, fileId, serviceType);
+
+        boolean isValid = status.getServiceType() == null && serviceType.equals(ServiceType.GPD) ||
+                Objects.equals(serviceType, status.getServiceType());
+
+        if (isValid) {
+            // apply the specific mapping function (mapReport or mapReportV2)
+            return mapper.apply(status);
+        }
+
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The data for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+
+    private Status getStatus(String brokerCode, String orgFiscalCode, String fileId, ServiceType serviceType) {
+        String sqlQuery = "SELECT * FROM c WHERE c.id = @fileId AND c.fiscalCode = @orgFiscalCode AND c.brokerID = @brokerCode";
+        SqlQuerySpec querySpec = new SqlQuerySpec(
+                sqlQuery,
+                Arrays.asList(
+                        new SqlParameter("@fileId", fileId),
+                        new SqlParameter("@orgFiscalCode", orgFiscalCode),
+                        new SqlParameter("@brokerCode", brokerCode)
+                )
+        );
+        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+        options.setPartitionKey(new PartitionKey(orgFiscalCode));
+
+        List<Status> statusList = statusRepository.find(querySpec, options);
+
+        if (!statusList.isEmpty()) {
+            return statusList.get(0);
+        }
+        throw new AppException(NOT_FOUND, "STATUS NOT FOUND", String.format("The status for given fileId %s does not exist for %s", fileId, serviceType.name()));
+    }
+
+    private UploadStatus mapStatusV1(Status status) {
+        return UploadStatus.builder()
+                .uploadID(status.getId())
+                .processedItem(status.upload.getCurrent())
+                .submittedItem(status.upload.getTotal())
+                .startTime(status.upload.getStart())
+                .build();
+    }
+
+    private UploadStatusDTO mapStatusV2(Status status) {
+        return UploadStatusDTO.builder()
+                .fileId(status.getId())
+                .processedItem(status.upload.getCurrent())
+                .submittedItem(status.upload.getTotal())
+                .startTime(status.upload.getStart())
+                .operationStatus(getOperationStatus(status))
                 .build();
     }
 }

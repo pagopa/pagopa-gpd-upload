@@ -5,7 +5,7 @@ import io.micronaut.context.annotation.Replaces;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
-import it.gov.pagopa.gpd.upload.service.RecoveryService;
+import it.gov.pagopa.gpd.upload.service.SupportService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Singleton;
 
@@ -27,9 +27,9 @@ class TestMockFactory {
     }
 
     @Singleton
-    @Replaces(RecoveryService.class)
-    public RecoveryService recoveryService() {
-        return mock(RecoveryService.class);
+    @Replaces(SupportService.class)
+    public SupportService recoveryService() {
+        return mock(SupportService.class);
     }
 
     @Singleton
