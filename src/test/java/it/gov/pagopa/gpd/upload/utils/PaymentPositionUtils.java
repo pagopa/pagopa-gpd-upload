@@ -36,6 +36,7 @@ public class PaymentPositionUtils {
                     .remittanceInformation("remittance information")
                     .category("categoryXZ")
                     .iban("IT0000000000000000000000000")
+                    .companyName("Test Company Name")
                     .transferMetadata(new ArrayList<>())
                     .build();
             List<TransferModel> transferList = new ArrayList<>();
