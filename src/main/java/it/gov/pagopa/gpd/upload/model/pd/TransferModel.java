@@ -56,7 +56,10 @@ public class TransferModel implements Serializable {
 
     @Schema(description = "mutual exclusive with iban and postalIban")
     private Stamp stamp;
-    
+
+    @Schema(description = "company name", example = "Comune di Roma")
+    private String companyName;
+
     @Valid
     @Size(min=0, max=10)
     @Schema(description = "it can added a maximum of 10 key-value pairs for metadata")

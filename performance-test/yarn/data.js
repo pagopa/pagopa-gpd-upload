@@ -9,6 +9,7 @@ class Transfer {
         this.remittanceInformation = uuidv4().substring(0, 10);
         this.category = "category-integration-test-gpd-upload";
         this.iban = "IT0000000000000000000000033";
+        this.companyName = "Performance Test Company";
         this.transferMetadata = [];
     }
 }
