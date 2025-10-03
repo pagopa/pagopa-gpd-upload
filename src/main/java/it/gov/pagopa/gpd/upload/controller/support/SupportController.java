@@ -82,7 +82,7 @@ public class SupportController {
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = "monitoring")
-    public HttpResponse monitoring(
+    public HttpResponse<ProblemJson> monitoring(
             @Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-01")
             @QueryValue(value = "from", defaultValue = "") String fromDateStr,
             @Parameter(description = "End date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-06")

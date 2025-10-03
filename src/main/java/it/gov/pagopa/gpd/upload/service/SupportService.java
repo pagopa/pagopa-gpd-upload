@@ -79,7 +79,6 @@ public class SupportService {
                 )
         );
 
-        log.info("Monitoring from {} to {}", from.atZone(zone).toEpochSecond(), to.atZone(zone).toEpochSecond());
         CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
         options.setPartitionKey(new PartitionKey("fiscalCode"));
 
@@ -88,9 +87,7 @@ public class SupportService {
         final String responseTitle = "Monitoring Alert";
         if (!statusList.isEmpty()) {
             // Send webhook notification
-            log.info("SEND NOTIFICATION");
             if (env.equalsIgnoreCase("prod")) {
-//                SlackNotifier slackNotifier = new SlackNotifier();
                 try {
                     File tempFile = generateCsvContent(statusList);
                     slackService.uploadCsv(
