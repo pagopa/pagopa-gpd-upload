@@ -72,7 +72,7 @@ public class SupportController {
                 .body(report);
     }
 
-    @Operation(summary = "Support API to recover status on CREATE and DELETE operation", description = "Returns the debt positions upload report recovered.", tags = {"Support API"})
+    @Operation(summary = "Support API to monitor pending massive operation", description = "Returns the pending massive operation number and sends a slack notification.", tags = {"Support API"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),

@@ -791,8 +791,8 @@
     "/support/monitoring" : {
       "get" : {
         "tags" : [ "Support API" ],
-        "summary" : "Support API to recover status on CREATE and DELETE operation",
-        "description" : "Returns the debt positions upload report recovered.",
+        "summary" : "Support API to monitor pending massive operation",
+        "description" : "Returns the pending massive operation number and sends a slack notification.",
         "operationId" : "monitoring",
         "parameters" : [ {
           "name" : "from",
