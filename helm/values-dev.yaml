@@ -141,7 +141,7 @@ monitoring-cron:
     - "-m"
     - "\"300\""
     - "weudev.gps.internal.dev.platform.pagopa.it/pagopa-gpd-upload/support/monitoring"
-  envSecret:
+  envSecret: {}
   resources:
     requests:
       memory: "256Mi"
