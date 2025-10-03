@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Tag(name = "Support API")
 @ExecuteOn(TaskExecutors.IO)
-@Controller("support")
+@Controller("/support")
 public class SupportController {
 
     @Inject
@@ -80,7 +80,7 @@ public class SupportController {
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = "monitoring")
+    @Get(value = "/monitoring")
     public HttpResponse<ProblemJson> monitoring(
             @Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-01")
             @QueryValue(value = "from", defaultValue = "") String fromDateStr,
