@@ -9,7 +9,7 @@ import io.micronaut.http.client.exceptions.HttpClientException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
-import it.gov.pagopa.gpd.upload.service.RecoveryService;
+import it.gov.pagopa.gpd.upload.service.SupportService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +33,12 @@ class SupportControllerTest {
     @Inject
     StatusService statusService;
     @Inject
-    RecoveryService recoveryService;
+    SupportService supportService;
 
     @BeforeEach
     void beforeEach() {
         Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
-        Mockito.when(recoveryService.recover(anyString(), anyString(), anyString(), any(ServiceType.class))).thenReturn(true);
+        Mockito.when(supportService.recover(anyString(), anyString(), anyString(), any(ServiceType.class))).thenReturn(true);
     }
 
     @Test

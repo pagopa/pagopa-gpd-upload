@@ -23,7 +23,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 
-class RecoveryServiceGroupingTest {
+class SupportServiceGroupingTest {
 
     private static final String CREATE_UPLOAD_ID = "upload-id-create-grouping";
 
@@ -33,7 +33,7 @@ class RecoveryServiceGroupingTest {
         BlobService blobService = Mockito.mock(BlobService.class);
         GPDClient gpdClient = Mockito.mock(GPDClient.class);
 
-        RecoveryService recoveryService = new RecoveryService(statusService, blobService, gpdClient);
+        SupportService supportService = new SupportService(statusService, blobService, gpdClient);
 
         UploadInput uploadInputCreate = UploadInput.builder()
                 .uploadOperation(UploadOperation.CREATE)
@@ -109,7 +109,7 @@ class RecoveryServiceGroupingTest {
                     return HttpResponse.ok();
                 });
 
-        boolean result = recoveryService.recover("broker", "organization", CREATE_UPLOAD_ID, ServiceType.GPD);
+        boolean result = supportService.recover("broker", "organization", CREATE_UPLOAD_ID, ServiceType.GPD);
 
         // --- assert ---
         Assertions.assertTrue(result, "Recovery should return true when upsert succeeds");

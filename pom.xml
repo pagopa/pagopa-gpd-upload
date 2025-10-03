@@ -214,6 +214,13 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Slack Integration -->
+        <dependency>
+            <groupId>com.slack.api</groupId>
+            <artifactId>slack-api-client</artifactId>
+            <version>1.45.4</version>
+        </dependency>
+
         <!-- Micronaut Test -->
         <dependency>
             <groupId>io.micronaut.test</groupId>

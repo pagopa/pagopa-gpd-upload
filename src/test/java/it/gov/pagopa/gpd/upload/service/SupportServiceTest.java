@@ -20,7 +20,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 
-class RecoveryServiceTest {
+class SupportServiceTest {
 
     static final String CREATE_UPLOAD_ID = "upload-id-create";
     static final String DELETE_UPLOAD_ID = "upload-id-delete";
@@ -28,7 +28,7 @@ class RecoveryServiceTest {
     StatusService statusService = mock(StatusService.class);
     BlobService blobService = mock(BlobService.class);
     GPDClient gpdClient = mock(GPDClient.class);
-    RecoveryService recoveryService = new RecoveryService(statusService, blobService, gpdClient);
+    SupportService supportService = new SupportService(statusService, blobService, gpdClient);
 
     @BeforeEach
     void beforeEach() {
@@ -96,14 +96,14 @@ class RecoveryServiceTest {
     @Test
     void recover_CREATE_UPLOAD_OK() {
         Assertions.assertTrue(
-                recoveryService.recover("broker", "organizaition", CREATE_UPLOAD_ID, ServiceType.GPD)
+                supportService.recover("broker", "organizaition", CREATE_UPLOAD_ID, ServiceType.GPD)
         );
     }
 
     @Test
     void recover_DELETE_UPLOAD_OK() {
         Assertions.assertTrue(
-                recoveryService.recover("broker", "organizaition", DELETE_UPLOAD_ID, ServiceType.GPD)
+                supportService.recover("broker", "organizaition", DELETE_UPLOAD_ID, ServiceType.GPD)
         );
     }
 }

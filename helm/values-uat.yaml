@@ -71,7 +71,7 @@ microservice-chart:
           value: "75"
   envConfig:
     WEBSITE_SITE_NAME: 'pagopa-u-gpd-upload-service' # required to show cloud role name in application insights
-    ENV: 'azure-kubernetes-uat'
+    ENV: 'uat'
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     COSMOS_URI: "https://pagopa-u-weu-gps-cosmos-account.documents.azure.com:443/"
@@ -91,6 +91,8 @@ microservice-chart:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
     BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'
     COSMOS_KEY: 'gpd-upload-db-key'
+    SLACK_TOKEN: 'pagopa-platform-reporter-oauth-token'
+    SLACK_CHANNEL: 'pagopa-platform-alert-channel-id'
   keyvault:
     name: "pagopa-u-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.upload.utils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 
@@ -29,6 +30,10 @@ public class CommonCheck {
 					);
 		}
 	}
+
+	public static LocalDate parseOrDefaultFromDate(String fromDateStr, LocalDateTime toDateTime) {
+        return parseOrDefaultFromDate(fromDateStr, toDateTime.toLocalDate());
+    }
 
 	public static LocalDate parseOrDefaultFromDate(String fromDateStr, LocalDate toDate) {
 		if (fromDateStr == null || fromDateStr.isBlank()) {
