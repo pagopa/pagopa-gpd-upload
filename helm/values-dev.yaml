@@ -15,14 +15,14 @@ microservice-chart: &microservice-chart
     httpGet:
       path: /info
       port: 8080
-    initialDelaySeconds: 90
+    initialDelaySeconds: 45
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /info
       port: 8080
-    initialDelaySeconds: 90
+    initialDelaySeconds: 60
     failureThreshold: 6
     periodSeconds: 10
   deployment:
@@ -141,6 +141,7 @@ monitoring-cron:
     - "-m"
     - "\"300\""
     - "weudev.gps.internal.dev.platform.pagopa.it/pagopa-gpd-upload/support/monitoring"
+  envSecret:
   resources:
     requests:
       memory: "256Mi"
