@@ -22,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @MicronautTest
-public class SlackNotifierTest {
+class SlackNotifierTest {
 
-    private static final String BOT_TOKEN = "test-bot-token";
-    private static final String CHANNEL_ID = "C1234567890";
+    private static final String botToken = "test-bot-token";
+    private static final String channelId = "C1234567890";
 
     @Mock
     Slack mockSlack;
@@ -47,7 +47,7 @@ public class SlackNotifierTest {
         mockedSlackStatic = Mockito.mockStatic(Slack.class);
         mockedSlackStatic.when(Slack::getInstance).thenReturn(mockSlack);
 
-        when(mockSlack.methods(BOT_TOKEN)).thenReturn(mockMethods);
+        when(mockSlack.methods(botToken)).thenReturn(mockMethods);
 
         FilesUploadV2Response mockResponse = mock(FilesUploadV2Response.class);
         when(mockResponse.isOk()).thenReturn(true);
@@ -55,7 +55,7 @@ public class SlackNotifierTest {
         doReturn(mockResponse)
                 .when(mockMethods).filesUploadV2(any(FilesUploadV2Request.class));
 
-        slackNotifier = new SlackNotifier(BOT_TOKEN, CHANNEL_ID);
+        slackNotifier = new SlackNotifier(botToken, channelId);
     }
 
     @AfterEach
@@ -76,14 +76,14 @@ public class SlackNotifierTest {
 
         FilesUploadV2Request capturedRequest = requestCaptor.getValue();
 
-        List<String> expectedChannels = List.of(CHANNEL_ID);
+        List<String> expectedChannels = List.of(channelId);
         assert capturedRequest.getChannels().equals(expectedChannels) : "Channel ID is incorrect";
         assert capturedRequest.getInitialComment().equals(title) : "Initial comment (title) is incorrect";
         assert capturedRequest.getTitle().equals(description) : "File description (title) is incorrect";
         assert capturedRequest.getFilename().equals(mockFile.getName()) : "Filename is incorrect";
         assert capturedRequest.getFile().equals(mockFile) : "File object is incorrect";
 
-        verify(mockSlack, times(1)).methods(BOT_TOKEN);
+        verify(mockSlack, times(1)).methods(botToken);
     }
 
     @Test

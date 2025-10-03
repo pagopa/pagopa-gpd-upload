@@ -22,6 +22,7 @@ import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -95,7 +96,7 @@ public class SupportService {
                             "Lista di elaborazioni non concluse",
                             tempFile
                     );
-                    tempFile.delete();
+                    Files.delete(tempFile.toPath());
                 } catch (Exception e) {
                     log.error("Error sending CSV file to Slack", e);
                 }

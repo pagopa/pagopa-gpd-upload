@@ -1,4 +1,4 @@
-microservice-chart:
+microservice-chart: &microservice-chart
   namespace: "gps"
   nameOverride: ""
   fullnameOverride: ""
@@ -126,3 +126,41 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+monitoring-cron:
+  namespace: "gps"
+  schedule: "0 10 * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "weudev.gps.internal.dev.platform.pagopa.it/pagopa-gpd-upload/support/monitoring"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  serviceAccount:
+    name: "gps-workload-identity"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user

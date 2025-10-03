@@ -39,10 +39,10 @@ class SupportServiceTest {
     @Spy
     private ZoneId zone = ZoneId.of("Europe/Rome");
 
-    static final String CREATE_UPLOAD_ID = "upload-id-create";
-    static final String DELETE_UPLOAD_ID = "upload-id-delete";
-    private final LocalDateTime FROM_TIME = LocalDateTime.of(2023, 10, 1, 0, 0);
-    private final LocalDateTime TO_TIME = LocalDateTime.of(2023, 10, 2, 0, 0);
+    static final String createUploadId = "upload-id-create";
+    static final String deleteUploadId = "upload-id-delete";
+    private final LocalDateTime fromTim = LocalDateTime.of(2023, 10, 1, 0, 0);
+    private final LocalDateTime toTime = LocalDateTime.of(2023, 10, 2, 0, 0);
 
     private File tempFileCreated = null;
 
@@ -65,11 +65,11 @@ class SupportServiceTest {
                 .paymentPositions(List.of(PaymentPositionModel.builder()
                         .iupd("IUPD-1").build()))
                 .build();
-        when(blobService.getUploadInput(anyString(), anyString(), eq(CREATE_UPLOAD_ID), any(ServiceType.class))).thenReturn(uploadInputCreate);
-        when(blobService.getUploadInput(anyString(), anyString(), eq(DELETE_UPLOAD_ID), any(ServiceType.class))).thenReturn(uploadInputDelete);
+        when(blobService.getUploadInput(anyString(), anyString(), eq(createUploadId), any(ServiceType.class))).thenReturn(uploadInputCreate);
+        when(blobService.getUploadInput(anyString(), anyString(), eq(deleteUploadId), any(ServiceType.class))).thenReturn(uploadInputDelete);
 
         // Mock StatusService
-        when(statusService.getStatus(anyString(), eq(DELETE_UPLOAD_ID))).thenReturn(
+        when(statusService.getStatus(anyString(), eq(deleteUploadId))).thenReturn(
                 Status.builder()
                         .id("UPLOAD_KEY")
                         .brokerID("broker")
@@ -83,7 +83,7 @@ class SupportServiceTest {
                                 .build())
                         .build()
         );
-        when(statusService.getStatus(anyString(), eq(CREATE_UPLOAD_ID))).thenReturn(
+        when(statusService.getStatus(anyString(), eq(createUploadId))).thenReturn(
                 Status.builder()
                         .id("UPLOAD_KEY")
                         .brokerID("broker")
@@ -119,14 +119,14 @@ class SupportServiceTest {
     @Test
     void recover_CREATE_UPLOAD_OK() {
         assertTrue(
-                supportService.recover("broker", "organizaition", CREATE_UPLOAD_ID, ServiceType.GPD)
+                supportService.recover("broker", "organizaition", createUploadId, ServiceType.GPD)
         );
     }
 
     @Test
     void recover_DELETE_UPLOAD_OK() {
         assertTrue(
-                supportService.recover("broker", "organizaition", DELETE_UPLOAD_ID, ServiceType.GPD)
+                supportService.recover("broker", "organizaition", deleteUploadId, ServiceType.GPD)
         );
     }
 
@@ -135,7 +135,7 @@ class SupportServiceTest {
         when(statusRepository.find(any(SqlQuerySpec.class), any(CosmosQueryRequestOptions.class)))
                 .thenReturn(Collections.emptyList());
 
-        ProblemJson result = supportService.monitoring(FROM_TIME, TO_TIME);
+        ProblemJson result = supportService.monitoring(fromTim, toTime);
 
         assertEquals(HttpStatus.OK.getCode(), result.getStatus());
         assertEquals("No pending massive operation in the given window", result.getDetail());
@@ -159,7 +159,7 @@ class SupportServiceTest {
 
         ArgumentCaptor<File> fileCaptor = ArgumentCaptor.forClass(File.class);
 
-        ProblemJson result = supportService.monitoring(FROM_TIME, TO_TIME);
+        ProblemJson result = supportService.monitoring(fromTim, toTime);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.getCode(), result.getStatus());
         assertTrue(result.getDetail().contains("There are 2 pending massive operations"));
@@ -185,7 +185,7 @@ class SupportServiceTest {
         when(statusRepository.find(any(SqlQuerySpec.class), any(CosmosQueryRequestOptions.class)))
                 .thenReturn(pendingList);
 
-        ProblemJson result = supportService.monitoring(FROM_TIME, TO_TIME);
+        ProblemJson result = supportService.monitoring(fromTim, toTime);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.getCode(), result.getStatus());
         assertTrue(result.getDetail().contains("There are 1 pending massive operations"));
@@ -207,7 +207,7 @@ class SupportServiceTest {
 
         ArgumentCaptor<File> fileCaptor = ArgumentCaptor.forClass(File.class);
 
-        ProblemJson result = supportService.monitoring(FROM_TIME, TO_TIME);
+        ProblemJson result = supportService.monitoring(fromTim, toTime);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.getCode(), result.getStatus());
 
@@ -222,7 +222,7 @@ class SupportServiceTest {
         when(statusRepository.find(any(SqlQuerySpec.class), any(CosmosQueryRequestOptions.class)))
                 .thenReturn(Collections.emptyList());
 
-        supportService.monitoring(FROM_TIME, TO_TIME);
+        supportService.monitoring(fromTim, toTime);
 
         ArgumentCaptor<SqlQuerySpec> queryCaptor = ArgumentCaptor.forClass(SqlQuerySpec.class);
         ArgumentCaptor<CosmosQueryRequestOptions> optionsCaptor = ArgumentCaptor.forClass(CosmosQueryRequestOptions.class);
@@ -232,8 +232,8 @@ class SupportServiceTest {
         SqlQuerySpec capturedQuery = queryCaptor.getValue();
         assertEquals("SELECT * FROM c WHERE c._ts >= @fromTs AND c._ts <= @toTs AND c.upload.current != c.upload.total", capturedQuery.getQueryText());
 
-        Long expectedFromTs = FROM_TIME.atZone(zone).toEpochSecond();
-        Long expectedToTs = TO_TIME.atZone(zone).toEpochSecond();
+        Long expectedFromTs = fromTim.atZone(zone).toEpochSecond();
+        Long expectedToTs = toTime.atZone(zone).toEpochSecond();
 
         SqlParameter fromParam = (SqlParameter) queryCaptor.getValue().getParameters().get(0);
         SqlParameter toParam = (SqlParameter) queryCaptor.getValue().getParameters().get(1);
@@ -276,7 +276,7 @@ class SupportServiceTest {
                 .upload(Upload.builder()
                         .current(current)
                         .total(total)
-                        .start(FROM_TIME.minusDays(1))
+                        .start(fromTim.minusDays(1))
                         .build())
                 .build();
     }
