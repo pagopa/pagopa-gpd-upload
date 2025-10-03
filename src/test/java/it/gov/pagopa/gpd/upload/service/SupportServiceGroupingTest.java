@@ -12,6 +12,7 @@ import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,11 +30,13 @@ class SupportServiceGroupingTest {
 
     @Test
     void recover_CREATE_groupsByStatusAndMessage() {
+        StatusRepository statusRepository = Mockito.mock(StatusRepository.class);
         StatusService statusService = Mockito.mock(StatusService.class);
         BlobService blobService = Mockito.mock(BlobService.class);
         GPDClient gpdClient = Mockito.mock(GPDClient.class);
+        SlackService slackService = Mockito.mock(SlackService.class);
 
-        SupportService supportService = new SupportService(statusService, blobService, gpdClient);
+        SupportService supportService = new SupportService(statusRepository, statusService, blobService, gpdClient, slackService);
 
         UploadInput uploadInputCreate = UploadInput.builder()
                 .uploadOperation(UploadOperation.CREATE)

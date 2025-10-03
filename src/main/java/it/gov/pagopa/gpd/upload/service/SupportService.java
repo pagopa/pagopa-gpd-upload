@@ -17,18 +17,13 @@ import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
 import it.gov.pagopa.gpd.upload.repository.StatusRepository;
-import it.gov.pagopa.gpd.upload.utils.ResponseEntryDTOMapper;
-import it.gov.pagopa.gpd.upload.utils.SlackNotifier;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.*;
 
 @Singleton

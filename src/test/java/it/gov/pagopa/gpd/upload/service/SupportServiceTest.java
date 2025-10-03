@@ -8,6 +8,7 @@ import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,10 +26,12 @@ class SupportServiceTest {
     static final String CREATE_UPLOAD_ID = "upload-id-create";
     static final String DELETE_UPLOAD_ID = "upload-id-delete";
 
+    StatusRepository statusRepository = mock(StatusRepository.class);
     StatusService statusService = mock(StatusService.class);
     BlobService blobService = mock(BlobService.class);
     GPDClient gpdClient = mock(GPDClient.class);
-    SupportService supportService = new SupportService(statusService, blobService, gpdClient);
+    SlackService slackService = mock(SlackService.class);
+    SupportService supportService = new SupportService(statusRepository, statusService, blobService, gpdClient, slackService);
 
     @BeforeEach
     void beforeEach() {
