@@ -88,6 +88,13 @@ public class SupportController {
             @Parameter(description = "End date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-06")
             @QueryValue(value = "to", defaultValue = "") String toDateStr
     ) {
+        if (fromDateStr.isBlank()) {
+            fromDateStr = LocalDate.now().toString();
+        }
+        if (toDateStr.isBlank()) {
+            toDateStr = fromDateStr;
+        }
+
         // Parse & defaults for dates (calendar date, Europe/Rome), inclusive range [from, to]
         final LocalDateTime toDateTime = CommonCheck.parseOrDefaultToDate(toDateStr).atTime(23,59,59);
         final LocalDateTime fromDateTime = CommonCheck.parseOrDefaultFromDate(fromDateStr, toDateTime).atStartOfDay();
