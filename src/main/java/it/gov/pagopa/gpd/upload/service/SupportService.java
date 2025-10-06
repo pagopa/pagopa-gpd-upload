@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -70,7 +71,6 @@ public class SupportService {
     }
 
     public ProblemJson monitoring(LocalDateTime from, LocalDateTime to) {
-
         String sqlQuery = "SELECT * FROM c WHERE c._ts >= @fromTs AND c._ts <= @toTs AND c.upload.current != c.upload.total";
         SqlQuerySpec querySpec = new SqlQuerySpec(
                 sqlQuery,
@@ -118,7 +118,8 @@ public class SupportService {
     }
 
     public File generateCsvContent(List<Status> statusList) throws IOException {
-        File tempFile = File.createTempFile("gpd_massive_operation_pending_", ".csv");
+        Path tempPath = Files.createTempFile("gpd_massive_operation_pending_", ".csv");
+        File tempFile = tempPath.toFile();
         try (FileWriter writer = new FileWriter(tempFile)) {
             writer.append("FileId,Broker,Organization,Start,Current/Total\n");
             for (Status status : statusList) {
