@@ -89,16 +89,24 @@ public class SupportService {
         if (!statusList.isEmpty()) {
             // Send webhook notification
             if (env.equalsIgnoreCase("prod")) {
+                File tempFile = null;
                 try {
-                    File tempFile = generateCsvContent(statusList);
+                    tempFile = generateCsvContent(statusList);
                     slackService.uploadCsv(
                             ":warning: ACA/GPD Caricamento Massivo",
                             "Lista di elaborazioni non concluse",
                             tempFile
                     );
-                    Files.delete(tempFile.toPath());
                 } catch (Exception e) {
                     log.error("Error sending CSV file to Slack", e);
+                } finally {
+                    if (tempFile != null) {
+                        try {
+                            Files.deleteIfExists(tempFile.toPath()); }
+                        catch (IOException ioe) {
+                            log.warn("CSV file not deleted", ioe);
+                        }
+                    }
                 }
             }
 
