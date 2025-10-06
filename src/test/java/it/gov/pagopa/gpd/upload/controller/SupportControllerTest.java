@@ -6,6 +6,7 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientException;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
@@ -27,9 +28,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 @MicronautTest
 class SupportControllerTest {
 
-    private static final String URI = "support/uploads/broker_organization_uid/status/refresh";
-    private static final String BAD_URI = "support/uploads/broker-organization-uid/status/refresh";
-    private static final String MONITOING_URI = "support/monitoring";
+    private static final String uri = "support/uploads/broker_organization_uid/status/refresh";
+    private static final String badUri = "support/uploads/broker-organization-uid/status/refresh";
+    private static final String monitoringUri = "support/monitoring";
 
     @Inject
     @Client("/")
@@ -48,7 +49,7 @@ class SupportControllerTest {
 
     @Test
     void recoverStatus_OK() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, URI);
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, uri);
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
 
         assertNotNull(response);
@@ -57,16 +58,49 @@ class SupportControllerTest {
 
     @Test
     void recoverStatus_KO() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, BAD_URI);
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, badUri);
         assertThrows(HttpClientException.class, () -> client.toBlocking().exchange(httpRequest));
     }
 
     @Test
-    void monitoring() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, MONITOING_URI);
+    void monitoring_okNoParams() {
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri);
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
 
         assertNotNull(response);
         assertEquals(OK, response.getStatus());
+    }
+
+    @Test
+    void monitoring_okFromTo() {
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?from=2024-01-01&to=2024-01-02");
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(OK, response.getStatus());
+    }
+
+    @Test
+    void monitoring_okFrom() {
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?from=2024-01-01");
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(OK, response.getStatus());
+    }
+
+    @Test
+    void monitoring_okTo() {
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?to=2099-01-01");
+        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
+
+        assertNotNull(response);
+        assertEquals(OK, response.getStatus());
+    }
+
+    @Test
+    void monitoring_ko() {
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?to=2024-01-01");
+        assertThrows(HttpClientResponseException.class, () -> client.toBlocking().exchange(httpRequest));
     }
 }

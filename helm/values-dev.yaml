@@ -136,12 +136,11 @@ monitoring-cron:
     tag: "latest"
     pullPolicy: "Always"
   command:
-    - "yesterday=$(date -d \"yesterday\" '+%Y-%m-%d')"
     - "curl"
     - "-k"
     - "-m"
     - "\"300\""
-    - "https://weudev.gps.internal.dev.platform.pagopa.it/pagopa-gpd-upload/support/monitoring?from=${yesterday}&to=${yesterday}"
+    - "https://weudev.gps.internal.dev.platform.pagopa.it/pagopa-gpd-upload/support/monitoring?fromDay=-1&toDay=-1"
   resources:
     requests:
       memory: "256Mi"

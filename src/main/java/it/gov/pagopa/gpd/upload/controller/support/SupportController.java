@@ -82,21 +82,34 @@ public class SupportController {
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
     @Get(value = "/monitoring")
     public HttpResponse<ProblemJson> monitoring(
-            @Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-01")
+            @Parameter(description = "Start date (YYYY-MM-DD), Europe/Rome. Primary compared to fromDay", required = false, example = "2025-09-01")
             @QueryValue(value = "from", defaultValue = "") String fromDateStr,
-            @Parameter(description = "End date (YYYY-MM-DD), Europe/Rome", required = false, example = "2025-09-06")
-            @QueryValue(value = "to", defaultValue = "") String toDateStr
+            @Parameter(description = "End date (YYYY-MM-DD), Europe/Rome. Primary compared to endDay", required = false, example = "2025-09-06")
+            @QueryValue(value = "to", defaultValue = "") String toDateStr,
+            @Parameter(description = "Start day among to now.", required = false, example = "-1")
+            @QueryValue(value = "fromDay", defaultValue = "-1") Long fromDay,
+            @Parameter(description = "End day among to now.", required = false, example = "-1")
+            @QueryValue(value = "toDay", defaultValue = "-1") Long toDay
     ) {
         if (fromDateStr.isBlank()) {
-            fromDateStr = LocalDate.now().toString();
+            fromDateStr = LocalDate.now().plusDays(fromDay).toString();
         }
         if (toDateStr.isBlank()) {
-            toDateStr = fromDateStr;
+            if (fromDateStr.isBlank() && toDay != null) {
+                toDateStr = LocalDate.now().plusDays(toDay).toString();
+            }
+            else {
+                toDateStr = fromDateStr;
+            }
         }
 
         // Parse & defaults for dates (calendar date, Europe/Rome), inclusive range [from, to]
         final LocalDateTime toDateTime = CommonCheck.parseOrDefaultToDate(toDateStr).atTime(23,59,59);
         final LocalDateTime fromDateTime = CommonCheck.parseOrDefaultFromDate(fromDateStr, toDateTime).atStartOfDay();
+
+        if (toDateTime.isBefore(fromDateTime)) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Monitoring bad request", "'to' date must be after 'from' date");
+        }
 
         return HttpResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
