@@ -4,7 +4,7 @@
     "title": "GPD-Upload-API-v2",
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.5.0-1-PAGOPA-3283-monitoring"
+    "version": "0.5.0-2-PAGOPA-3283-monitoring"
   },
   "servers": [
     {
