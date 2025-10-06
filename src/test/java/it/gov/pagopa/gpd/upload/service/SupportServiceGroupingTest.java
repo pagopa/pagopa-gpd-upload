@@ -12,6 +12,7 @@ import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,17 +24,19 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 
-class RecoveryServiceGroupingTest {
+class SupportServiceGroupingTest {
 
     private static final String CREATE_UPLOAD_ID = "upload-id-create-grouping";
 
     @Test
     void recover_CREATE_groupsByStatusAndMessage() {
+        StatusRepository statusRepository = Mockito.mock(StatusRepository.class);
         StatusService statusService = Mockito.mock(StatusService.class);
         BlobService blobService = Mockito.mock(BlobService.class);
         GPDClient gpdClient = Mockito.mock(GPDClient.class);
+        SlackService slackService = Mockito.mock(SlackService.class);
 
-        RecoveryService recoveryService = new RecoveryService(statusService, blobService, gpdClient);
+        SupportService supportService = new SupportService(statusRepository, statusService, blobService, gpdClient, slackService);
 
         UploadInput uploadInputCreate = UploadInput.builder()
                 .uploadOperation(UploadOperation.CREATE)
@@ -47,12 +50,10 @@ class RecoveryServiceGroupingTest {
                 ))
                 .build();
 
-        // BlobService.getUploadInput(...)
-        Mockito.when(blobService.getUploadInput(eq("broker"), eq("organization"), eq(CREATE_UPLOAD_ID), eq(ServiceType.GPD)))
+        Mockito.when(blobService.getUploadInput("broker", "organization", CREATE_UPLOAD_ID, ServiceType.GPD))
                 .thenReturn(uploadInputCreate);
 
-        // StatusService.getStatus(orgFiscalCode, fileId)
-        Mockito.when(statusService.getStatus(eq("organization"), eq(CREATE_UPLOAD_ID))).thenReturn(
+        Mockito.when(statusService.getStatus("organization", CREATE_UPLOAD_ID)).thenReturn(
                 Status.builder()
                         .id(CREATE_UPLOAD_ID)
                         .brokerID("broker")
@@ -62,7 +63,7 @@ class RecoveryServiceGroupingTest {
                                 .total(6)
                                 .responses(new ArrayList<>())
                                 .start(LocalDateTime.now().minusMinutes(1))
-                                .end(null) // evita uscita anticipata
+                                .end(null)
                                 .build())
                         .build()
         );
@@ -109,7 +110,7 @@ class RecoveryServiceGroupingTest {
                     return HttpResponse.ok();
                 });
 
-        boolean result = recoveryService.recover("broker", "organization", CREATE_UPLOAD_ID, ServiceType.GPD);
+        boolean result = supportService.recover("broker", "organization", CREATE_UPLOAD_ID, ServiceType.GPD);
 
         // --- assert ---
         Assertions.assertTrue(result, "Recovery should return true when upsert succeeds");

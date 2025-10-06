@@ -1,5 +1,10 @@
 package it.gov.pagopa.gpd.upload.service;
 
+import com.azure.cosmos.models.CosmosQueryRequestOptions;
+import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.SqlParameter;
+import com.azure.cosmos.models.SqlQuerySpec;
+import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.HttpResponse;
 import it.gov.pagopa.gpd.upload.client.GPDClient;
@@ -11,30 +16,42 @@ import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionModel;
+import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashMap;
+import java.time.ZoneId;
+import java.util.*;
 
 @Singleton
 @Slf4j
-public class RecoveryService {
+public class SupportService {
+
+    private StatusRepository statusRepository;
+
     private final StatusService statusService;
     private final BlobService blobService;
     private final GPDClient gpdClient;
+    private final SlackService slackService;
+
+    @Value("${env}")
+    private String env;
+
+    private ZoneId zone = ZoneId.of("Europe/Rome");
+
 
     @Inject
-    public RecoveryService(StatusService statusService, BlobService blobService, GPDClient gpdClient) {
+    public SupportService(StatusRepository statusRepository, StatusService statusService, BlobService blobService, GPDClient gpdClient, SlackService slackService) {
+        this.statusRepository = statusRepository;
         this.statusService = statusService;
         this.blobService = blobService;
         this.gpdClient = gpdClient;
+        this.slackService = slackService;
     }
 
     public boolean recover(String brokerId, String organizationFiscalCode, String uploadId, ServiceType serviceType) {
@@ -51,6 +68,79 @@ public class RecoveryService {
             throw new AppException(HttpStatus.NOT_FOUND, "Upload operation not processable",
                     String.format("Not exists CREATE or DELETE operation with upload-id %s", uploadId));
         }
+    }
+
+    public ProblemJson monitoring(LocalDateTime from, LocalDateTime to) {
+        String sqlQuery = "SELECT * FROM c WHERE c._ts >= @fromTs AND c._ts <= @toTs AND c.upload.current != c.upload.total";
+        SqlQuerySpec querySpec = new SqlQuerySpec(
+                sqlQuery,
+                Arrays.asList(
+                        new SqlParameter("@fromTs", from.atZone(zone).toEpochSecond()),
+                        new SqlParameter("@toTs", to.atZone(zone).toEpochSecond())
+                )
+        );
+
+        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+        options.setPartitionKey(new PartitionKey("fiscalCode"));
+
+        List<Status> statusList = statusRepository.find(querySpec,  new CosmosQueryRequestOptions());
+
+        final String responseTitle = String.format("Monitoring Alert: %s -> %s", from.atZone(zone).toLocalDateTime(), to.atZone(zone).toLocalDateTime());
+        if (!statusList.isEmpty()) {
+            // Send webhook notification
+            if (env.equalsIgnoreCase("prod")) {
+                File tempFile = null;
+                try {
+                    tempFile = generateCsvContent(statusList);
+                    slackService.uploadCsv(
+                            ":warning: ACA/GPD Caricamento Massivo",
+                            "Lista di elaborazioni non concluse",
+                            tempFile
+                    );
+                } catch (Exception e) {
+                    log.error("Error sending CSV file to Slack", e);
+                } finally {
+                    if (tempFile != null) {
+                        try {
+                            Files.deleteIfExists(tempFile.toPath()); }
+                        catch (IOException ioe) {
+                            log.warn("CSV file not deleted", ioe);
+                        }
+                    }
+                }
+            }
+
+            return ProblemJson.builder()
+                    .title(responseTitle)
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.getCode())
+                    .detail("There are " + statusList.size() + " pending massive operations in the given window. " +
+                            "Report is published in the Slack channel PagoPA-Pagamenti-Alert if in PROD environment")
+                    .build();
+        }
+
+        return ProblemJson.builder()
+                .title(responseTitle)
+                .status(HttpStatus.OK.getCode())
+                .detail("No pending massive operation in the given window")
+                .build();
+    }
+
+    @SuppressWarnings("java:S5443")
+    public File generateCsvContent(List<Status> statusList) throws IOException {
+        File tempFile = Files.createTempFile("gpd_massive_operation_pending_", ".csv").toFile();
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.append("FileId,Broker,Organization,Start,Current/Total\n");
+            for (Status status : statusList) {
+                writer.append(String.format("%s,%s,%s,%s,%s\n",
+                        status.getId(),
+                        status.getBrokerID(),
+                        status.getFiscalCode(),
+                        status.upload.getStart().atZone(zone).toLocalDate().toString(),
+                        String.format("%d/%d", status.upload.getCurrent(), status.upload.getTotal())
+                ));
+            }
+        }
+        return tempFile;
     }
 
     private boolean recover(String organizationFiscalCode, String uploadId, List<String> inputIUPD, HttpStatus toGetFromGPD, HttpStatus toWrite) {
