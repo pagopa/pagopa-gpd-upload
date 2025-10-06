@@ -16,6 +16,8 @@ import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
@@ -28,9 +30,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 @MicronautTest
 class SupportControllerTest {
 
-    private static final String uri = "support/uploads/broker_organization_uid/status/refresh";
-    private static final String badUri = "support/uploads/broker-organization-uid/status/refresh";
-    private static final String monitoringUri = "support/monitoring";
+    private static final String URI = "support/uploads/broker_organization_uid/status/refresh";
+    private static final String BAD_URI = "support/uploads/broker-organization-uid/status/refresh";
+    private static final String MONITORING_URI = "support/monitoring";
 
     @Inject
     @Client("/")
@@ -49,7 +51,7 @@ class SupportControllerTest {
 
     @Test
     void recoverStatus_OK() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, uri);
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, URI);
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
 
         assertNotNull(response);
@@ -58,40 +60,19 @@ class SupportControllerTest {
 
     @Test
     void recoverStatus_KO() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, badUri);
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, BAD_URI);
         assertThrows(HttpClientException.class, () -> client.toBlocking().exchange(httpRequest));
     }
 
-    @Test
-    void monitoring_okNoParams() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri);
-        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
-
-        assertNotNull(response);
-        assertEquals(OK, response.getStatus());
-    }
-
-    @Test
-    void monitoring_okFromTo() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?from=2024-01-01&to=2024-01-02");
-        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
-
-        assertNotNull(response);
-        assertEquals(OK, response.getStatus());
-    }
-
-    @Test
-    void monitoring_okFrom() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?from=2024-01-01");
-        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
-
-        assertNotNull(response);
-        assertEquals(OK, response.getStatus());
-    }
-
-    @Test
-    void monitoring_okTo() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?to=2099-01-01");
+    @ParameterizedTest
+    @ValueSource(strings = {
+            MONITORING_URI,
+            MONITORING_URI + "?from=2024-01-01&to=2024-01-02",
+            MONITORING_URI + "?from=2024-01-01",
+            MONITORING_URI + "?to=2099-01-01"
+            })
+    void monitoring(String uri) {
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, uri);
         HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
 
         assertNotNull(response);
@@ -100,7 +81,7 @@ class SupportControllerTest {
 
     @Test
     void monitoring_ko() {
-        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, monitoringUri + "?to=2024-01-01");
+        HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, MONITORING_URI + "?to=2024-01-01");
         assertThrows(HttpClientResponseException.class, () -> client.toBlocking().exchange(httpRequest));
     }
 }
