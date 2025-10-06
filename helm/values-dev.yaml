@@ -1,4 +1,4 @@
-microservice-chart: &microservice-chart
+microservice-chart:
   namespace: "gps"
   nameOverride: ""
   fullnameOverride: ""
@@ -86,7 +86,7 @@ microservice-chart: &microservice-chart
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
     OTEL_LOGS_EXPORTER: none
     OTEL_TRACES_SAMPLER: "always_on"
-  envSecret: &envSecret
+  envSecret:
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
     BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'

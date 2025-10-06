@@ -85,7 +85,7 @@ public class SupportService {
 
         List<Status> statusList = statusRepository.find(querySpec,  new CosmosQueryRequestOptions());
 
-        final String responseTitle = "Monitoring Alert";
+        final String responseTitle = String.format("Monitoring Alert: %s -> %s", from.atZone(zone).toLocalDateTime(), to.atZone(zone).toLocalDateTime());
         if (!statusList.isEmpty()) {
             // Send webhook notification
             if (env.equalsIgnoreCase("prod")) {

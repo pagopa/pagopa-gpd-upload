@@ -126,5 +126,48 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
-ghcr:
-  io/pagopa/pagopa-gpd-upload:
+monitoring-cron:
+  namespace: "gps"
+  schedule: "0 10 * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "https://weuuat.gps.internal.uat.platform.pagopa.it/pagopa-gpd-upload/support/monitoring?fromDay=-1&toDay=-1"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecrets:
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-u-connection-string'
+  keyvault:
+    name: "pagopa-u-gps-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+  serviceAccount:
+    name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: "feceef7b-51a4-4141-87b8-1b58b10e83c4"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user
