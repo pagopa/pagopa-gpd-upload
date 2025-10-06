@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @ToString
 @Builder(toBuilder = true)
 public class UploadStatusDTO {
-    private String uploadID;
+    private String fileId;
     private int processedItem;
     private int submittedItem;
 

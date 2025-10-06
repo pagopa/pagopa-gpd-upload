@@ -13,10 +13,10 @@ import io.micronaut.http.multipart.CompletedFileUpload;
 import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.UploadInput;
 import it.gov.pagopa.gpd.upload.model.UploadOperation;
-import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
 import it.gov.pagopa.gpd.upload.model.pd.MultipleIUPDModel;
 import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
+import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
 import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
 import it.gov.pagopa.gpd.upload.utils.GPDValidator;
@@ -82,10 +82,7 @@ public class BlobService {
         try {
             PaymentPositionsModel paymentPositionsModel = objectMapper.readValue(is, PaymentPositionsModel.class);
 
-            if (!paymentPositionsValidator.isValid(paymentPositionsModel)) {
-                log.error("[Error][BlobService@upload] Debt-Positions validation failed for upload from broker {} and organization {}", broker, organizationFiscalCode);
-                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
-            }
+            paymentPositionsValidator.isValidOrElseThrow(paymentPositionsModel);
 
             UploadInput uploadInput = UploadInput.builder()
                     .uploadOperation(uploadOperation)
@@ -110,11 +107,7 @@ public class BlobService {
         try {
             MultipleIUPDModel multipleIUPDModel = objectMapper.readValue(is, MultipleIUPDModel.class);
 
-            if (!multipleIUPDValidator.isValid(multipleIUPDModel)) {
-                log.error(String.format("[Error][BlobService@delete] Debt-Positions validation failed for upload from broker %s and organization %s",
-                        broker, organizationFiscalCode));
-                throw new AppException(HttpStatus.BAD_REQUEST, "INVALID DEBT POSITIONS", "The format of the debt positions in the uploaded file is invalid.");
-            }
+            multipleIUPDValidator.isValidOrElseThrow(multipleIUPDModel);
 
             UploadInput uploadInput = UploadInput.builder()
                     .uploadOperation(uploadOperation)
@@ -240,12 +233,10 @@ public class BlobService {
 
             log.error("[Error][BlobService@unzip] No valid file in ZIP");
             throw new AppException(HttpStatus.BAD_REQUEST, "INVALID FILE", "No valid file found in ZIP.");
-        }
-        catch (EOFException e) {
+        } catch (EOFException e) {
             log.error("[Error][BlobService@unzip] Client input error: " + e.getMessage(), e);
             throw new AppException(HttpStatus.BAD_REQUEST, "UNZIP ERROR", "Could not unzip file");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.error("[Error][BlobService@unzip] " + e.getMessage(), e);
             throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "UNZIP ERROR", "Problem to manage zip file", e);
         }

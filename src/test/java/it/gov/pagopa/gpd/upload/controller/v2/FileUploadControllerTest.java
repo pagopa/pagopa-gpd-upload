@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.upload.controller.v2;
 
-import io.micronaut.context.annotation.Bean;
-import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpMethod;
 import io.micronaut.http.HttpRequest;
@@ -12,13 +10,10 @@ import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.multipart.MultipartBody;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import it.gov.pagopa.gpd.upload.model.v1.UploadReport;
-import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
-import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
-import it.gov.pagopa.gpd.upload.repository.BlobStorageRepository;
-import it.gov.pagopa.gpd.upload.repository.StatusRepository;
 import it.gov.pagopa.gpd.upload.service.BlobService;
 import it.gov.pagopa.gpd.upload.service.StatusService;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -30,7 +25,8 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 
 import static io.micronaut.http.HttpStatus.ACCEPTED;
-import static io.micronaut.http.HttpStatus.OK;
+import static it.gov.pagopa.gpd.upload.utils.TestConstants.QUERY_PARAM_SERVICE_TYPE_GPD;
+import static it.gov.pagopa.gpd.upload.utils.TestConstants.URI_V2;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,21 +37,29 @@ import static org.mockito.ArgumentMatchers.anyString;
 @MicronautTest
 class FileUploadControllerTest {
 
-    private static final String URI = "v2/brokers/broker-ID/organizations/fiscal-code/debtpositions/file";
     private static final String UPLOAD_KEY = "key";
-    private static final String QUERY_PARAM_SERVICE_TYPE = String.format("?serviceType=%s",ServiceType.GPD.name());
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
 
     @Inject
     @Client("/")
     HttpClient client;
+    @Inject
+    StatusService statusService;
+    @Inject
+    BlobService blobService;
+
+    @BeforeEach
+    void beforeEach() {
+        Mockito.when(statusService.getReportV1(anyString(), anyString(), anyString(), any())).thenReturn(UploadReport.builder().build());
+        Mockito.when(blobService.upsert(anyString(), anyString(), any(), any(), any())).thenReturn(UPLOAD_KEY);
+    }
 
     @Test
     void createDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI + QUERY_PARAM_SERVICE_TYPE)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.POST, URI_V2 + QUERY_PARAM_SERVICE_TYPE_GPD)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -71,7 +75,7 @@ class FileUploadControllerTest {
     void updateDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI + QUERY_PARAM_SERVICE_TYPE)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.PUT, URI_V2 + QUERY_PARAM_SERVICE_TYPE_GPD)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -87,7 +91,7 @@ class FileUploadControllerTest {
     void deleteDebtPositionsByFile_OK() throws IOException {
         File file = getTempFile();
 
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI + QUERY_PARAM_SERVICE_TYPE)
+        HttpRequest httpRequest = HttpRequest.create(HttpMethod.DELETE, URI_V2 + QUERY_PARAM_SERVICE_TYPE_GPD)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(MultipartBody.builder()
                         .addPart("file", file.getName(), file)
@@ -105,48 +109,5 @@ class FileUploadControllerTest {
                 Path.of("./"), "test", ".zip",
                 PosixFilePermissions.asFileAttribute(EnumSet.of(OWNER_READ, OWNER_WRITE)) // permissions `-rw-------`
         ).toFile();
-    }
-
-    @Test
-    void getUploadStatus_KO() throws IOException {
-        this.createDebtPositionsByFile_OK();
-
-        HttpRequest httpRequest = HttpRequest.create(HttpMethod.GET, URI + "/fileID" + "/report" + QUERY_PARAM_SERVICE_TYPE);
-        HttpResponse<?> response = client.toBlocking().exchange(httpRequest);
-
-        assertNotNull(response);
-        assertEquals(OK, response.getStatus());
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////MOCK//////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    @Bean
-    @Primary
-    public BlobService fileUploadService() throws IOException {
-        BlobService blobService = Mockito.mock(BlobService.class);
-        Mockito.when(blobService.upsert(anyString(), anyString(), any(), any(), any())).thenReturn(UPLOAD_KEY);
-        return blobService;
-    }
-
-    @Bean
-    @Primary
-    public StatusService statusService() throws IOException {
-        StatusService statusService = Mockito.mock(StatusService.class);
-        Mockito.when(statusService.getReportV2(anyString(), anyString(), anyString(), any())).thenReturn(UploadReportDTO.builder().build());
-        return statusService;
-    }
-
-    // real repositories are out of scope for this test, @PostConstruct init routine requires connection-string
-    @Bean
-    @Primary
-    public BlobStorageRepository blobStorageRepository() {
-        return Mockito.mock(BlobStorageRepository.class);
-    }
-    @Bean
-    @Primary
-    public StatusRepository statusRepository() {
-        return Mockito.mock(StatusRepository.class);
     }
 }

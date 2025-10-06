@@ -54,8 +54,8 @@ public class CheckUploadController {
     BlobService blobService;
     @Inject
     StatusService statusService;
-    private static final String BASE_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
-    private static final String FILES_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files";
+
+    private static final String BASE_PATH = "v2/brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/";
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
@@ -66,7 +66,7 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "404", description = "Upload not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "/{file-id}/status",
+    @Get(value = BASE_PATH + "file/{file-id}/status",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<UploadStatusDTO> getUploadStatus(
             @Parameter(description = "The broker code", required = true)
@@ -91,9 +91,10 @@ public class CheckUploadController {
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "Upload report not found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "425", description = "The report has not been generated yet, wait for the operations to complete.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))})
-    @Get(value = BASE_PATH + "/{file-id}/report",
+    @Get(value = BASE_PATH + "file/{file-id}/report",
             produces = MediaType.APPLICATION_JSON)
     HttpResponse<UploadReportDTO> getUploadReport(
             @Parameter(description = "The broker code", required = true)
@@ -110,9 +111,13 @@ public class CheckUploadController {
         } catch (AppException e) {
             if (e.getHttpStatus() == NOT_FOUND) {
                 uploadReport = blobService.getReportV2(brokerCode, organizationFiscalCode, uploadID, serviceType);
-                if (uploadReport == null)
-                    throw e;
             }
+            if (uploadReport == null)
+                throw e;
+        }
+
+        if(uploadReport != null && uploadReport.getEndTime() == null){
+            throw new AppException(HttpStatus.TOO_EARLY, "Too Early", "The report has not been generated yet, wait for the operations to complete.");
         }
 
         return HttpResponse.status(HttpStatus.OK)
@@ -135,10 +140,15 @@ public class CheckUploadController {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "410", description = "Gone",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
+            @ApiResponse(responseCode = "429", description = "Too many requests.", content = @Content(mediaType = MediaType.TEXT_JSON)),
             @ApiResponse(responseCode = "500", description = "Service unavailable.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class)))
     })
-    @Get(value = FILES_PATH, produces = MediaType.APPLICATION_JSON)
+
+    @Get(value = BASE_PATH + "files", produces = MediaType.APPLICATION_JSON)
     public HttpResponse<FileIdListResponse> getFileIdList(
             @Parameter(description = "The broker code", required = true)
             @NotBlank @PathVariable(name = "broker-code") String brokerCode,
@@ -177,6 +187,9 @@ public class CheckUploadController {
                     "Invalid size: must be between 100 and 500 (default 100)"
             );
         }
+
+        // Retention check: reject ranges older than (now - 60-days)
+        CommonCheck.enforceRetention(fromDate, toDate);
 
         // Service call
         FileIdListResponse res = statusService.getFileIdList(

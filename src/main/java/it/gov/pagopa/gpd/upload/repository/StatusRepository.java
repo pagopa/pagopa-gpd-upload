@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.upload.repository;
 
-import com.azure.cosmos.CosmosClientBuilder;
-import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.CosmosException;
 import com.azure.cosmos.models.CosmosItemResponse;
@@ -10,17 +8,15 @@ import com.azure.cosmos.models.FeedResponse;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.SqlParameter;
 import com.azure.cosmos.models.SqlQuerySpec;
-import com.azure.cosmos.util.CosmosPagedFlux;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import io.micronaut.context.annotation.Context;
-import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpStatus;
 import it.gov.pagopa.gpd.upload.entity.Status;
 import it.gov.pagopa.gpd.upload.exception.AppException;
-import jakarta.annotation.PostConstruct;
+import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,28 +30,10 @@ import static io.micronaut.http.HttpStatus.NOT_FOUND;
 @Context
 @Slf4j
 public class StatusRepository {
-
-    @Value("${cosmos.uri}")
-    private String cosmosURI;
-
-    @Value("${cosmos.key}")
-    private String cosmosKey;
-
-    @Value("${cosmos.database.name}")
-    private String databaseName;
-
-    @Value("${cosmos.container.name}")
-    private String containerName;
-
-    private CosmosContainer container;
-
-    @PostConstruct
-    public void init() {
-        CosmosClient cosmosClient = new CosmosClientBuilder()
-                .endpoint(cosmosURI)
-                .key(cosmosKey)
-                .buildClient();
-        container = cosmosClient.getDatabase(databaseName).getContainer(containerName);
+    private final CosmosContainer container;
+    @Inject
+    public StatusRepository(CosmosContainer container) {
+        this.container = container;
     }
 
     public static final class FileIdsPage {
@@ -154,7 +132,7 @@ public class StatusRepository {
             LocalDateTime to,
             int size,
             String continuationToken,
-            it.gov.pagopa.gpd.upload.model.enumeration.ServiceType serviceType
+            ServiceType serviceType
     ) {
         try {
             // Serialize dates to ISO-8601
