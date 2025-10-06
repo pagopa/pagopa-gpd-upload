@@ -127,8 +127,7 @@ public class SupportService {
 
     @SuppressWarnings("java:S5443")
     public File generateCsvContent(List<Status> statusList) throws IOException {
-        Path tempPath = Files.createTempFile("gpd_massive_operation_pending_", ".csv");
-        File tempFile = tempPath.toFile();
+        File tempFile = Files.createTempFile("gpd_massive_operation_pending_", ".csv").toFile();
         try (FileWriter writer = new FileWriter(tempFile)) {
             writer.append("FileId,Broker,Organization,Start,Current/Total\n");
             for (Status status : statusList) {
