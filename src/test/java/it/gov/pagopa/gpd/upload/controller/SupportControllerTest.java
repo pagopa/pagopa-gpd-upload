@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.upload.controller;
 import io.micronaut.http.HttpMethod;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.client.BlockingHttpClient;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientException;
@@ -82,6 +83,8 @@ class SupportControllerTest {
     @Test
     void monitoring_ko() {
         HttpRequest<?> httpRequest = HttpRequest.create(HttpMethod.GET, MONITORING_URI + "?to=2024-01-01");
-        assertThrows(HttpClientResponseException.class, () -> client.toBlocking().exchange(httpRequest));
+        BlockingHttpClient blockingClient = client.toBlocking();
+        assertThrows(HttpClientResponseException.class, () -> blockingClient.exchange(httpRequest));
     }
+
 }
