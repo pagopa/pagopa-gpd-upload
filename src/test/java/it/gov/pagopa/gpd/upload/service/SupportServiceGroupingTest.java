@@ -50,12 +50,10 @@ class SupportServiceGroupingTest {
                 ))
                 .build();
 
-        // BlobService.getUploadInput(...)
-        Mockito.when(blobService.getUploadInput(eq("broker"), eq("organization"), eq(CREATE_UPLOAD_ID), eq(ServiceType.GPD)))
+        Mockito.when(blobService.getUploadInput("broker", "organization", CREATE_UPLOAD_ID, ServiceType.GPD))
                 .thenReturn(uploadInputCreate);
 
-        // StatusService.getStatus(orgFiscalCode, fileId)
-        Mockito.when(statusService.getStatus(eq("organization"), eq(CREATE_UPLOAD_ID))).thenReturn(
+        Mockito.when(statusService.getStatus("organization", CREATE_UPLOAD_ID)).thenReturn(
                 Status.builder()
                         .id(CREATE_UPLOAD_ID)
                         .brokerID("broker")
@@ -65,7 +63,7 @@ class SupportServiceGroupingTest {
                                 .total(6)
                                 .responses(new ArrayList<>())
                                 .start(LocalDateTime.now().minusMinutes(1))
-                                .end(null) // evita uscita anticipata
+                                .end(null)
                                 .build())
                         .build()
         );
