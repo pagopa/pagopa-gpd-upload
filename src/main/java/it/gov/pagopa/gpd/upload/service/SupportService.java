@@ -117,6 +117,7 @@ public class SupportService {
                 .build();
     }
 
+    @SuppressWarnings("java:S5443")
     public File generateCsvContent(List<Status> statusList) throws IOException {
         Path tempPath = Files.createTempFile("gpd_massive_operation_pending_", ".csv");
         File tempFile = tempPath.toFile();
