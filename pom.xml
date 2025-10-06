@@ -7,7 +7,7 @@
 
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.5.0-2-PAGOPA-3283-monitoring</version>
+    <version>0.5.1</version>
     <packaging>jar</packaging>
 
     <parent>
