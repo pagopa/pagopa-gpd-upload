@@ -19,3 +19,9 @@ overrides:
       response_time_threshold: 5
     DELETE /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file:
       response_time_threshold: 5
+    GET /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/status:
+      response_time_threshold: 5
+    GET /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{file-id}/report:
+      response_time_threshold: 5
+    GET /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/files:
+      response_time_threshold: 5
