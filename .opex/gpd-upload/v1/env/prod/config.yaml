@@ -21,7 +21,3 @@ overrides:
       response_time_threshold: 5
     GET /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{upload-id}/status:
       response_time_threshold: 5
-    GET /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{upload-id}/report:
-      response_time_threshold: 5
-    GET /brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file/{upload-id}/files:
-      response_time_threshold: 5
