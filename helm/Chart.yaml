@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopa-gpd-upload
 description: Microservice that handles file upload of massive debt positions JSON object
 type: application
-version: 0.139.0
-appVersion: 0.5.1
+version: 0.140.0
+appVersion: 0.5.2
 dependencies:
   - name: microservice-chart
     version: 7.5.0
