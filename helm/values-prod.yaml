@@ -9,7 +9,7 @@ microservice-chart:
       maxSurge: 1
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.5.0-1-PIDM-968-add-companyName-to-transfer"
+    tag: "0.5.1"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -96,6 +96,8 @@ microservice-chart:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
     BLOB_CONNECTION_STRING: 'gpd-upload-sa-connection-string'
     COSMOS_KEY: 'gpd-upload-db-key'
+    SLACK_TOKEN: 'pagopa-platform-reporter-oauth-token'
+    SLACK_CHANNEL: 'pagopa-platform-alert-channel-id'
   keyvault:
     name: "pagopa-p-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -131,3 +133,48 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+monitoring-cron:
+  namespace: "gps"
+  schedule: "0 10 * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "https://weuprod.gps.internal.platform.pagopa.it/pagopa-gpd-upload/support/monitoring?fromDay=-1&toDay=-1"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecrets:
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
+  keyvault:
+    name: "pagopa-p-gps-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+  serviceAccount:
+    name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: "28793c44-d0fe-4c90-8c81-832a10ff86e2"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user

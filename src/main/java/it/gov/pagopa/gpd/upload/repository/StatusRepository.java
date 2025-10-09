@@ -116,7 +116,7 @@ public class StatusRepository {
             );
             return response.stream().toList();
         } catch (CosmosException ex) {
-            log.error("[Error][StatusRepository@findPending] The Status retrieval was not successful: {}", ex.getStatusCode());
+            log.error("[Error][StatusRepository@findPending] The status retrieval was not successful: {}", ex.getStatusCode(), ex);
             if(ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR.getCode())
                 throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.name(), "The Status retrieval was not successful");
             else if(ex.getStatusCode() == NOT_FOUND.getCode())
@@ -147,7 +147,6 @@ public class StatusRepository {
             params.add(new SqlParameter("@to", toIso));
             params.add(new SqlParameter("@serviceType", serviceType.name())); // "GPD" or "ACA"
 
-
             // Query: Return ONLY the id, sort by start DESC (newest)
             final String sql =
             		"SELECT VALUE c.id " +
@@ -163,6 +162,7 @@ public class StatusRepository {
 
             final SqlQuerySpec spec = new SqlQuerySpec(sql, params);
             final CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+            options.setPartitionKey(new PartitionKey(organizationFiscalCode));
             // Optional: Enable query metrics for tuning
             // options.setQueryMetricsEnabled(true);
 

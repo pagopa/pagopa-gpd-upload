@@ -7,7 +7,7 @@
 
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.5.0-1-PIDM-968-add-companyName-to-transfer</version>
+    <version>0.5.1</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -214,6 +214,13 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Slack Integration -->
+        <dependency>
+            <groupId>com.slack.api</groupId>
+            <artifactId>slack-api-client</artifactId>
+            <version>1.45.4</version>
+        </dependency>
+
         <!-- Micronaut Test -->
         <dependency>
             <groupId>io.micronaut.test</groupId>
@@ -223,6 +230,11 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

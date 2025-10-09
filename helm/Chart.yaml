@@ -2,9 +2,14 @@ apiVersion: v2
 name: pagopa-gpd-upload
 description: Microservice that handles file upload of massive debt positions JSON object
 type: application
-version: 0.137.0
-appVersion: 0.5.0-1-PIDM-968-add-companyName-to-transfer
+version: 0.139.0
+appVersion: 0.5.1
 dependencies:
   - name: microservice-chart
     version: 7.5.0
     repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
+  - name: cron-chart
+    version: 3.0.0
+    repository: "https://pagopa.github.io/aks-cron-chart-blueprint"
+    alias: monitoring-cron
+    condition: monitoring-cron.enabled
