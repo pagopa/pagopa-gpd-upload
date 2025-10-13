@@ -6,7 +6,7 @@ version: 0.140.0
 appVersion: 0.5.2
 dependencies:
   - name: microservice-chart
-    version: 7.5.0
+    version: 8.0.2
     repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
   - name: cron-chart
     version: 3.0.0
