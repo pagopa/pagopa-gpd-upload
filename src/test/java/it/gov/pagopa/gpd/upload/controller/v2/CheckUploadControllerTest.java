@@ -26,8 +26,7 @@ import java.util.List;
 
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
 import static io.micronaut.http.HttpStatus.OK;
-import static it.gov.pagopa.gpd.upload.utils.TestConstants.QUERY_PARAM_SERVICE_TYPE_GPD;
-import static it.gov.pagopa.gpd.upload.utils.TestConstants.URI_V2;
+import static it.gov.pagopa.gpd.upload.utils.TestConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -196,7 +195,12 @@ class CheckUploadControllerTest {
                 eq(ServiceType.GPD)
         )).thenReturn(stub);
 
-        String url = URI_V2 + "s?from=2025-09-01&to=2025-09-06&size=100";
+//        String url = URI_V2 + "s?from=2025-09-01&to=2025-09-06&size=100";
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate from = today.minusDays(10);
+        LocalDate to = today.minusDays(7);
+
+        String url = String.format("%ss?from=%s&to=%s&size=100", URI_V2, from, to);
 
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
 
@@ -240,7 +244,12 @@ class CheckUploadControllerTest {
                 .thenReturn(stub);
 
         String inToken = "opaque-token-xyz";
-        String url = URI_V2 + "s?from=2025-09-01&to=2025-09-06&size=100";
+
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate from = today.minusDays(10);
+        LocalDate to = today.minusDays(7);
+
+        String url = String.format("%ss?from=%s&to=%s&size=100", URI_V2, from, to);
         HttpRequest<?> req = HttpRequest.GET(url)
                 .header("x-continuation-token", inToken)
                 .contentType(MediaType.APPLICATION_JSON);
