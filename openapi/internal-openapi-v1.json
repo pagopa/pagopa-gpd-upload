@@ -14,8 +14,8 @@
         "enum" : [ "/upload/gpd/debt-positions-service/v1" ]
       },
       "host" : {
-        "default" : "api.dev.platform.pagopa.it",
-        "enum" : [ "api.dev.platform.pagopa.it", "api.uat.platform.pagopa.it", "api.platform.pagopa.it" ]
+        "default" : "api.platform.pagopa.it",
+        "enum" : [ "api.uat.platform.pagopa.it", "api.platform.pagopa.it" ]
       }
     }
   } ],
@@ -241,7 +241,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/UploadStatus"
+                  "$ref" : "#/components/schemas/UploadStatusDTO"
                 }
               }
             }
@@ -482,6 +482,10 @@
           }
         }
       },
+      "OperationStatus" : {
+        "type" : "string",
+        "enum" : [ "IN_PROGRESS", "COMPLETED", "COMPLETED_WITH_WARNINGS", "COMPLETED_UNSUCCESSFULLY" ]
+      },
       "ProblemJson" : {
         "type" : "object",
         "properties" : {
@@ -554,10 +558,10 @@
           }
         }
       },
-      "UploadStatus" : {
+      "UploadStatusDTO" : {
         "type" : "object",
         "properties" : {
-          "uploadID" : {
+          "fileId" : {
             "type" : "string"
           },
           "processedItem" : {
@@ -572,6 +576,9 @@
             "type" : "string",
             "format" : "date-time",
             "example" : "2024-10-08T14:55:16.302Z"
+          },
+          "operationStatus" : {
+            "$ref" : "#/components/schemas/OperationStatus"
           }
         }
       }

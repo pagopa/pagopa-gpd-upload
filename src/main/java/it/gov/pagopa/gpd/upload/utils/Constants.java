@@ -13,7 +13,6 @@ public class Constants {
             TAB + "\"paymentPositions\": [<br>" +
             TAB + "  {<br>" +
             TAB + TAB + "\"iupd\": \"string\",<br>" +
-            TAB + TAB + "\"aca\": false,<br>" +
             TAB + TAB + "\"payStandIn\": false,<br>" +
             TAB + TAB + "\"type\": \"F\",<br>" +
             TAB + TAB + "\"fiscalCode\": \"string\",<br>" +
@@ -33,6 +32,7 @@ public class Constants {
             TAB + TAB + "\"validityDate\": \"YYYY-MM-DDThh:mm:ss.SSSZ\",<br>" +
             TAB + TAB + "\"paymentOption\": [<br>" +
             TAB + TAB + "  {<br>" +
+            TAB + TAB + TAB + "\"nav\": \"string\",<br>" +
             TAB + TAB + TAB + "\"iuv\": \"string\",<br>" +
             TAB + TAB + TAB + "\"amount\": 0,<br>" +
             TAB + TAB + TAB + "\"description\": \"string\",<br>" +
@@ -45,6 +45,7 @@ public class Constants {
             TAB + TAB + TAB + TAB + "\"idTransfer\": \"1\",<br>" +
             TAB + TAB + TAB + TAB + "\"amount\": 0,<br>" +
             TAB + TAB + TAB + TAB + "\"organizationFiscalCode\": \"00000000000\",<br>" +
+            TAB + TAB + TAB + TAB + "\"companyName\": \"Comune di Roma\",<br>" +
             TAB + TAB + TAB + TAB + "\"remittanceInformation\": \"string\",<br>" +
             TAB + TAB + TAB + TAB + "\"category\": \"string\",<br>" +
             TAB + TAB + TAB + TAB + "\"iban\": \"IT0000000000000000000000000\",<br>" +
