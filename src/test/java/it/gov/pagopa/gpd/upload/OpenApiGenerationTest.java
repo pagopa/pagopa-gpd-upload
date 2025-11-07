@@ -34,28 +34,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 class OpenApiGenerationTest {
 
-    @Value("${openapi.application.version}")
+    @Value("${info.application.version}")
     private String version;
 
     @Inject
     @Client("/")
     HttpClient client;
 
-    @Value("${info.application.title}")
-    String title;
-
     @Test
     void swaggerSpringPlugin() throws Exception {
-        boolean resultV1 = saveOpenAPI("gpd", "v1", "/swagger/pagopa-gpd-upload-v1-" + version + ".json", false);
+        boolean resultV1 = saveOpenAPI("gpd", "v1", "/swagger/pagopa-gpd-upload-v1.json", false);
         assertTrue(resultV1);
 
-        boolean resultV2 = saveOpenAPI("gpd", "v2", "/swagger/pagopa-gpd-upload-v2-" + version + ".json", false);
+        boolean resultV2 = saveOpenAPI("gpd", "v2", "/swagger/pagopa-gpd-upload-v2.json", false);
         assertTrue(resultV2);
 
-        boolean resultV3 = saveOpenAPI("aca", "v2", "/swagger/pagopa-gpd-upload-v2-" + version + ".json", false);
+        boolean resultV3 = saveOpenAPI("aca", "v2", "/swagger/pagopa-gpd-upload-v2.json", false);
         assertTrue(resultV3);
 
-        boolean resultSupportAPI = saveOpenAPI("internal", "v1", "/swagger/pagopa-gpd-upload-v2-" + version + ".json", true);
+        boolean resultSupportAPI = saveOpenAPI("internal", "v1", "/swagger/pagopa-gpd-upload-v2.json", true);
         assertTrue(resultSupportAPI);
     }
 
@@ -72,6 +69,7 @@ class OpenApiGenerationTest {
         OpenAPI openAPI = objectMapper.readValue(response.getBody().get(), OpenAPI.class);
 
         openAPI.getInfo().setTitle(newTitle);
+        openAPI.getInfo().setVersion(version);
 
         // server management
         List<Server> servers = openAPI.getServers();

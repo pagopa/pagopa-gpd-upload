@@ -180,7 +180,6 @@ class CheckUploadControllerTest {
                 eq(ServiceType.GPD)
         )).thenReturn(stub);
 
-
         String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
 
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
