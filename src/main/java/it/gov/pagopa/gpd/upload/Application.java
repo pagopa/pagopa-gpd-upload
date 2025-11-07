@@ -3,8 +3,10 @@ package it.gov.pagopa.gpd.upload;
 import io.micronaut.runtime.Micronaut;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.info.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.servers.ServerVariable;
+import it.gov.pagopa.gpd.upload.model.pd.PaymentPositionsModel;
 
 
 @OpenAPIDefinition(
@@ -47,4 +49,7 @@ public class Application {
     public static void main(String[] args) {
         Micronaut.run(Application.class, args);
     }
+
+//    @Schema(name = "PaymentPositionsModel", description = "Structure of debt positions model", implementation = PaymentPositionsModel.class)
+//    static class IncludePaymentPositionsModel {}
 }
