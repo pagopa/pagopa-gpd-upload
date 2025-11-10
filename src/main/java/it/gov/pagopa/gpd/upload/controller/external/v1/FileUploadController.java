@@ -34,6 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static it.gov.pagopa.gpd.upload.utils.Constants.CREATE_UPDATE_FILE_DESCRIPTION;
+import static it.gov.pagopa.gpd.upload.utils.Constants.DELETE_FILE_DESCRIPTION;
+
 @Tag(name = "Massive operation APIs for Debt Positions - v1")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
@@ -46,6 +49,8 @@ public class FileUploadController {
     private static final String BASE_PATH = "brokers/{broker-code}/organizations/{organization-fiscal-code}/debtpositions/file";
     @Value("${post.file.response.headers.retry_after.millis}")
     private int retryAfter;
+    
+
 
     @Operation(summary = "The Organization creates the debt positions listed in the file.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "create-debt-positions-by-file-upload")
     @ApiResponses(value = {
@@ -63,8 +68,15 @@ public class FileUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(
-                    description = "File to be uploaded",
-                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
+                    description = CREATE_UPDATE_FILE_DESCRIPTION,
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_OCTET_STREAM,
+                            schema = @Schema(
+                                    type = "string",
+                                    format = "binary",
+                                    description = "ZIP file containing the JSON"
+                            )
+                    )
             ) CompletedFileUpload file,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
     ) {
@@ -99,7 +111,7 @@ public class FileUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(
-                    description = "File to be uploaded",
+                    description = CREATE_UPDATE_FILE_DESCRIPTION,
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
@@ -135,7 +147,7 @@ public class FileUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(
-                    description = "File to be uploaded",
+                    description = DELETE_FILE_DESCRIPTION,
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType

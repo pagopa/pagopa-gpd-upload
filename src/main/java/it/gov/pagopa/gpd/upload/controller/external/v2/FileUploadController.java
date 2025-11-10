@@ -34,6 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static it.gov.pagopa.gpd.upload.utils.Constants.CREATE_UPDATE_FILE_DESCRIPTION;
+import static it.gov.pagopa.gpd.upload.utils.Constants.DELETE_FILE_DESCRIPTION;
+
 @Tag(name = "Massive operation APIs for Debt Positions - v2")
 @ExecuteOn(TaskExecutors.IO)
 @Controller()
@@ -63,7 +66,7 @@ public class FileUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(
-                    description = "File to be uploaded",
+                    description = CREATE_UPDATE_FILE_DESCRIPTION,
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
@@ -99,7 +102,7 @@ public class FileUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(
-                    description = "File to be uploaded",
+                    description = CREATE_UPDATE_FILE_DESCRIPTION,
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType
@@ -135,7 +138,7 @@ public class FileUploadController {
             @Parameter(description = "The organization fiscal code", required = true)
             @NotBlank @PathVariable(name = "organization-fiscal-code") String organizationFiscalCode,
             @Parameter(
-                    description = "File to be uploaded",
+                    description = DELETE_FILE_DESCRIPTION,
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)
             ) CompletedFileUpload file,
             @Parameter(description = "GPD or ACA", hidden = true) @QueryValue(defaultValue = "GPD") ServiceType serviceType

@@ -180,8 +180,11 @@ class CheckUploadControllerTest {
                 eq(ServiceType.GPD)
         )).thenReturn(stub);
 
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate from = today.minusDays(10);
+        LocalDate to = today.minusDays(7);
 
-        String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
+        String url = String.format("%ss?from=%s&to=%s&size=100", URI_V1, from, to);
 
         HttpRequest<?> req = HttpRequest.GET(url).contentType(MediaType.APPLICATION_JSON);
 
@@ -226,7 +229,11 @@ class CheckUploadControllerTest {
 
         String inToken = "opaque-token-xyz";
 
-        String url = URI_V1 + "s?from=2025-09-01&to=2025-09-06&size=100";
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate from = today.minusDays(10);
+        LocalDate to = today.minusDays(7);
+
+        String url = String.format("%ss?from=%s&to=%s&size=100", URI_V1, from, to);
 
         HttpRequest<?> req = HttpRequest.GET(url)
                 .header("x-continuation-token", inToken)

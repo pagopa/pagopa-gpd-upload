@@ -27,7 +27,6 @@ import it.gov.pagopa.gpd.upload.exception.AppException;
 import it.gov.pagopa.gpd.upload.model.FileIdListResponse;
 import it.gov.pagopa.gpd.upload.model.ProblemJson;
 import it.gov.pagopa.gpd.upload.model.enumeration.ServiceType;
-import it.gov.pagopa.gpd.upload.model.v1.UploadStatus;
 import it.gov.pagopa.gpd.upload.model.v2.UploadReportDTO;
 import it.gov.pagopa.gpd.upload.model.v2.UploadStatusDTO;
 import it.gov.pagopa.gpd.upload.service.BlobService;
@@ -59,7 +58,7 @@ public class CheckUploadController {
 
     @Operation(summary = "Returns the debt positions upload status.", security = {@SecurityRequirement(name = "ApiKey")}, operationId = "get-debt-positions-upload-status")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadStatus.class))),
+            @ApiResponse(responseCode = "200", description = "Upload found.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = UploadStatusDTO.class))),
             @ApiResponse(responseCode = "400", description = "Malformed request.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "401", description = "Wrong or missing function key.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProblemJson.class))),
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema())),
