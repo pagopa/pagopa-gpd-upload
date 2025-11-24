@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.BOT_TOKEN_GITHUB }}
 
       - name: Checkout Pull Request
-        run: hub pr checkout $PR_NUMBER
+        run: gh pr checkout $PR_NUMBER
         env:
           PR_NUMBER: ${{ github.event.issue.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
