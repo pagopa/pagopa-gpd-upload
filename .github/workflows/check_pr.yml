@@ -7,20 +7,16 @@ on:
       - main
     types: [ opened, synchronize, labeled, unlabeled, reopened, edited ]
 
-
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
+permissions: {}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   auto_assign:
     name: Auto Assign
-
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
+    permissions:
+      pull-requests: write
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Assign Me
@@ -32,6 +28,9 @@ jobs:
   check_format:
     name: Check Format
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # checkout
+      pull-requests: write # Writes comments
     steps:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
@@ -77,6 +76,10 @@ jobs:
   check_size:
     runs-on: ubuntu-latest
     name: Check Size
+    permissions:
+      contents: read       # git diff
+      pull-requests: write # to add labels and comments
+      issues: write
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
         with:
