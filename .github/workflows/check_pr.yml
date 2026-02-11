@@ -9,8 +9,9 @@ on:
 
 
 permissions:
+  contents: read
   pull-requests: write
-
+  issues: write
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -84,6 +85,7 @@ jobs:
       - name: Check Size
         uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0 # v6.3.3
         env:
+          HEAD_REF: ${{ github.head_ref }}
           IGNORED_FILES: openapi.json, openapi-node.json
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -100,8 +102,8 @@ jobs:
               const execSync = require('child_process').execSync;
               for (const file of IGNORED_FILES.trim().split(',')) {
             
-                const ignored_additions_str = execSync('git --no-pager  diff --numstat origin/main..origin/${{ github.head_ref}} | grep ' + file + ' | cut -f 1', { encoding: 'utf-8' })
-                const ignored_deletions_str = execSync('git --no-pager  diff --numstat origin/main..origin/${{ github.head_ref}} | grep ' + file + ' | cut -f 2', { encoding: 'utf-8' })
+                const ignored_additions_str = execSync('git --no-pager  diff --numstat origin/main..origin/"${HEAD_REF}" | grep ' + file + ' | cut -f 1', { encoding: 'utf-8' })
+                const ignored_deletions_str = execSync('git --no-pager  diff --numstat origin/main..origin/"${HEAD_REF}" | grep ' + file + ' | cut -f 2', { encoding: 'utf-8' })
             
                 const ignored_additions = ignored_additions_str.split('\n').map(elem=> parseInt(elem || 0)).reduce(
                 (accumulator, currentValue) => accumulator + currentValue,
