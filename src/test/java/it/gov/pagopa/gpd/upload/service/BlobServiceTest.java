@@ -22,9 +22,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -159,5 +162,26 @@ class BlobServiceTest {
         assertEquals(uploadInput.getPaymentPositionIUPDs().get(0), response.getPaymentPositionIUPDs().get(0));
         assertEquals(uploadInput.getPaymentPositionIUPDs().get(1), response.getPaymentPositionIUPDs().get(1));
         verify(blobStorageRepository, times(1)).downloadContent(BROKER_CODE, FILE_ID, String.format("/%s/%s/%s.json", FISCAL_CODE, INPUT_DIRECTORY, FILE_ID), ServiceType.GPD);
+    }
+    
+    @Test
+    void upload_StoresCompactJsonOnBlob_OK() throws IOException {
+        when(blobStorageRepository.upload(anyString(), anyString(), any(), any())).thenReturn(FILE_ID);
+        UploadInput uploadInput = UploadInput.builder()
+                .uploadOperation(UploadOperation.DELETE)
+                .paymentPositionIUPDs(List.of(IUPD_1, IUPD_2))
+                .build();
+
+        String uploadKey = blobService.upload(uploadInput, BROKER_CODE, FISCAL_CODE, 2, ServiceType.GPD);
+
+        ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
+        verify(blobStorageRepository, times(1))
+                .upload(eq(BROKER_CODE), eq(FISCAL_CODE), inputStreamCaptor.capture(), eq(ServiceType.GPD));
+
+        String uploadedJson = new String(inputStreamCaptor.getValue().readAllBytes(), StandardCharsets.UTF_8);
+        assertEquals(objectMapper.writeValueAsString(uploadInput), uploadedJson);
+        Assertions.assertFalse(uploadedJson.contains("\n"));
+        verify(statusService, times(1)).createUploadStatus(FISCAL_CODE, BROKER_CODE, FILE_ID, 2, ServiceType.GPD);
+        assertEquals(FILE_ID, uploadKey);
     }
 }

@@ -4,7 +4,6 @@ import com.azure.core.util.BinaryData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
@@ -164,8 +163,8 @@ public class BlobService {
             log.debug(String.format("Upload operation %s was launched for broker %s and organization fiscal code %s",
                     uploadInput.getUploadOperation(), broker, organizationFiscalCode));
 
-            // from UploadInput Object to ByteArrayInputStream
-            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            // Serialize the intermediate input file in compact JSON format. 
+            // The file is consumed by the upload function and does not need to be human-readable.
             ByteArrayInputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(uploadInput));
 
             // upload blob
