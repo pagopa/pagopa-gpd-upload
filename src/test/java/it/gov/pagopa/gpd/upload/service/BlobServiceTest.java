@@ -179,8 +179,9 @@ class BlobServiceTest {
                 .upload(eq(BROKER_CODE), eq(FISCAL_CODE), inputStreamCaptor.capture(), eq(ServiceType.GPD));
 
         String uploadedJson = new String(inputStreamCaptor.getValue().readAllBytes(), StandardCharsets.UTF_8);
-        assertEquals(objectMapper.writeValueAsString(uploadInput), uploadedJson);
+        assertEquals(objectMapper.valueToTree(uploadInput), objectMapper.readTree(uploadedJson));
         Assertions.assertFalse(uploadedJson.contains("\n"));
+        Assertions.assertFalse(uploadedJson.contains("\r"));
         verify(statusService, times(1)).createUploadStatus(FISCAL_CODE, BROKER_CODE, FILE_ID, 2, ServiceType.GPD);
         assertEquals(FILE_ID, uploadKey);
     }
