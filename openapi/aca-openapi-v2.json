@@ -4,7 +4,7 @@
     "title": "ACA-Upload-API-v2",
     "description": "Microservice to manage PagoPA GPD Upload",
     "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.5.3-1-PIDM-2170-gpd-upload-error"
+    "version": "0.5.4"
   },
   "servers": [
     {
