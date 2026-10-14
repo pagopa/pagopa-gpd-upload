@@ -65,14 +65,12 @@ microservice-chart:
     cooldownPeriod: 50 # seconds
     triggers:
       - type: cpu
+        metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
-          # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
       - type: memory
+        metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
-          # Required
-          type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig:
     WEBSITE_SITE_NAME: 'pagopa-p-gpd-upload-service' # required to show cloud role name in application insights
