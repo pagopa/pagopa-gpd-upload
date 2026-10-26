@@ -70,7 +70,7 @@ export default function () {
   let statusURL = r.headers['Location']
   r = callStatus(statusURL)
 
-  while(r.json().processedItem !== r.json().submittedItem) {
+  while(r.status === 429 || r.json().processedItem !== r.json().submittedItem) {
     r = callStatus(statusURL)
   }
 
@@ -78,7 +78,7 @@ export default function () {
   let reportURL = statusURL.replace("/status", "/report")
   r = http.get(`${vars.host}/${reportURL}`, params)
 
-  checkOutput =   check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, tag = "Report retrieve API");
+  checkOutput = check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, { tag: "Report retrieve API" });
   if (!checkOutput) {
     console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
   }
