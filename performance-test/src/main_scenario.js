@@ -27,6 +27,15 @@ export function setup() {
     uploadUrl: rootUrl,
     fileNumber: __ENV.FILE_NUMBER,
     subscriptionKeyPresent: Boolean(__ENV.API_SUBSCRIPTION_KEY),
+    subscriptionKeyHasWhitespace: /\s/.test(__ENV.API_SUBSCRIPTION_KEY || ''),
+    host: vars.host,
+    basePath: vars.basePath,
+    testType: __ENV.TEST_TYPE,
+    envFile: __ENV.VARS,
+    runId: runId,
+    githubRef: __ENV.GITHUB_REF_NAME,
+    githubSha: __ENV.GITHUB_SHA,
+    githubActor: __ENV.GITHUB_ACTOR,
   }));
   // The setup code runs, setting up the test environment (optional) and generating data
   // used to reuse code for the same VU
@@ -42,9 +51,13 @@ function postcondition() {
   // Delete the new entity created
 }
 
+const runId = __ENV.GITHUB_RUN_ID || 'local';
+
+// X-Perf-Run lets the request be found in APIM gateway logs
 const params = {
   headers: {
     'Ocp-Apim-Subscription-Key': __ENV.API_SUBSCRIPTION_KEY,
+    'X-Perf-Run': runId,
   },
 };
 
@@ -53,7 +66,7 @@ function logFailure(stage, response) {
   const headerNames = [
     'content-type', 'date', 'server', 'server-timing', 'via',
     'www-authenticate', 'retry-after', 'apim-request-id',
-    'request-id', 'x-azure-ref', 'x-cache', 'x-correlation-id',
+    'request-id', 'request-context', 'x-azure-ref', 'x-cache', 'x-correlation-id',
     'x-envoy-upstream-service-time', 'x-ms-correlation-request-id',
     'x-ms-request-id', 'x-powered-by', 'x-request-id', 'traceparent',
   ];
@@ -65,6 +78,8 @@ function logFailure(stage, response) {
   const requestHeaders = response.request.headers;
   const message = JSON.stringify({
     stage,
+    runId,
+    requestTimeUtc: new Date().toISOString(),
     method: response.request.method,
     requestUrl: response.request.url,
     requestHeaderNames: Object.keys(requestHeaders),
@@ -77,7 +92,7 @@ function logFailure(stage, response) {
     errorCode: response.error_code,
     timings: response.timings,
     headers: diagnosticHeaders,
-    body: response.body,
+    body: typeof response.body === 'string' ? response.body.replace(/\s+/g, ' ').trim() : response.body,
   });
   const key = __ENV.API_SUBSCRIPTION_KEY;
   console.error(key ? message.split(key).join('[REDACTED]') : message);
