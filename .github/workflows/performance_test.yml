@@ -21,6 +21,7 @@ on:
         options:
           - smoke
           - constant
+          - ramping
         default: smoke
       positions-per-file:
         required: true
@@ -35,7 +36,7 @@ on:
       lifetime:
         required: true
         type: number
-        description: Test duration in minutes
+        description: Test duration in minutes (ignored for ramping)
         default: 1
       iteration-rate:
         required: true
@@ -74,6 +75,10 @@ jobs:
           chmod +x ./prepare_performance_data.sh
           ./prepare_performance_data.sh ${{inputs.file-number}} ${{inputs.positions-per-file}}
           export BASE_PATH=./src/test-types
+          # ramping uses the stages defined in ramping.json: lifetime and iteration-rate are ignored
+          if [ "${{inputs.type}}" == "ramping" ]; then
+            exit 0
+          fi
           jq --arg type "${{inputs.type}}" \
             --arg duration "${{inputs.lifetime}}m" \
             --argjson iteration_rate "$ITERATION_RATE" \
