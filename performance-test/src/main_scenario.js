@@ -1,5 +1,4 @@
 import http from 'k6/http';
-import exec from 'k6/execution';
 import {check, fail, sleep} from 'k6';
 import {SharedArray} from 'k6/data';
 
@@ -22,25 +21,28 @@ for (let i = 0; i < __ENV.FILE_NUMBER; i++) {
 }
 
 export function setup() {
-  console.log(JSON.stringify({
-    environment: vars.env,
-    uploadUrl: rootUrl,
-    fileNumber: __ENV.FILE_NUMBER,
-    subscriptionKeyPresent: Boolean(__ENV.API_SUBSCRIPTION_KEY),
-    subscriptionKeyHasWhitespace: /\s/.test(__ENV.API_SUBSCRIPTION_KEY || ''),
-    host: vars.host,
-    basePath: vars.basePath,
-    testType: __ENV.TEST_TYPE,
-    envFile: __ENV.VARS,
-    runId: runId,
-    githubRef: __ENV.GITHUB_REF_NAME,
-    githubSha: __ENV.GITHUB_SHA,
-    githubActor: __ENV.GITHUB_ACTOR,
-  }));
-  // The setup code runs, setting up the test environment (optional) and generating data
-  // used to reuse code for the same VU
-  // precondition is moved to default fn because in this stage
-  // __VU is always 0 and cannot be used to create env properly
+  // single upload, only needed to obtain the status URL
+  // "/brokers/{broker}/organizations/{ec}/debtpositions/file"
+  const data = {
+    field: 'file',
+    file: http.file(zipFiles[0], 'file.zip'),
+  };
+  const r = http.post(rootUrl, data, uploadParams);
+
+  const uploadOk = check(r, { 'check file upload response is 202': (_r) => r.status === 202, }, { api: 'upload' });
+  if (!uploadOk) {
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
+    fail(`Upload failed with HTTP ${r.status}; cannot run status test.`);
+  }
+
+  const statusURL = r.headers['Location'];
+  if (!statusURL) {
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
+    fail('Upload response has no Location; cannot run status test.');
+  }
+  const statusUrl = `${vars.host}/${statusURL}`;
+
+  return {statusUrl};
 }
 
 function precondition() {
@@ -51,117 +53,34 @@ function postcondition() {
   // Delete the new entity created
 }
 
-const runId = __ENV.GITHUB_RUN_ID || 'local';
-
-// X-Perf-Run lets the request be found in APIM gateway logs
 const params = {
   headers: {
     'Ocp-Apim-Subscription-Key': __ENV.API_SUBSCRIPTION_KEY,
-    'X-Perf-Run': runId,
   },
 };
 
-function logFailure(stage, response) {
-  const diagnosticHeaders = {};
-  const headerNames = [
-    'content-type', 'date', 'server', 'server-timing', 'via',
-    'www-authenticate', 'retry-after', 'apim-request-id',
-    'request-id', 'request-context', 'x-azure-ref', 'x-cache', 'x-correlation-id',
-    'x-envoy-upstream-service-time', 'x-ms-correlation-request-id',
-    'x-ms-request-id', 'x-powered-by', 'x-request-id', 'traceparent',
-  ];
-  for (const name of Object.keys(response.headers)) {
-    if (headerNames.includes(name.toLowerCase())) {
-      diagnosticHeaders[name] = response.headers[name];
-    }
-  }
-  const requestHeaders = response.request.headers;
-  const message = JSON.stringify({
-    stage,
-    runId,
-    requestTimeUtc: new Date().toISOString(),
-    method: response.request.method,
-    requestUrl: response.request.url,
-    requestHeaderNames: Object.keys(requestHeaders),
-    subscriptionKeySent: Object.keys(requestHeaders).some(
-      name => name.toLowerCase() === 'ocp-apim-subscription-key',
-    ),
-    url: response.url,
-    status: response.status,
-    error: response.error,
-    errorCode: response.error_code,
-    timings: response.timings,
-    headers: diagnosticHeaders,
-    body: typeof response.body === 'string' ? response.body.replace(/\s+/g, ' ').trim() : response.body,
-  });
-  const key = __ENV.API_SUBSCRIPTION_KEY;
-  console.error(key ? message.split(key).join('[REDACTED]') : message);
-}
+// the "api" tag lets thresholds evaluate only the status API
+const uploadParams = {headers: params.headers, tags: {api: 'upload', name: 'File Upload API'}};
+const statusParams = {headers: params.headers, tags: {api: 'status', name: 'Status check API'}};
 
+export default function (data) {
+  const r = http.get(data.statusUrl, statusParams)
 
-export default function () {
-
-  let test_id = exec.scenario.iterationInInstance % __ENV.FILE_NUMBER;
-
-  console.log("Run perfromance scenario for user: " + test_id)
-
-  let tag = {
-  };
-
-  // "/brokers/{broker}/organizations/{ec}/debtpositions/file"
-  let url = `${rootUrl}`;
-
-  const data = {
-    field: 'file',
-    file: http.file(zipFiles[test_id], 'file.zip'),
-  };
-
-  let r = http.post(url, data, params);
-  let checkOutput = check(r, { 'check file upload response is 202': (_r) => r.status === 202, }, { tag: "File Upload API" });
-
+  const checkOutput = check(r, { 'check status check is 200': (_r) => r.status === 200, }, { api: 'status' });
   if (!checkOutput) {
-    logFailure('upload', r);
-    fail(`Upload failed with HTTP ${r.status}; skipping status and report requests.`);
-  }
-
-  let statusURL = r.headers['Location']
-  if (!check(r, { 'check upload response has Location': () => Boolean(statusURL) })) {
-    logFailure('upload: missing Location', r);
-    fail('Upload response has no Location; skipping status and report requests.');
-  }
-  r = callStatus(statusURL)
-
-  while(r.status === 429 || r.json().processedItem !== r.json().submittedItem) {
-    r = callStatus(statusURL)
-  }
-
-  sleep(1)
-  let reportURL = statusURL.replace("/status", "/report")
-  r = http.get(`${vars.host}/${reportURL}`, params)
-
-  checkOutput = check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, { tag: "Report retrieve API" });
-  if (!checkOutput) {
-    logFailure('report', r);
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
   }
 
   postcondition();
 }
 
-function callStatus(statusURL) {
-  sleep(1)
-  let r = http.get(`${vars.host}/${statusURL}`, params)
-
-  const checkOutput = check(r, { 'check status check is 200': (_r) => r.status === 200, }, { tag: "Status check API" });
-  if (!checkOutput) {
-    logFailure('status', r);
-    if (r.status !== 429) {
-      fail(`Status request failed with HTTP ${r.status}; skipping further polling and report.`);
-    }
-  }
-  return r;
-}
-
 export function teardown(data) {
-  // After All
-  // teardown code
+  // single report retrieve on the uploaded file, excluded from thresholds (api tag "report")
+  const reportUrl = data.statusUrl.replace("/status", "/report");
+  const r = http.get(reportUrl, {headers: params.headers, tags: {api: 'report', name: 'Report retrieve API'}});
+
+  const checkOutput = check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, { api: 'report' });
+  if (!checkOutput) {
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
+  }
 }
