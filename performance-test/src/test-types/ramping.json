@@ -24,15 +24,15 @@
         },
         {
           "duration": "2m",
-          "target": 100
+          "target": 40
         },
         {
           "duration": "3m",
-          "target": 300
+          "target": 70
         },
         {
           "duration": "4m",
-          "target": 600
+          "target": 100
         }
       ]
     }
