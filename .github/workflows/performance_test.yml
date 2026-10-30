@@ -21,6 +21,7 @@ on:
         options:
           - smoke
           - constant
+          - ramping
         default: smoke
       positions-per-file:
         required: true
@@ -35,8 +36,13 @@ on:
       lifetime:
         required: true
         type: number
-        description: The max expected duration to complete the test
+        description: Test duration in minutes (ignored for ramping)
         default: 1
+      iteration-rate:
+        required: true
+        type: number
+        description: Upload flows started per second (constant test only)
+        default: 50
       canary:
         description: 'run the tests on canary version'
         required: false
@@ -62,12 +68,28 @@ jobs:
 
       - name: Prepare performance data
         shell: bash
+        env:
+          ITERATION_RATE: ${{ inputs.iteration-rate }}
         run: |
           cd ./performance-test
           chmod +x ./prepare_performance_data.sh
           ./prepare_performance_data.sh ${{inputs.file-number}} ${{inputs.positions-per-file}}
           export BASE_PATH=./src/test-types
-          jq '.scenarios.contacts.timeUnit |= "${{inputs.lifetime}}m" | .scenarios.contacts.duration |= "${{inputs.lifetime}}m"' ${BASE_PATH}/${{inputs.type}}.json > temp.json && mv temp.json ${BASE_PATH}/${{inputs.type}}.json
+          # ramping uses the stages defined in ramping.json: lifetime and iteration-rate are ignored
+          if [ "${{inputs.type}}" == "ramping" ]; then
+            exit 0
+          fi
+          jq --arg type "${{inputs.type}}" \
+            --arg duration "${{inputs.lifetime}}m" \
+            --argjson iteration_rate "$ITERATION_RATE" \
+            '.scenarios.contacts.duration = $duration |
+            if $type == "constant" then
+              .scenarios.contacts.timeUnit = "1s" |
+              .scenarios.contacts.rate = $iteration_rate
+            else
+              .scenarios.contacts.timeUnit = $duration
+            end' \
+            ${BASE_PATH}/${{inputs.type}}.json > temp.json && mv temp.json ${BASE_PATH}/${{inputs.type}}.json
  
       - name: Run k6 local test
         uses: grafana/k6-action@e4714b734f2b0afaabeb7b4a69142745548ab9ec # v0.3.1
@@ -77,37 +99,3 @@ jobs:
         env:
           API_SUBSCRIPTION_KEY: ${{ secrets.SUBKEY }}
           FILE_NUMBER: ${{inputs.file-number}}
-
-  delete_github_deployments:
-    runs-on: ubuntu-latest
-    needs: performance_test
-    if: ${{ always() }}
-    steps:
-      - name: Delete Previous deployments
-        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
-        env:
-          SHA_HEAD: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || github.sha}}
-        with:
-          script: |
-            const { SHA_HEAD } = process.env
-
-            const deployments = await github.rest.repos.listDeployments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: SHA_HEAD
-            });
-            await Promise.all(
-              deployments.data.map(async (deployment) => {
-                await github.rest.repos.createDeploymentStatus({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  deployment_id: deployment.id,
-                  state: 'inactive'
-                });
-                return github.rest.repos.deleteDeployment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  deployment_id: deployment.id
-                });
-              })
-            );

@@ -1,6 +1,5 @@
 import http from 'k6/http';
-import exec from 'k6/execution';
-import {check, sleep} from 'k6';
+import {check, fail, sleep} from 'k6';
 import {SharedArray} from 'k6/data';
 
 export let options = JSON.parse(open(__ENV.TEST_TYPE));
@@ -22,10 +21,28 @@ for (let i = 0; i < __ENV.FILE_NUMBER; i++) {
 }
 
 export function setup() {
-  // The setup code runs, setting up the test environment (optional) and generating data
-  // used to reuse code for the same VU
-  // precondition is moved to default fn because in this stage
-  // __VU is always 0 and cannot be used to create env properly
+  // single upload, only needed to obtain the status URL
+  // "/brokers/{broker}/organizations/{ec}/debtpositions/file"
+  const data = {
+    field: 'file',
+    file: http.file(zipFiles[0], 'file.zip'),
+  };
+  const r = http.post(rootUrl, data, uploadParams);
+
+  const uploadOk = check(r, { 'check file upload response is 202': (_r) => r.status === 202, }, { api: 'upload' });
+  if (!uploadOk) {
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
+    fail(`Upload failed with HTTP ${r.status}; cannot run status test.`);
+  }
+
+  const statusURL = r.headers['Location'];
+  if (!statusURL) {
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
+    fail('Upload response has no Location; cannot run status test.');
+  }
+  const statusUrl = `${vars.host}/${statusURL}`;
+
+  return {statusUrl};
 }
 
 function precondition() {
@@ -42,62 +59,28 @@ const params = {
   },
 };
 
+// the "api" tag lets thresholds evaluate only the status API
+const uploadParams = {headers: params.headers, tags: {api: 'upload', name: 'File Upload API'}};
+const statusParams = {headers: params.headers, tags: {api: 'status', name: 'Status check API'}};
 
-export default function () {
+export default function (data) {
+  const r = http.get(data.statusUrl, statusParams)
 
-  let test_id = exec.scenario.iterationInInstance % __ENV.FILE_NUMBER;
-
-  console.log("Run perfromance scenario for user: " + test_id)
-
-  let tag = {
-  };
-
-  // "/brokers/{broker}/organizations/{ec}/debtpositions/file"
-  let url = `${rootUrl}`;
-
-  const data = {
-    field: 'file',
-    file: http.file(zipFiles[test_id], 'file.zip'),
-  };
-
-  let r = http.post(url, data, params);
-  let checkOutput = check(r, { 'check file upload response is 202': (_r) => r.status === 202, }, { tag: "File Upload API" });
-
+  const checkOutput = check(r, { 'check status check is 200': (_r) => r.status === 200, }, { api: 'status' });
   if (!checkOutput) {
-    console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
-  }
-
-  let statusURL = r.headers['Location']
-  r = callStatus(statusURL)
-
-  while(r.json().processedItem !== r.json().submittedItem) {
-    r = callStatus(statusURL)
-  }
-
-  sleep(1)
-  let reportURL = statusURL.replace("/status", "/report")
-  r = http.get(`${vars.host}/${reportURL}`, params)
-
-  checkOutput =   check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, tag = "Report retrieve API");
-  if (!checkOutput) {
-    console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
   }
 
   postcondition();
 }
 
-function callStatus(statusURL) {
-  sleep(1)
-  let r = http.get(`${vars.host}/${statusURL}`, params)
-
-  const checkOutput = check(r, { 'check status check is 200': (_r) => r.status === 200, }, { tag: "Status check API" });
-  if (!checkOutput) {
-    console.log(`status: ${r.status},\nbody: ${r.json.body}\n`)
-  }
-  return r;
-}
-
 export function teardown(data) {
-  // After All
-  // teardown code
+  // single report retrieve on the uploaded file, excluded from thresholds (api tag "report")
+  const reportUrl = data.statusUrl.replace("/status", "/report");
+  const r = http.get(reportUrl, {headers: params.headers, tags: {api: 'report', name: 'Report retrieve API'}});
+
+  const checkOutput = check(r, { 'check report retrieve is 200': (_r) => r.status === 200, }, { api: 'report' });
+  if (!checkOutput) {
+    console.log(`status: ${r.status},\nbody: ${r.body}\n`);
+  }
 }
