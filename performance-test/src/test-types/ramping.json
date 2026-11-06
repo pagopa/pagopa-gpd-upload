@@ -38,10 +38,16 @@
     }
   },
   "thresholds": {
-    "http_req_failed{api:status}": [
-      "rate<0.1"
+    "status_unexpected_errors": [
+      "rate==0"
     ],
-    "http_req_duration{api:status}": [
+    "status_responses_200": [
+      "count>0"
+    ],
+    "status_responses_429": [
+      "count>0"
+    ],
+    "http_req_duration{api:status,status:200}": [
       "p(99)<2000"
     ]
   }
