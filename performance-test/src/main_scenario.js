@@ -1,13 +1,8 @@
 import http from 'k6/http';
 import {check, fail, sleep} from 'k6';
 import {SharedArray} from 'k6/data';
-import {Counter, Rate} from 'k6/metrics';
 
 export let options = JSON.parse(open(__ENV.TEST_TYPE));
-
-const status200 = new Counter('status_responses_200');
-const status429 = new Counter('status_responses_429');
-const statusUnexpectedErrors = new Rate('status_unexpected_errors');
 
 // read configuration
 // note: SharedArray can currently only be constructed inside init code
@@ -69,19 +64,12 @@ const uploadParams = {headers: params.headers, tags: {api: 'upload', name: 'File
 const statusParams = {
   headers: params.headers,
   tags: {api: 'status', name: 'Status check API'},
-  responseCallback: http.expectedStatuses(200, 429),
 };
 
 export default function (data) {
   const r = http.get(data.statusUrl, statusParams)
 
-  status200.add(r.status === 200 ? 1 : 0);
-  status429.add(r.status === 429 ? 1 : 0);
-  statusUnexpectedErrors.add(r.status !== 200 && r.status !== 429);
-
-  const checkOutput = check(r, {
-    'check status response is 200 or 429': (_r) => _r.status === 200 || _r.status === 429,
-  }, { api: 'status' });
+  const checkOutput = check(r, { 'check status check is 200': (_r) => _r.status === 200, }, { api: 'status' });
   if (!checkOutput) {
     console.log(`status: ${r.status},\nbody: ${r.body}\n`);
   }

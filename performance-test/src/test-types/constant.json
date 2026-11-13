@@ -3,10 +3,10 @@
     "contacts": {
       "executor": "constant-arrival-rate",
       "duration": "5m",
-      "rate": 45,
+      "rate": 1500,
       "timeUnit": "1s",
-      "preAllocatedVUs": 70,
-      "maxVUs": 140
+      "preAllocatedVUs": 500,
+      "maxVUs": 3000
     }
   }
 }

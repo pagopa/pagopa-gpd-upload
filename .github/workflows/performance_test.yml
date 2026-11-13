@@ -41,8 +41,8 @@ on:
       iteration-rate:
         required: true
         type: number
-        description: Upload flows started per second (constant test only)
-        default: 50
+        description: Status requests per second (constant test only)
+        default: 1500
       canary:
         description: 'run the tests on canary version'
         required: false
