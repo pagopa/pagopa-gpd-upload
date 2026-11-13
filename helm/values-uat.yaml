@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.5.4"
+    tag: "0.5.4-1-PIDM-2601-otel-migration"
     pullPolicy: Always
   livenessProbe:
     httpGet:

@@ -7,7 +7,7 @@
 
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.5.4</version>
+    <version>0.5.4-1-PIDM-2601-otel-migration</version>
     <packaging>jar</packaging>
 
     <parent>

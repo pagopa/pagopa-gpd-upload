@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.5.4"
+    tag: "0.5.4-1-PIDM-2601-otel-migration"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -82,7 +82,7 @@ microservice-chart:
     CRON_RECOVERY_RATE: "60s"
     OTEL_SERVICE_NAME: "pagopa-gpd-upload"
     OTEL_RESOURCE_ATTRIBUTES: "service.name=pagopa-gpd-upload,deployment.environment=dev"
-    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-scalable-lb-collector.otel.svc.cluster.local:4317"
     OTEL_LOGS_EXPORTER: none
     OTEL_TRACES_SAMPLER: "always_on"
   envSecret:
