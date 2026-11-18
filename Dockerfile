@@ -21,4 +21,4 @@ COPY --from=build /app/target/pagopa-gpd-upload*.jar /app/app.jar
 RUN chown -R nobody:nobody /app
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-javaagent:/applicationinsights-agent.jar", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-javaagent:/applicationinsights-agent.jar", "-XX:-UseBASE64Intrinsics", "-XX:UseAVX=2", "-jar", "/app/app.jar"]
