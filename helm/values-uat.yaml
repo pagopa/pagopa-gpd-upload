@@ -52,11 +52,11 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "640Mi"
+      memory: "1Gi"
       cpu: "0.25"
     limits:
-      memory: "1Gi"
-      cpu: "0.30"
+      memory: "2Gi"
+      cpu: "0.50"
   autoscaling:
     enable: true
     minReplica: 2
@@ -65,6 +65,10 @@ microservice-chart:
     cooldownPeriod: 50 # seconds
     triggers:
       - type: cpu
+        metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+        metadata:
+          value: "75"
+      - type: memory
         metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
           value: "75"
