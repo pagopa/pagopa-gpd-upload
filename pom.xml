@@ -7,7 +7,7 @@
 
     <groupId>it.gov.pagopa.gpd.upload</groupId>
     <artifactId>pagopa-gpd-upload</artifactId>
-    <version>0.5.4-2-PIDM-2252-rate-limit-api</version>
+    <version>0.5.4-3-PIDM-2252-rate-limit-api</version>
     <packaging>jar</packaging>
 
     <parent>
