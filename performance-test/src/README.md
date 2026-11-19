@@ -18,3 +18,32 @@ where
 - _API_SUBSCRIPTION_KEY_ is your sub-key
 
 `<script-name>.js` is the scenario to run with k6
+
+## Status API ramping test
+
+`test-types/ramping.json` increases the arrival rate continuously from 1 to
+1500 status requests/s over 30 minutes. Six consecutive 5-minute stages reach
+250, 500, 750, 1000, 1250 and 1500 requests/s respectively. These are ramps,
+not constant-rate plateaus: 1500 requests/s is reached only at the end.
+In GitHub Actions, select `ramping`; `lifetime` and `iteration-rate` do not
+override this profile. Setup, in-flight request completion and teardown can
+extend the overall execution beyond 30 minutes.
+
+The ramping test assesses status API performance under the offered load. Run
+it with the APIM rate limit disabled when measuring backend capacity; HTTP 429
+responses count as failed requests and contribute to the
+`http_req_failed{api:status}` threshold. The threshold allows a failure rate
+below 10%, so the test fails when the rate of 429 and other failed responses
+reaches 10% or more.
+
+The UAT capacity run ramped up to 100 requests/s and completed 33,629 status
+requests with HTTP 200 responses and a p99 of approximately 699 ms. This result
+was collected with the APIM rate limit disabled.
+
+`main_scenario.js` uploads one ZIP in `setup()` (checking HTTP 202 and the
+`Location` header), calls status during the ramp, and retrieves the report once
+in `teardown()` (checking HTTP 200).
+
+This ramping configuration is not a dedicated APIM throttling validation:
+HTTP 429 responses are treated as failed status requests, just like other
+non-successful status responses.
