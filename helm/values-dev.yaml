@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.5.4-3-PIDM-2252-rate-limit-api"
+    tag: "0.5.6"
     pullPolicy: Always
   livenessProbe:
     httpGet:
