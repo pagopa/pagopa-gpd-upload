@@ -3,7 +3,19 @@
     {
       "env": "uat",
       "host": "https://api.uat.platform.pagopa.it/upload/gpd/debt-positions-service/v1",
-      "basePath": "brokers/brokerperf/organizations/ecperf/debtpositions/file"
+      "basePath": "brokers/brokerperf/organizations/{organization}/debtpositions/file",
+      "organizations": [
+        "77777777771",
+        "77777777772",
+        "77777777773",
+        "77777777774",
+        "77777777775",
+        "77777777776",
+        "77777777777",
+        "77777777778",
+        "77777777779",
+        "77777777770"
+      ]
     }
   ]
 }
