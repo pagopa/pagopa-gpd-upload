@@ -67,7 +67,7 @@ microservice-chart:
       - type: cpu
         metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
-          value: "75"
+          value: "50"
       - type: memory
         metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
