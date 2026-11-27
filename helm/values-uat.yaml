@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-upload
-    tag: "0.5.6"
+    tag: "0.5.6-2-PIDM-2252-rate-limit-api"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -22,7 +22,7 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 1
+    replicas: 2
     strategy:
       type: RollingUpdate
       rollingUpdate:
@@ -52,19 +52,23 @@ microservice-chart:
     allowPrivilegeEscalation: false
   resources:
     requests:
-      memory: "640Mi"
+      memory: "1Gi"
       cpu: "0.25"
     limits:
-      memory: "1Gi"
-      cpu: "0.30"
+      memory: "2Gi"
+      cpu: "0.80"
   autoscaling:
     enable: true
-    minReplica: 1
-    maxReplica: 1
+    minReplica: 2
+    maxReplica: 10
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
       - type: cpu
+        metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+        metadata:
+          value: "50"
+      - type: memory
         metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
         metadata:
           value: "75"
