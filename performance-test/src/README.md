@@ -22,13 +22,14 @@ where
 ## Status API ramping test
 
 `test-types/ramping.json` increases the arrival rate continuously from 1 to
-1500 status requests/s over 30 minutes. Six consecutive 5-minute stages reach
-250, 500, 750, 1000, 1250 and 1500 requests/s respectively. These are ramps,
-not constant-rate plateaus: 1500 requests/s is reached only at the end.
+1500 status requests/s over 30 minutes, then holds 1500 requests/s for another
+30 minutes (about 60 minutes in total). Six consecutive 5-minute stages reach
+250, 500, 750, 1000, 1250 and 1500 requests/s respectively (ramps, not
+plateaus); the final 30-minute stage is a steady plateau at 1500 requests/s,
+used to check how long the system holds at full load.
 In GitHub Actions, select `ramping`; `lifetime` and `iteration-rate` do not
 override this profile. Setup, in-flight request completion and teardown can
-extend the overall execution beyond 30 minutes.
-
+extend the overall execution beyond 60 minutes.
 The ramping test assesses status API performance under the offered load. Run
 it with the APIM rate limit disabled when measuring backend capacity; HTTP 429
 responses count as failed requests and contribute to the

@@ -41,6 +41,10 @@
         {
           "duration": "5m",
           "target": 1500
+        },
+        {
+          "duration": "30m",
+          "target": 1500
         }
       ]
     }
